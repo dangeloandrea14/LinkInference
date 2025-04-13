@@ -1,0 +1,6 @@
+{
+    "class": "erasure.unlearners.GoldModel.GoldModel",
+    "parameters": {
+      "training_set": "retain"
+    }
+}

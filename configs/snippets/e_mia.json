@@ -1,0 +1,65 @@
+{
+    "class": "erasure.evaluations.MIA.mia.Attack",
+    "parameters": {
+      "data_out_path": "resources/data/mia/mia.pt",
+      "attack_test_part": "test",
+
+      "attack_in_data": {
+        "class": "erasure.data.datasets.DatasetManager.DatasetManager",
+        "parameters": {
+          "DataSource": {
+            "class": "erasure.data.data_sources.TorchFileDataSource.TorchFileDataSource",
+            "parameters": {
+              "path": "resources/data/mia/mia.pt"
+            }
+          },
+          "partitions": [
+            { "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
+              "parameters": {"parts_names": ["train", "test"], "percentage": 1.0, "ref_data": "all"}
+            }
+          ],
+          "batch_size": 32
+        }
+      },
+
+      "attack_model": {
+        "class": "erasure.model.TorchModel.TorchModel",
+        "parameters": {
+          "epochs": 50,
+          "optimizer": {
+            "class": "torch.optim.RMSprop",
+            "parameters": {
+              "lr": 0.01
+            }
+          },
+          "loss_fn": {
+            "class": "torch.nn.CrossEntropyLoss",
+            "parameters": {
+              "reduction": "mean"
+            }
+          },
+          "model": {
+            "class": "erasure.model.FF.FlexSeqBin",
+            "parameters": {"mult":[2,0.75]}
+          }
+        }
+      },
+
+      "shadows": {
+        "n_shadows": 5,
+        "train_part_plh":"shw_train",
+        "test_part_plh":"shw_test",
+        "dataset_preproc":[
+          {
+            "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
+            "parameters": {"parts_names": ["shadow_data", "-"], "percentage": 1.0, "ref_data": "train"}
+          }
+        ],
+        "per_shadows_partition":
+          {
+            "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
+            "parameters": {"parts_names": ["shw_train", "shw_test"], "percentage": 0.5, "ref_data": "shadow_data", "shuffle": true}
+          }
+      }
+    }
+}
