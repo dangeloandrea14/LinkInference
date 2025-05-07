@@ -12,8 +12,15 @@ from torch_geometric.data import Data
 class GeometricWrapper(DatasetWrapper):
     def __init__(self, data, preprocess):
         super().__init__(data,preprocess)
+        self.num_nodes = data[0].num_nodes
+        
 
     def __realgetitem__(self, index: int):
+
+        #print("Underlying dataset:", self.data.dataset)
+        #print("Subset indices:", self.data.indices)
+
+
         sample = self.data[index]
 
         X = Data(sample.x, sample.edge_index, sample.edge_attr)
@@ -28,29 +35,93 @@ class GeometricWrapper(DatasetWrapper):
         unique_y = torch.unique(all_y)
         return len(unique_y)
     
+    
+    def revise_graph_nodes(self, nodes_subset, partitions_dict):
+        """
+        Given a list/tensor of node indices, return a new Data object containing
+        only the subgraph induced by those nodes.
+        """
+        nodes_subset = torch.tensor(nodes_subset, dtype=torch.long)
+        nodes_subset = nodes_subset.sort().values 
 
+        id_map = {old_id.item(): new_id for new_id, old_id in enumerate(nodes_subset)}
 
+        graph = self.data[0]  
+        edge_index = graph.edge_index
+
+        mask = torch.isin(edge_index[0], nodes_subset) & torch.isin(edge_index[1], nodes_subset)
+        edge_index_sub = edge_index[:, mask]
+
+        edge_index_sub = edge_index_sub.clone()
+        edge_index_sub[0] = torch.tensor([id_map[idx.item()] for idx in edge_index_sub[0]])
+        edge_index_sub[1] = torch.tensor([id_map[idx.item()] for idx in edge_index_sub[1]])
+
+        x_sub = graph.x[nodes_subset]
+        y_sub = graph.y[nodes_subset]
+
+        data_sub = Data(x=x_sub, edge_index=edge_index_sub, y=y_sub)
+
+        remapped_partitions = {}
+
+        if partitions_dict is not None:
+            for key, node_ids in partitions_dict.items():
+                if key=='all':
+                    continue
+                remapped = []
+                for i in node_ids:
+                    if i in id_map:
+                        remapped.append(id_map[i])
+                remapped_partitions[key] = remapped
+
+        return GeometricWrapper([data_sub], self.preprocess),remapped_partitions
+        
+
+    def revise_graph_edges(self, edges_subset):
+        """
+        Given a list/tensor of edges indices, return a new Data object containing
+        the graph with only those edges.
+        """
+
+        graph = self.data[0]  
+        edge_index = graph.edge_index
+
+        edges_to_keep = set(edges_subset)
+
+        src = edge_index[0]
+        dst = edge_index[1]
+        
+        mask = torch.tensor( [(s.item(), d.item()) in edges_to_keep for s, d in zip(src, dst)], dtype=torch.bool)
+            
+        new_edge_index = edge_index[:, mask]
+
+        new_edge_attr = graph.edge_attr[mask] if graph.edge_attr is not None else None
+
+        data_sub = Data(
+                x=graph.x,
+                edge_index=new_edge_index,
+                edge_attr=new_edge_attr,
+                y=graph.y if hasattr(graph, 'y') else None
+            )
+        
+        return GeometricWrapper([data_sub], self.preprocess) 
 
 class TorchGeometricDataSource(DataSource):
     def __init__(self, global_ctx: Global, local_ctx: Local):
         super().__init__(global_ctx, local_ctx)
         self.dataset = None
-
-        diocane = torch_geometric.datasets.MoleculeNet(root="resources/data", name="ESOL")
     
         self.dataset = get_instance_kvargs(self.local_config['parameters']['datasource']['class'],
                         self.local_config['parameters']['datasource']['parameters'])
         
         self.name = self.local_config['parameters']['datasource']['parameters']['name']
 
-        
 
     def get_name(self):
         return self.name
 
 
     def create_data(self):
-        
+
         #Remove empty graphs
         filtered_data_list = [data for data in self.dataset if data.x is not None and data.x.shape[0] > 0]
         filtered_dataset = self.dataset.__class__(root=self.dataset.root, name=self.name)  
@@ -63,6 +134,6 @@ class TorchGeometricDataSource(DataSource):
         return GeometricWrapper(data, self.preprocess)
     
 
-
     def check_configuration(self):
         super().check_configuration()
+

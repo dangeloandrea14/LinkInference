@@ -62,6 +62,66 @@ class TorchSKLearn(Measure):
 
         return e
 
+class TorchSKLearnGraph(Measure):
+    def init(self):
+        super().init()
+
+        self.partition_name = self.local.config['parameters']['partition']
+        self.target = self.local.config['parameters']['target']
+        self.metric_name = self.local.config['parameters']['name']
+        self.metric_params = self.local.config['parameters']['function']['parameters']
+        self.metric_func = get_function(self.local.config['parameters']['function']['class'])
+
+    def check_configuration(self):
+        super().check_configuration()
+        init_dflts_to_of(self.local.config, 'function', 'sklearn.metrics.accuracy_score') # Default empty node for: sklearn.metrics.accuracy_score
+        self.local.config['parameters']['partition'] = self.local.config['parameters'].get('partition', 'test')  # Default partition: test
+        self.local.config['parameters']['name'] = self.local.config['parameters'].get('name', self.local.config['parameters']['function']['class'])  # Default name as metric name
+        self.local.config['parameters']['target'] = self.local.config['parameters'].get('target', 'unlearned')  # Default partition: test
+
+    def process(self, e: Evaluation):
+        erasure_model = e.predictor
+
+        if self.target == 'unlearned':
+            erasure_model = e.unlearned_model
+
+        self.device = erasure_model.model.device
+
+        graph,labels = erasure_model.dataset.partitions['all'][0][0], erasure_model.dataset.partitions['all'][0][1]
+
+        var_labels, var_preds = [], []
+
+        with torch.no_grad():
+            num_nodes = erasure_model.dataset.partitions['all'].num_nodes
+
+            partition_mask = torch.zeros(num_nodes, dtype=torch.bool)
+            partition_mask[erasure_model.dataset.partitions[self.partition_name]] = True
+
+            X,edge_index= graph.x,graph.edge_index
+            X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
+
+            print("edge_index has ", edge_index.shape)
+
+            pred = erasure_model.model(X,edge_index)
+
+            pred = pred[partition_mask].detach().cpu().numpy()
+            labels = labels[partition_mask].cpu().numpy()
+
+            var_labels += list(labels.squeeze()) if len(labels) > 1 \
+                        else [labels.squeeze()]
+            var_preds += list(pred.squeeze()) if len(pred) > 1 \
+                        else [list(pred.squeeze())]
+
+
+            var_preds = np.argmax(var_preds, axis=1)
+
+            value = self.metric_func(var_labels, var_preds,**self.metric_params)
+            self.info(f"{self.metric_name} of \"{self.partition_name}\" on {self.target}: {value} of {erasure_model}")
+
+            e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target,value)
+
+        return e
+    
 class PartitionInfo(Measure):
     def init(self):
         super().init()
@@ -231,7 +291,7 @@ class NoMUS(Measure):
     def init(self):
         super().init()
         self.l = self.params["l"]
-        self.acc_metric = f"sklearn.metrics.accuracy_score.{self.params["acc_split"]}.unlearned"
+        self.acc_metric = f"sklearn.metrics.accuracy_score.{self.params['acc_split']}.unlearned"
 
     def check_configuration(self):
         self.params["l"] = self.params.get("l", 0.5)

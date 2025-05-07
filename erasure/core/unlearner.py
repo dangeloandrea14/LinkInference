@@ -16,7 +16,8 @@ class Unlearner(Configurable, metaclass=ABCMeta):
         else:
             self.predictor = 'global'
 
-        super().__init__(global_ctx, local_ctx)   
+        super().__init__(global_ctx, local_ctx)  
+        
 
     def unlearn(self):
         self.__preprocess__()
@@ -25,6 +26,8 @@ class Unlearner(Configurable, metaclass=ABCMeta):
         self.__postprocess__()
         return new_model
 
+    def init(self):
+        self.removal_type = self.global_ctx.removal_type
 
     def __preprocess__(self):
         pass

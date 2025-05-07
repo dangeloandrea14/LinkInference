@@ -39,7 +39,15 @@ class Global:
             self.config.globals['cached'] = self.cached = False
         else:
             self.config.globals['cached'] = self.cached = strtobool(self.config.globals['cached'])
+
+        if 'removal_type' in self.config.globals:
+            if self.config.globals['removal_type'] not in ["node", "edge", "node_feature"]:
+                raise ValueError(f'''Error setting removal type. It should be one of "node", "edge", "node_feature". It was set to: {self.config.globals.removal_type}''')
             
+            self.removal_type = self.config.globals['removal_type']
+
+            self.info(f'''{bcolors.FAIL}REMOVAL TYPE SET AS {self.config.globals['removal_type']}{bcolors.ENDC}''' )
+
         self.info(f'''{bcolors.FAIL}Caching System: {self.cached}.{bcolors.ENDC}''' )
 
 
