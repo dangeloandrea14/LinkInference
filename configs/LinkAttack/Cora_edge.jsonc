@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Citeseer"},
+                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Cora"},
                         "preprocess":[
                           ]}
                     }}, 
@@ -22,7 +22,7 @@
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
-              "lr": 0.001            }
+              "lr": 0.5            }
           },
           "loss_fn": {
             "class": "torch.nn.CrossEntropyLoss",
@@ -31,7 +31,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.SGC_CGU.SGC_CGU","parameters": { "in_channels":3703, "out_channels":6 }
+            "class": "erasure.model.graphs.SGC_CGU.SGC_CGU","parameters": { "in_channels":1433,  "out_channels":7 }
           }
         }
       },
@@ -55,7 +55,7 @@
               {"class":"erasure.evaluations.running.RunTime"},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original"}},
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Citeseer_edge.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Cora_edge.json"}}
             ]
           }
         },

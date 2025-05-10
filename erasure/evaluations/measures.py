@@ -100,8 +100,6 @@ class TorchSKLearnGraph(Measure):
             X,edge_index= graph.x,graph.edge_index
             X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
 
-            print("edge_index has ", edge_index.shape)
-
             pred = erasure_model.model(X,edge_index)
 
             pred = pred[partition_mask].detach().cpu().numpy()
