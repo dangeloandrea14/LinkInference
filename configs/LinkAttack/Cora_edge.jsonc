@@ -10,7 +10,7 @@
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["validation","train"], "percentage":0.1, "ref_data":"train_0", "shuffle":false}},
-          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.2, "ref_data":"train", "shuffle":false, "edge_removal":true}}
+          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.0001, "ref_data":"train", "shuffle":false, "edge_removal":true}}
                     ],
         "batch_size":4,
         "split_seed":16}
@@ -37,16 +37,15 @@
       },
 
     "unlearners":[
-        {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
-        "parameters": {}} 
-      
-        /* {
+         {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
+        "parameters": {}},
+        {
         "class": "erasure.unlearners.GoldModel.GoldModelGraph",
         "parameters": {
           "training_set": "retain"
         }
         },
-        {"compose_idt" : "configs/snippets/u_id.json"} */
+        {"compose_idt" : "configs/snippets/u_id.json"} 
     ],
       "evaluator":{
           "class": "erasure.evaluations.manager.Evaluator",
@@ -55,6 +54,8 @@
               {"class":"erasure.evaluations.running.RunTime"},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original"}},
+              {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":false}},
+              {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original", "unlearned_graph":false}},
               {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Cora_edge.json"}}
             ]
           }

@@ -34,38 +34,45 @@ class GeometricWrapper(DatasetWrapper):
         all_y = torch.cat([data.y for data in self.data], dim=0)
         unique_y = torch.unique(all_y)
         return len(unique_y)
-    
-    
-    def revise_graph_nodes(self, nodes_subset, partitions_dict):
-        """
-        Given a list/tensor of node indices, return a new Data object containing
-        only the subgraph induced by those nodes.
-        """
+        
+        
+    def revise_graph_nodes(self, nodes_subset, partitions_dict, remove=False):
+
         nodes_subset = torch.tensor(nodes_subset, dtype=torch.long)
-        nodes_subset = nodes_subset.sort().values 
+        nodes_subset = nodes_subset.sort().values
 
-        id_map = {old_id.item(): new_id for new_id, old_id in enumerate(nodes_subset)}
-
-        graph = self.data[0]  
+        graph = self.data[0]
+        total_nodes = graph.x.size(0)
         edge_index = graph.edge_index
 
-        mask = torch.isin(edge_index[0], nodes_subset) & torch.isin(edge_index[1], nodes_subset)
-        edge_index_sub = edge_index[:, mask]
+        if remove:
+            mask = torch.ones(total_nodes, dtype=torch.bool)
+            mask[nodes_subset] = False
+            nodes_to_keep = torch.arange(total_nodes)[mask]
+        else:
+            nodes_to_keep = nodes_subset
 
-        edge_index_sub = edge_index_sub.clone()
+        nodes_to_keep = nodes_to_keep.sort().values
+        id_map = {old_id.item(): new_id for new_id, old_id in enumerate(nodes_to_keep)}
+
+        edge_mask = (
+            torch.isin(edge_index[0], nodes_to_keep) &
+            torch.isin(edge_index[1], nodes_to_keep)
+        )
+        edge_index_sub = edge_index[:, edge_mask].clone()
+
         edge_index_sub[0] = torch.tensor([id_map[idx.item()] for idx in edge_index_sub[0]])
         edge_index_sub[1] = torch.tensor([id_map[idx.item()] for idx in edge_index_sub[1]])
 
-        x_sub = graph.x[nodes_subset]
-        y_sub = graph.y[nodes_subset]
+        x_sub = graph.x[nodes_to_keep]
+        y_sub = graph.y[nodes_to_keep]
 
         data_sub = Data(x=x_sub, edge_index=edge_index_sub, y=y_sub)
 
         remapped_partitions = {}
-
         if partitions_dict is not None:
             for key, node_ids in partitions_dict.items():
-                if key=='all':
+                if key == 'all':
                     continue
                 remapped = []
                 for i in node_ids:
@@ -73,37 +80,44 @@ class GeometricWrapper(DatasetWrapper):
                         remapped.append(id_map[i])
                 remapped_partitions[key] = remapped
 
-        return GeometricWrapper([data_sub], self.preprocess),remapped_partitions
-        
+        return GeometricWrapper([data_sub], self.preprocess), remapped_partitions
 
-    def revise_graph_edges(self, edges_subset):
-        """
-        Given a list/tensor of edges indices, return a new Data object containing
-        the graph with only those edges.
-        """
 
-        graph = self.data[0]  
+
+    def revise_graph_edges(self, edges_subset, remove=False):
+
+        graph = self.data[0]
         edge_index = graph.edge_index
 
-        edges_to_keep = set(edges_subset)
+        edges_subset = set([tuple(edge) for edge in edges_subset]) 
 
         src = edge_index[0]
         dst = edge_index[1]
-        
-        mask = torch.tensor( [(s.item(), d.item()) in edges_to_keep for s, d in zip(src, dst)], dtype=torch.bool)
-            
-        new_edge_index = edge_index[:, mask]
 
+        edge_pairs = list(zip(src.tolist(), dst.tolist()))
+
+        if remove:
+            mask = torch.tensor(
+                [pair not in edges_subset for pair in edge_pairs],
+                dtype=torch.bool
+            )
+        else:
+            mask = torch.tensor(
+                [pair in edges_subset for pair in edge_pairs],
+                dtype=torch.bool
+            )
+
+        new_edge_index = edge_index[:, mask]
         new_edge_attr = graph.edge_attr[mask] if graph.edge_attr is not None else None
 
         data_sub = Data(
-                x=graph.x,
-                edge_index=new_edge_index,
-                edge_attr=new_edge_attr,
-                y=graph.y if hasattr(graph, 'y') else None
-            )
-        
-        return GeometricWrapper([data_sub], self.preprocess) 
+            x=graph.x,
+            edge_index=new_edge_index,
+            edge_attr=new_edge_attr,
+            y=graph.y if hasattr(graph, 'y') else None
+        )
+
+        return GeometricWrapper([data_sub], self.preprocess)
 
 class TorchGeometricDataSource(DataSource):
     def __init__(self, global_ctx: Global, local_ctx: Local):

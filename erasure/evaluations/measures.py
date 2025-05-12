@@ -71,6 +71,10 @@ class TorchSKLearnGraph(Measure):
         self.metric_name = self.local.config['parameters']['name']
         self.metric_params = self.local.config['parameters']['function']['parameters']
         self.metric_func = get_function(self.local.config['parameters']['function']['class'])
+        self.unlearned_graph = self.local.config['parameters']['unlearned_graph']
+        self.removal_type = self.global_ctx.removal_type
+
+        ##get removal type from global
 
     def check_configuration(self):
         super().check_configuration()
@@ -78,6 +82,8 @@ class TorchSKLearnGraph(Measure):
         self.local.config['parameters']['partition'] = self.local.config['parameters'].get('partition', 'test')  # Default partition: test
         self.local.config['parameters']['name'] = self.local.config['parameters'].get('name', self.local.config['parameters']['function']['class'])  # Default name as metric name
         self.local.config['parameters']['target'] = self.local.config['parameters'].get('target', 'unlearned')  # Default partition: test
+        self.local.config['parameters']['unlearned_graph'] = self.local.config['parameters'].get('unlearned_graph', True)
+
 
     def process(self, e: Evaluation):
         erasure_model = e.predictor
@@ -88,14 +94,28 @@ class TorchSKLearnGraph(Measure):
         self.device = erasure_model.model.device
 
         graph,labels = erasure_model.dataset.partitions['all'][0][0], erasure_model.dataset.partitions['all'][0][1]
+        num_nodes = erasure_model.dataset.partitions['all'].num_nodes
+
+        partition_mask = torch.zeros(num_nodes, dtype=torch.bool)
+        partition_mask[erasure_model.dataset.partitions[self.partition_name]] = True
+
+
+        if self.unlearned_graph and 'forget' in erasure_model.dataset.partitions.keys():
+            toremove = erasure_model.dataset.partitions['forget']
+            if self.removal_type == 'node':
+                new_graph, remapped_partitions = graph.revise_graph_nodes(toremove, erasure_model.dataset.partitions, remove=True)
+            if self.removal_type == 'edge':
+                new_graph = erasure_model.dataset.partitions['all'].revise_graph_edges(toremove, remove=True)
+                remapped_partitions = erasure_model.dataset.partitions
+
+            graph, labels = new_graph[0][0], new_graph[0][1]
+    
+
+        print("The graph is ", graph)
 
         var_labels, var_preds = [], []
 
         with torch.no_grad():
-            num_nodes = erasure_model.dataset.partitions['all'].num_nodes
-
-            partition_mask = torch.zeros(num_nodes, dtype=torch.bool)
-            partition_mask[erasure_model.dataset.partitions[self.partition_name]] = True
 
             X,edge_index= graph.x,graph.edge_index
             X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
@@ -104,6 +124,7 @@ class TorchSKLearnGraph(Measure):
 
             pred = pred[partition_mask].detach().cpu().numpy()
             labels = labels[partition_mask].cpu().numpy()
+
 
             var_labels += list(labels.squeeze()) if len(labels) > 1 \
                         else [labels.squeeze()]
@@ -114,12 +135,13 @@ class TorchSKLearnGraph(Measure):
             var_preds = np.argmax(var_preds, axis=1)
 
             value = self.metric_func(var_labels, var_preds,**self.metric_params)
-            self.info(f"{self.metric_name} of \"{self.partition_name}\" on {self.target}: {value} of {erasure_model}")
+            self.info(f"{self.metric_name} on partition: \"{self.partition_name}\", target: {self.target}, unlearned: {self.unlearned_graph}: {value} of {erasure_model}")
 
             e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target,value)
 
         return e
-    
+
+
 class PartitionInfo(Measure):
     def init(self):
         super().init()

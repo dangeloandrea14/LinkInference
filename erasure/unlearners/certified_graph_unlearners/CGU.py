@@ -6,6 +6,7 @@ import torch
 import time
 from collections import Counter
 from torch import Tensor
+import copy
 import math
 from sklearn import preprocessing
 from numpy.linalg import norm
@@ -98,7 +99,7 @@ class CGU_edge(TorchUnlearner):
         X = data.x.to(self.device)
 
 
-        X = self.preprocess_data(data.x).to(self.device)
+        #X = self.preprocess_data(data.x).to(self.device)
 
         # save a copy of X for removal
         X_scaled_copy_guo = X.clone().detach().float()
@@ -199,6 +200,7 @@ class CGU_edge(TorchUnlearner):
         num_retrain = 0 
         grad_norm_approx_sum = 0
         perm_idx = 0
+
         # start the removal process
         for i in range(len(forget)):
             while (edge_index[0, perm[perm_idx]] == edge_index[1, perm[perm_idx]]) or (not edge_mask[perm[perm_idx]]):
@@ -265,7 +267,34 @@ class CGU_edge(TorchUnlearner):
 
 
         #set the new weights
-        self.predictor.model.weights = w_approx
+        print("Starting weights:", self.predictor.model.classifier.weight)
+
+        with torch.no_grad():
+            self.predictor.model.classifier.weight.copy_(w_approx.T)
+
+        print("New weights:", self.predictor.model.classifier.weight)
+
+
+        ## Remove edges from the graph associated with the predictor
+        og_graph =  self.dataset.partitions['all'] 
+
+        if self.removal_type == 'node':
+            new_graph, remapped_partitions = og_graph.revise_graph_nodes(forget, self.dataset.partitions, remove=True)
+        if self.removal_type == 'edge':
+            new_graph = og_graph.revise_graph_edges(forget, remove=True)
+            remapped_partitions = copy.deepcopy(self.dataset.partitions)
+        
+        print("graph", new_graph.data[0].edge_index)
+
+        self.predictor.dataset.partitions = {}
+        self.predictor.dataset.partitions['all'] = new_graph
+
+        if self.removal_type == 'node':
+            self.predictor.dataset.partitions['train'] = list(range(new_graph.num_nodes))
+        if self.removal_type == 'edge':
+            self.predictor.dataset.partitions['train'] = remapped_partitions['train']
+
+        self.predictor.dataset.partitions['test'] = remapped_partitions['test']
         
         return self.predictor
 
@@ -378,7 +407,6 @@ class CGU_edge(TorchUnlearner):
         reg = lam * w.pow(2).sum() / 2
         return loss + reg
 
-
     def old_ovr_lr_loss(self,w, X, y, lam, weight=None):
         '''
         input:
@@ -395,12 +423,6 @@ class CGU_edge(TorchUnlearner):
             return -F.logsigmoid(z).mean(0).sum() + lam * w.pow(2).sum() / 2
         else:
             return -F.logsigmoid(z).mul_(weight).sum() + lam * w.pow(2).sum() / 2
-
-    def new_ovr_lr_loss(self,w, X, y, lam, weight=None):
-        logits = X @ w  # shape: (n_samples, n_classes)
-        loss = F.binary_cross_entropy_with_logits(logits, y, weight=weight, reduction='mean')
-        return loss + lam * w.pow(2).sum() / 2
-
 
 
     def batch_multiply(self,A, B, batch_size=500000):
@@ -498,9 +520,6 @@ class CGU_edge(TorchUnlearner):
             else:
                 w_best = w.clone().detach()
 
-        print("w_shape", w.shape)
-        print("w_norm", w.norm())
-        
         if w_best is None:
             raise("Error: Training procedure failed")
         return w_best
