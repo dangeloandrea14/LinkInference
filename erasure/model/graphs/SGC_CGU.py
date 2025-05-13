@@ -61,6 +61,8 @@ class SGC_CGU(nn.Module):
         self.feat_prop = FeaturePropagator(K=K, alpha=alpha,
                                      XdegNorm=XdegNorm, add_self_loops=add_self_loops)
         self.classifier = nn.Linear(in_channels, out_channels)
+        self.hidden_channels = []
+
 
     def forward(self, x, edge_index):
         x = self.feat_prop(x, edge_index)

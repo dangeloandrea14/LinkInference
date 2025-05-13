@@ -11,6 +11,8 @@ class SGC(nn.Module):
         self.alpha = alpha
         self.add_self_loops = add_self_loops
         self.linear = nn.Linear(in_channels, out_channels, bias=False)
+        self.hidden_channels = []
+
 
     def forward(self, x, edge_index):
         # Build propagation smatrix: P = D^{-alpha} A D^{-(1-alpha)}

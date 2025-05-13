@@ -34,8 +34,6 @@ class CEU(TorchUnlearner):
         """
 
         super().init()
-
-        self.hidden = self.local.config['parameters']['hidden']
         self.cg_approx = self.local.config['parameters']['cg_approx']
         self.transductive_edge = self.local.config['parameters']['transductive_edge']
         self.lam = self.local.config['parameters']['lam']
@@ -45,7 +43,6 @@ class CEU(TorchUnlearner):
     def check_configuration(self):
         super().check_configuration()
 
-        self.local.config['parameters']['hidden'] = self.local.config['parameters'].get("hidden", [])
         self.local.config['parameters']['cg_approx'] = self.local.config['parameters'].get("cg_approx", True)
         self.local.config['parameters']['transductive_edge'] = self.local.config['parameters'].get("transductive_edge", True)
         self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam", 1e-4) #same as CGU
@@ -62,6 +59,7 @@ class CEU(TorchUnlearner):
 
         self.info(f'Starting CEU (Certified Edge Unlearning)')
 
+        self.hidden = self.predictor.model.hidden_channels
 
         ## ERASURE: get train and test masks
         num_nodes = self.dataset.partitions['all'].num_nodes
@@ -235,8 +233,11 @@ class CEU(TorchUnlearner):
         # return inverse_hvps, loss, status
 
     def inverse_hvp_cg(self,data, model, edge_index, vs, damping, device, use_torch=True):
-        x_train = torch.tensor(data.train_set.nodes, device=device)
-        y_train = torch.tensor(data.train_set.labels, device=device)
+        x_train = torch.tensor(self.dataset.partitions['train'], device=device)
+        y_train = torch.tensor( self.labels[self.dataset.partitions['train']], device=device)
+
+        #x_train = torch.tensor(data.train_set.nodes, device=device)
+        #y_train = torch.tensor(data.train_set.labels, device=device)
         inverse_hvp = []
         status = []
         cg_grad = []
@@ -356,8 +357,8 @@ class CEU(TorchUnlearner):
 
         
     def inverse_hvp_cg_sep(self, data, model, edge_index, vs, damping, device, use_torch=True):
-        x_train = torch.tensor(data.train_set.nodes, device=device)
-        y_train = torch.tensor(data.train_set.labels, device=device)
+        x_train = torch.tensor(self.dataset.partitions['train'], device=device)
+        y_train = torch.tensor( self.labels[self.dataset.partitions['train']], device=device)
         inverse_hvp = []
         status = []
         cg_grad = []
@@ -480,10 +481,10 @@ class CEU(TorchUnlearner):
 
         x = self.to_list(x, sizes, device)
         if use_torch:
-            _hvp = self.hessian_vector_product(model, edge_index, x_train, y_train, x, device, p_idx)
+            _hvp,_ = self.hessian_vector_product(model, edge_index, x_train, y_train, x, device, p_idx)
         else:
             model.eval()
-            y_hat = model(x_train, edge_index)
+            y_hat = model(self.x, edge_index)[self.dataset.partitions['train']]
             loss = model.loss(y_hat, y_train)
             params = [p for p in model.parameters() if p.requires_grad]
             if p_idx is not None:
@@ -509,9 +510,9 @@ class CEU(TorchUnlearner):
         if p_idx is not None:
             parameters = parameters[p_idx:p_idx+1]
 
-        y_hat = model(x, edge_index)
+        y_hat = model(self.x, edge_index)[self.dataset.partitions['train']]
         # train_loss = model.loss(y_hat, y)
-        train_loss = model.loss_sum(y_hat, y)
+        train_loss = self.loss_sum(y_hat, y)
 
         _, train_loss = self._as_tuple(train_loss, "outputs of the user-provided function", "hvp")
 

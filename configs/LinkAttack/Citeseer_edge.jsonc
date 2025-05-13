@@ -18,11 +18,11 @@
     "predictor": {
         "class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "parameters": {
-          "epochs": 20,
+          "epochs": 50,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
-              "lr": 0.5            }
+              "lr": 0.001            }
           },
           "loss_fn": {
             "class": "torch.nn.CrossEntropyLoss",
@@ -31,7 +31,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.SGC.SGC","parameters": { "in_channels":3703,  "out_channels":6 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":3703, "hidden_channels":[100], "out_channels":6 }
           }
         }
       },

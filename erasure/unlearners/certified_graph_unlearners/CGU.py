@@ -265,14 +265,8 @@ class CGU_edge(TorchUnlearner):
                 
                 print('Val acc = %.4f, Test acc = %.4f' % (acc_removal[0, i, 0], acc_removal[1, i, 0]))
 
-
-        #set the new weights
-        print("Starting weights:", self.predictor.model.classifier.weight)
-
         with torch.no_grad():
             self.predictor.model.classifier.weight.copy_(w_approx.T)
-
-        print("New weights:", self.predictor.model.classifier.weight)
 
 
         ## Remove edges from the graph associated with the predictor
@@ -284,8 +278,6 @@ class CGU_edge(TorchUnlearner):
             new_graph = og_graph.revise_graph_edges(forget, remove=True)
             remapped_partitions = copy.deepcopy(self.dataset.partitions)
         
-        print("graph", new_graph.data[0].edge_index)
-
         self.predictor.dataset.partitions = {}
         self.predictor.dataset.partitions['all'] = new_graph
 
