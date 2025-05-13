@@ -10,12 +10,19 @@ class SGC(nn.Module):
         self.K = K
         self.alpha = alpha
         self.add_self_loops = add_self_loops
-        self.linear = nn.Linear(in_channels, out_channels, bias=True)
+        self.linear = nn.Linear(in_channels, out_channels, bias=False)
 
     def forward(self, x, edge_index):
-        # Build propagation matrix: P = D^{-alpha} A D^{-(1-alpha)}
+        # Build propagation smatrix: P = D^{-alpha} A D^{-(1-alpha)}
         if self.add_self_loops:
             edge_index, _ = add_self_loops(edge_index, num_nodes=x.size(0))
+
+        for _ in range(self.K):
+            x = self.propagate(edge_index, x=x)
+
+        return self.linear(x)
+
+    def propagate(self, edge_index, x):
 
         row, col = edge_index
         deg = degree(col, x.size(0), dtype=x.dtype)
@@ -25,13 +32,6 @@ class SGC(nn.Module):
         deg_inv_right[deg_inv_right == float('inf')] = 0
 
         edge_weight = deg_inv_left[row] * deg_inv_right[col]
-
-        for _ in range(self.K):
-            x = self.propagate(edge_index, x=x, edge_weight=edge_weight)
-
-        return self.linear(x)
-
-    def propagate(self, edge_index, x, edge_weight):
         row, col = edge_index
         out = torch.zeros_like(x)
         out.index_add_(0, row, edge_weight.view(-1, 1) * x[col])

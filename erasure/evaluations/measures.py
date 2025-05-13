@@ -91,6 +91,8 @@ class TorchSKLearnGraph(Measure):
         if self.target == 'unlearned':
             erasure_model = e.unlearned_model
 
+        print(erasure_model)
+
         self.device = erasure_model.model.device
 
         graph,labels = erasure_model.dataset.partitions['all'][0][0], erasure_model.dataset.partitions['all'][0][1]
@@ -110,8 +112,6 @@ class TorchSKLearnGraph(Measure):
 
             graph, labels = new_graph[0][0], new_graph[0][1]
     
-
-        print("The graph is ", graph)
 
         var_labels, var_preds = [], []
 
@@ -135,9 +135,10 @@ class TorchSKLearnGraph(Measure):
             var_preds = np.argmax(var_preds, axis=1)
 
             value = self.metric_func(var_labels, var_preds,**self.metric_params)
-            self.info(f"{self.metric_name} on partition: \"{self.partition_name}\", target: {self.target}, unlearned: {self.unlearned_graph}: {value} of {erasure_model}")
+            self.info(f"{self.metric_name} on partition: \"{self.partition_name}\", target model: {self.target}, unlearned graph: {self.unlearned_graph}: {value} of {erasure_model}")
 
             e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target,value)
+
 
         return e
 
