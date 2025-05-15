@@ -65,7 +65,7 @@ class TorchGraphModel(Trainable):
         num_nodes = self.dataset.partitions['all'].num_nodes
 
         train_mask = torch.zeros(num_nodes, dtype=torch.bool)
-        train_mask[self.dataset.partitions['train']] = True
+        train_mask[self.dataset.partitions[self.training_set]] = True
 
         test_mask = torch.zeros(num_nodes, dtype=torch.bool)
         test_mask[self.dataset.partitions['test']] = True

@@ -37,8 +37,26 @@
       },
 
     "unlearners":[
-      {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}}
-      /* {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
+       /*  {
+          "class": "erasure.unlearners.graph_unlearners.AdvancedNegGrad.AdvancedNegGrad",
+          "parameters": {
+              "epochs": 1, 
+              "ref_data_retain": "retain", 
+              "ref_data_forget": "forget",
+              "optimizer": {"class": "torch.optim.SGD","parameters": {"lr": 0.0001}}
+          }
+      }, */
+      {
+          "class": "erasure.unlearners.graph_unlearners.BadTeaching.BadTeaching",
+          "parameters": {
+              "epochs": 1, 
+              "ref_data_retain": "retain", 
+              "ref_data_forget": "forget",
+              "optimizer": {"class": "torch.optim.SGD","parameters": {"lr": 0.0001}}
+          }
+      } 
+      /*{"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
+       {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
         "parameters": {}}, 
       {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}}, 
         {
