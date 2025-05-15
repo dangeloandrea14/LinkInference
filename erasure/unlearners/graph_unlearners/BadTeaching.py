@@ -1,19 +1,14 @@
-from erasure.unlearners.torchunlearner import TorchUnlearner
+from erasure.unlearners.graph_unlearners.GraphUnlearner import GraphUnlearner
 
 import torch
 import torch.nn.functional as F
 
 import numpy as np
 import copy
-
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
-from torch_geometric.loader import DataLoader as GeometricDataLoader
-from torch_geometric.data import Data
 from erasure.utils.config.local_ctx import Local
 from erasure.core.factory_base import get_instance_kvargs
 
-class BadTeaching(TorchUnlearner):
+class BadTeaching(GraphUnlearner):
     def init(self):
         """
         Initializes the Bad Teaching class with global and local contexts.
@@ -27,7 +22,6 @@ class BadTeaching(TorchUnlearner):
         self.transform = self.local.config['parameters']['transform']
         self.batch_size = self.dataset.batch_size
         self.KL_temperature = self.local.config['parameters']['KL_temperature']
-        self.hops = len(self.predictor.model.hidden_channels) + 1
         self.predictor.optimizer = get_instance_kvargs(self.local_config['parameters']['optimizer']['class'],
                                       {'params':self.predictor.model.parameters(), **self.local_config['parameters']['optimizer']['parameters']})
 
@@ -90,11 +84,6 @@ class BadTeaching(TorchUnlearner):
 
         og_graph =  self.dataset.partitions['all'] 
 
-        self.x = og_graph[0][0].x
-        self.edge_index = og_graph[0][0].edge_index
-        self.labels = self.dataset.partitions['all'][0][1]
-        self.labels = torch.tensor(self.labels)
-
         self.retain_set = self.dataset.partitions[self.ref_data_retain]
         self.forget_set = self.dataset.partitions[self.ref_data_forget]
 
@@ -125,27 +114,6 @@ class BadTeaching(TorchUnlearner):
             
         return self.predictor
 
-    def infected_nodes(self, edges_to_forget, hops):
-        import networkx as nx
-
-        G = nx.Graph()
-        all_edges = self.dataset.partitions['all'][0][0].edge_index.t().tolist()  
-        G.add_edges_from(all_edges)
-
-        edge_nodes = set()
-        for u, v in edges_to_forget:
-            edge_nodes.add(u)
-            edge_nodes.add(v)
-
-        infected = set()
-        for node in edge_nodes:
-            if node in G:
-                neighbors = nx.single_source_shortest_path_length(G, node, cutoff=hops).keys()
-                infected.update(neighbors)
-
-        return list(infected)
-    
-
     def check_configuration(self):
         super().check_configuration()
 
@@ -165,36 +133,3 @@ class BadTeaching(TorchUnlearner):
             self.local.config['parameters']['predictor']['parameters']['training_set'] = self.local.config['parameters']['predictor']['parameters'].get('training_set',self.local.config['parameters']['ref_data_retain'])
 
         self.local.config['parameters']['bad_teacher']['parameters']['cached'] = self.local.config['parameters']['bad_teacher']['parameters'].get('cached',False)
-
-class UnLearningData(Dataset):
-    def __init__(self, forget_data, retain_data, transform):
-        super().__init__()
-        self.forget_data = forget_data
-        self.retain_data = retain_data
-        self.transform = transform
-        self.forget_len = len(forget_data)
-        self.retain_len = len(retain_data)
-
-    def __len__(self):
-        return self.retain_len + self.forget_len
-    
-    def __getitem__(self, index):
-        if(index < self.forget_len):
-            if isinstance(self.forget_data[index], dict):
-                x = self.forget_data[index].values()
-                x = self.transform(list(x)) if self.transform else list(x)
-                x = torch.tensor(x)
-            else:
-                x = self.transform(self.forget_data[index][0]) if self.transform else self.forget_data[index][0]
-            y = 1
-            return x,y
-        else:
-            if isinstance(self.retain_data[index - self.forget_len], dict):
-                x = self.retain_data[index - self.forget_len].values()
-                x = self.transform(list(x)) if self.transform else list(x)
-                print(x)
-                x = torch.tensor(x)
-            else:
-                x = self.transform(self.retain_data[index - self.forget_len][0]) if self.transform else self.retain_data[index - self.forget_len][0]
-            y = 0
-            return x,y

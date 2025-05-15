@@ -1,4 +1,4 @@
-from erasure.unlearners.torchunlearner import TorchUnlearner
+from erasure.unlearners.graph_unlearners.GraphUnlearner import GraphUnlearner
 from fractions import Fraction
 import torch.optim as optim
 from erasure.utils.config.local_ctx import Local
@@ -7,7 +7,7 @@ import torch
 
 from erasure.core.factory_base import get_instance_kvargs
 
-class AdvancedNegGrad(TorchUnlearner):
+class AdvancedNegGrad(GraphUnlearner):
     def init(self):
         """
         Initializes the AdvancedNegGrad class with global and local contexts.
@@ -19,8 +19,6 @@ class AdvancedNegGrad(TorchUnlearner):
         self.ref_data_retain = self.local.config['parameters']['ref_data_retain']  
         self.ref_data_forget = self.local.config['parameters']['ref_data_forget'] 
         self.training_set = self.local.config['parameters']['training_set']
-        self.removal_type = self.global_ctx.removal_type
-        self.hops = len(self.predictor.model.hidden_channels) + 1
         self.predictor.optimizer = get_instance_kvargs(self.local_config['parameters']['optimizer']['class'],
                                       {'params':self.predictor.model.parameters(), **self.local_config['parameters']['optimizer']['parameters']})
 
@@ -33,16 +31,6 @@ class AdvancedNegGrad(TorchUnlearner):
         """
 
         self.info(f'Starting AdvancedNegGrad with {self.epochs} epochs')      
-
-        og_graph =  self.dataset.partitions['all'] 
-        gold_training_set = self.local.config['parameters']['training_set']
-        gold_training_set = self.dataset.partitions[gold_training_set]
-
-
-        self.x = og_graph[0][0].x
-        self.edge_index = og_graph[0][0].edge_index
-        self.labels = self.dataset.partitions['all'][0][1]
-        self.labels = torch.tensor(self.labels)
 
 
         retain_set = self.dataset.partitions[self.ref_data_retain]
@@ -82,25 +70,6 @@ class AdvancedNegGrad(TorchUnlearner):
         
         return self.predictor
     
-    def infected_nodes(self, edges_to_forget, hops):
-        import networkx as nx
-
-        G = nx.Graph()
-        all_edges = self.dataset.partitions['all'][0][0].edge_index.t().tolist()  
-        G.add_edges_from(all_edges)
-
-        edge_nodes = set()
-        for u, v in edges_to_forget:
-            edge_nodes.add(u)
-            edge_nodes.add(v)
-
-        infected = set()
-        for node in edge_nodes:
-            if node in G:
-                neighbors = nx.single_source_shortest_path_length(G, node, cutoff=hops).keys()
-                infected.update(neighbors)
-
-        return list(infected)
 
     def check_configuration(self):
         super().check_configuration()
