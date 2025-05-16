@@ -37,6 +37,33 @@
       },
 
     "unlearners":[
+            {
+        "class": "erasure.unlearners.graph_unlearners.FisherForgetting.FisherForgetting",
+        "parameters": {
+            "ref_data":"retain",
+            "alpha": 1e-7
+            }
+        }/*
+        {
+        "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
+        "parameters": {
+            "epochs": 1, 
+            "ref_data_retain": "retain", 
+            "ref_data_forget": "forget",
+            "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.01}}
+        }
+      }
+
+            {
+        "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
+        "parameters": {
+            "last_trainable_layers": 3,
+            "epochs": 20, 
+            "ref_data":"retain",
+            "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
+        }
+      }
+      
       {"class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning", "parameters":{
             "epochs": 1, 
             "ref_data":"retain",
@@ -68,7 +95,7 @@
               "optimizer": {"class": "torch.optim.SGD","parameters": {"lr": 0.0001}}
           }
       } 
-      /*{"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
+      {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
        {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
         "parameters": {}}, 
       {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}}, 
