@@ -22,10 +22,9 @@ class Evaluator(Configurable):
             try:
                 e = measure.process(e)
             except Exception as err:
-                self.global_ctx.logger.warning(f"Error occurred during execution of evaluation {measure}")
-                self.global_ctx.logger.warning(repr(err))
-                if isinstance(measure, UnlearnRunner):
-                    traceback.print_exc()
+                exc_type, exc_value, exc_tb = sys.exc_info()
+                traceback_details = traceback.format_exception(exc_type, exc_value, exc_tb)
+                print("".join(traceback_details))
 
         return e
 

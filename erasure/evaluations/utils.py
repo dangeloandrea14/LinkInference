@@ -26,6 +26,8 @@ def compute_accuracy_graph(graph,model,subset):
     device = model.device
     x = graph[0][0].x.to(device).float()
     edge_index = graph[0][0].edge_index.to(device).long()
+
+    subset = torch.tensor(subset, dtype=torch.long)
     labels = graph[0][1][subset].to(device).long()
     model = model.to(device).float()
     
@@ -90,15 +92,16 @@ def compute_relearn_time_graph(graph, model, subset, device, max_accuracy=0.8, m
 
     x = graph[0][0].x.to(device).float()
     edge_index = graph[0][0].edge_index.to(device).long()
+    subset = torch.tensor(subset, dtype=torch.long)
     labels = graph[0][1][subset].to(device).long()
 
     model.model = model.model.to(device).float()
 
-    while (curr_accuracy < max_accuracy  # reached the target accuracy
-    and epochs < max_epochs):  # fine-tune for a maximum of epochs
+    while (curr_accuracy < max_accuracy  
+    and epochs < max_epochs):  
         losses, preds, labels_list = [], [], []
         model.model.train()
-
+        
         model.optimizer.zero_grad()
         pred = model.model(x, edge_index)[subset]
         loss = model.loss_fn(pred,labels)
@@ -106,12 +109,12 @@ def compute_relearn_time_graph(graph, model, subset, device, max_accuracy=0.8, m
         model.optimizer.step()
 
         losses.append(loss.to('cpu').detach().numpy())
-        if labels.dim() == 0:  # If labels is a scalar
-            labels_list += [labels.item()]  # Add scalar as a single element list
+        if labels.dim() == 0:  
+            labels_list += [labels.item()]  
         else:
             labels_list += list(labels.squeeze().long().detach().to('cpu').numpy())
-        if pred.dim() == 0:  # If pred is a scalar
-            preds += [pred.item()]  # Add scalar as a single element list
+        if pred.dim() == 0: 
+            preds += [pred.item()]  
         else:
             preds += list(pred.squeeze().detach().to('cpu').numpy())
 

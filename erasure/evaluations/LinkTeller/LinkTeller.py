@@ -52,14 +52,14 @@ class LinkTeller(GraphMeasure):
         norm_nonexist = []
 
         with torch.no_grad():
-            for u, v in tqdm(self.exist_edges):
+            for u, v in self.exist_edges:
 
                 grad = self.get_gradient_eps(u, v) if self.approx else self.get_gradient(u, v)
                 norm_exist.append(grad.norm().item())
 
 
             i = 0
-            for u, v in tqdm(self.nonexist_edges):
+            for u, v in self.nonexist_edges:
 
                 i += 1 
 
@@ -103,7 +103,7 @@ class LinkTeller(GraphMeasure):
 
         with torch.no_grad():
 
-            for i in tqdm(range(self.args.n_test)):
+            for i in range(self.args.n_test):
                 u = self.test_nodes[i]
                 grad_mat = self.get_gradient_eps_mat(u)
 

@@ -17,10 +17,10 @@ class GraphUnlearner(TorchUnlearner):
         self.removal_type = self.global_ctx.removal_type
 
         og_graph =  self.dataset.partitions['all'] 
-
-        self.x = og_graph[0][0].x
-        self.edge_index = og_graph[0][0].edge_index
-        self.labels = og_graph[0][1]
+        
+        self.x = og_graph[0][0].x.to(self.device).float()
+        self.edge_index = og_graph[0][0].edge_index.to(self.device).long()
+        self.labels = og_graph[0][1].to(self.device).long()
         self.labels = torch.tensor(self.labels)
         
 
