@@ -20,7 +20,7 @@ class GraphUnlearner(TorchUnlearner):
 
         self.x = og_graph[0][0].x
         self.edge_index = og_graph[0][0].edge_index
-        self.labels = self.dataset.partitions['all'][0][1]
+        self.labels = og_graph[0][1]
         self.labels = torch.tensor(self.labels)
         
 

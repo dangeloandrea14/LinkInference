@@ -9,6 +9,14 @@ from erasure.core.factory_base import get_instance_kvargs
 from torch_geometric.transforms import Pad
 from torch_geometric.data import Data
 
+from torch.serialization import add_safe_globals
+from torch_geometric.data import Data, EdgeAttr, TensorAttr
+from torch_geometric.data.data import DataEdgeAttr
+from torch_geometric.data.storage import GlobalStorage
+
+# Allowlist required PyG classes
+add_safe_globals([Data, EdgeAttr])
+
 class GeometricWrapper(DatasetWrapper):
     def __init__(self, data, preprocess):
         super().__init__(data,preprocess)
@@ -122,7 +130,10 @@ class GeometricWrapper(DatasetWrapper):
 class TorchGeometricDataSource(DataSource):
     def __init__(self, global_ctx: Global, local_ctx: Local):
         super().__init__(global_ctx, local_ctx)
+
         self.dataset = None
+
+        add_safe_globals([Data, EdgeAttr, TensorAttr, DataEdgeAttr, GlobalStorage])
     
         self.dataset = get_instance_kvargs(self.local_config['parameters']['datasource']['class'],
                         self.local_config['parameters']['datasource']['parameters'])

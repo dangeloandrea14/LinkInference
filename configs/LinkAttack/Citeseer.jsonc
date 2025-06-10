@@ -30,7 +30,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GIN.GIN","parameters": { "in_channels":3703, "hidden_channels":64, "out_channels":6 }
+            "class": "erasure.model.graphs.GIN.GIN","parameters": { "in_channels":3703, "hidden_channels":[64], "out_channels":6 }
           }
         }
       },

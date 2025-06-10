@@ -6,9 +6,9 @@ import torch
 import numpy as np
 
 from erasure.core.factory_base import get_function
-from erasure.core.measure import Measure
+from erasure.core.measure import Measure, GraphMeasure
 from erasure.evaluations.evaluation import Evaluation
-from erasure.evaluations.utils import compute_accuracy, compute_relearn_time
+from erasure.evaluations.utils import compute_accuracy, compute_relearn_time, compute_accuracy_graph, compute_relearn_time_graph
 from erasure.utils.cfg_utils import init_dflts_to_of
 from erasure.utils.config.global_ctx import Global
 from erasure.utils.config.local_ctx import Local
@@ -62,7 +62,7 @@ class TorchSKLearn(Measure):
 
         return e
 
-class TorchSKLearnGraph(Measure):
+class TorchSKLearnGraph(GraphMeasure):
     def init(self):
         super().init()
 
@@ -90,8 +90,6 @@ class TorchSKLearnGraph(Measure):
 
         if self.target == 'unlearned':
             erasure_model = e.unlearned_model
-
-        print(erasure_model)
 
         self.device = erasure_model.model.device
 
@@ -408,3 +406,140 @@ class AIN(Measure):
 
         return e
 
+
+class AINGraph(GraphMeasure):
+    """ Anamnesis Index (AIN)
+        https://doi.org/10.1109/TIFS.2023.3265506
+    """
+
+    def init(self):
+        super().init()
+        self.alpha = self.params["alpha"]
+        self.gold_cfg = self.params["gold_model"]
+        self.forget_part = self.params["forget_part"]
+
+        # Gold Model creation
+        '''dataset = self.global_ctx.factory.get_object(Local(self.global_ctx.config.data))
+        current = Local(self.global_ctx.config.predictor)
+        current.dataset = dataset
+        predictor = self.global_ctx.factory.get_object(current)'''
+
+        current = Local(self.gold_cfg)
+        '''current.dataset = dataset
+        current.predictor = predictor'''
+        gold_model_unlearner = self.global_ctx.factory.get_object(current)
+        self.gold_model = gold_model_unlearner.unlearn()
+        self.removal_type = self.global_ctx.removal_type
+        
+
+    def check_configuration(self):
+        self.params["alpha"] = self.params.get("alpha", 0.05)
+        self.params["forget_part"] = self.params.get("forget_part", "forget")
+
+    def process(self, e: Evaluation):
+
+        self.hops = len(e.predictor.model.hidden_channels)
+
+        graph = e.unlearner.dataset.partitions['all']
+
+        self.forget_part = e.unlearner.dataset.partitions[self.forget_part]
+
+        if self.removal_type == 'edge':
+            self.forget_part = self.infected_nodes(e.unlearner, self.forget_part, self.hops)
+
+        # orginal accuracy on forget
+        original_forget_accuracy = compute_accuracy_graph(graph, e.predictor.model, self.forget_part)
+
+        max_accuracy = (1-self.alpha) * original_forget_accuracy
+
+
+        # relearn time of Unlearned model on forget
+        rt_unlearned = compute_relearn_time_graph(graph, e.unlearned_model, self.forget_part, max_accuracy=max_accuracy)
+
+        # relearn time of Gold model on forget
+        rt_gold = compute_relearn_time_graph(graph, deepcopy(self.gold_model), self.forget_part, max_accuracy=max_accuracy)
+
+        epsilon = 0.01
+        ain = (rt_unlearned + epsilon) / (rt_gold + epsilon)
+        self.info(f'AIN: {ain}')
+        e.add_value('AIN', ain)
+
+        return e
+
+    
+class RelearnTimeGraph(GraphMeasure):
+    """ Time (epochs) needed to acquire the original accuracy"""
+
+    def init(self):
+        super().init()
+        self.forget_part = self.params["forget_part"]
+        self.removal_type = self.global_ctx.removal_type
+
+    def check_configuration(self):
+        self.params["forget_part"] = self.params.get("forget_part", "forget")
+
+    def process(self, e: Evaluation):
+        # evaluate the original model accuracy on Forget set
+
+
+        self.hops = len(e.predictor.model.hidden_channels)
+
+        graph = e.unlearner.dataset.partitions['all']
+
+        self.forget_part = e.unlearner.dataset.partitions[self.forget_part]
+
+        if self.removal_type == 'edge':
+            self.forget_part = self.infected_nodes(e.unlearner, self.forget_part, self.hops)
+
+        original_accuracy = compute_accuracy_graph(graph, e.predictor.model, self.forget_part)
+
+        # relearn over the Forget set
+        relearn_time = compute_relearn_time_graph(graph, e.unlearned_model, self.forget_part, original_accuracy)
+
+        self.info(f'Relearning Time: {relearn_time} epochs')
+        e.add_value('RelearnTime', relearn_time)
+
+        return e
+    
+
+class AUSGraph(GraphMeasure):
+    """ Adaptive Unlearning Score
+        https://doi.org/10.48550/arXiv.2312.02052
+    """
+
+    def init(self):
+        super().init()
+        self.forget_part = self.params["forget_part"]
+        self.test_part = self.params["test_part"]
+        self.removal_type = self.global_ctx.removal_type
+
+    def check_configuration(self):
+        self.params["forget_part"] = self.params.get("forget_part", "forget")
+        self.params["test_part"] = self.params.get("test_part", "test")
+
+    def process(self, e: Evaluation):
+        or_model = e.predictor
+        ul_model = e.unlearned_model
+
+        self.hops = len(e.predictor.model.hidden_channels)
+
+        graph = e.unlearner.dataset.partitions['all']
+
+        self.forget_part = e.unlearner.dataset.partitions[self.forget_part]
+        self.test_part = e.unlearner.dataset.partitions[self.test_part]
+
+        if self.removal_type == 'edge':
+            self.forget_part = self.infected_nodes(e.unlearner, self.forget_part, self.hops)
+
+        or_test_accuracy = compute_accuracy_graph(graph, or_model.model, self.test_part)
+        ul_test_accuracy = compute_accuracy_graph(graph, ul_model.model, self.test_part)
+        ul_forget_accuracy = compute_accuracy_graph(graph, ul_model.model, self.forget_part)
+
+        aus = (1 - (or_test_accuracy - ul_test_accuracy)) / (1 + abs(ul_test_accuracy - ul_forget_accuracy))
+
+        self.info(f"Adaptive Unlearning Score: {aus}")
+        e.add_value("AUS", aus)
+
+        return e
+    
+  
