@@ -7,15 +7,7 @@ import numpy as np
 import random
 import tracemalloc
 import torch
-from torch.serialization import add_safe_globals
 from torch_geometric.data import Data, EdgeAttr
-
-# Trust PyG dataset classes globally
-add_safe_globals([Data, EdgeAttr])
-#from erasure.utils.config.global_ctx import set_seed 
-
-#set_seed(1)
-
 
 from erasure.utils.config.local_ctx import Local
 from erasure.utils.config.global_ctx import Global, bcolors 

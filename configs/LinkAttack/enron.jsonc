@@ -1,11 +1,11 @@
 {
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
-        "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "ogb.nodeproppred.PygNodePropPredDataset", "parameters":{"root":"resources/data","name":"ogbn-arxiv"},
+        "DataSource": { "class":"erasure.data.data_sources.EdgeFileDataSource.EdgeFileDataSource", 
+                        "parameters": {"path":"erasure/data/data_sources/sources/email-Enron.txt", "name":"Enron email dataset",
                         "preprocess":[
                           ]}
-                    }}, 
+                    }, 
         "partitions":  [  
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
@@ -18,7 +18,7 @@
     "predictor": {
         "class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "parameters": {
-          "epochs": 200,
+          "epochs": 50,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
@@ -31,7 +31,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":128, "hidden_channels":[100], "out_channels":40 }
+            "class": "erasure.model.graphs.GAT.GAT","parameters": { "in_channels":3703, "hidden_channels":[100], "out_channels":6 }
           }
         }
       },
@@ -47,8 +47,8 @@
                         "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 1e-06}},
                         "sample_tipe": "text"
                     }
-                },
-            {
+                }
+            /*{
         "class": "erasure.unlearners.graph_unlearners.SelectiveSynapticDampening.SelectiveSynapticDampening",
         "parameters": {
             "ref_data_train": "train", 
@@ -57,8 +57,8 @@
             "selection_weighting": 20,
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.01}}
           }
-      },
-            {
+      }
+        /*    {
         "class": "erasure.unlearners.graph_unlearners.Scrub.Scrub",
         "parameters": {
             "epochs": 1, 
@@ -67,7 +67,7 @@
             "T": 4.0,
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.0001}}
         }
-      },
+      }
 
           {
         "class": "erasure.unlearners.composite.Cascade",
@@ -99,15 +99,15 @@
               }
             ]
         }
-      },
+      }*/
       
-            {
+            /*{
         "class": "erasure.unlearners.graph_unlearners.FisherForgetting.FisherForgetting",
         "parameters": {
             "ref_data":"retain",
             "alpha": 1e-7
             }
-        },
+        }
         {
         "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
         "parameters": {
@@ -116,7 +116,7 @@
             "ref_data_forget": "forget",
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.01}}
         }
-      },
+      }
 
             {
         "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
@@ -126,7 +126,7 @@
             "ref_data":"retain",
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
         }
-      },
+      }
       
       {"class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning", "parameters":{
             "epochs": 1, 
@@ -158,7 +158,7 @@
               "ref_data_forget": "forget",
               "optimizer": {"class": "torch.optim.SGD","parameters": {"lr": 0.0001}}
           }
-      } ,
+      } 
       {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
        {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
         "parameters": {}}, 
@@ -169,7 +169,7 @@
           "training_set": "retain"
         }
         },
-        {"compose_idt" : "configs/snippets/u_id.json"} 
+        {"compose_idt" : "configs/snippets/u_id.json"} */
     ],
       "evaluator":{
           "class": "erasure.evaluations.manager.Evaluator",
@@ -204,14 +204,14 @@
                 }
               },
 
-              {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
+              /*{"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":false}},
-              {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original", "unlearned_graph":false}},
+              {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original", "unlearned_graph":false}},*/
               {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"unlearn"}},
               {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"original"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/arxiv_test_complete.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Citeseer_edge_test.json"}}
             ]
           }
         },

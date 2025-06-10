@@ -417,6 +417,7 @@ class AINGraph(GraphMeasure):
         self.alpha = self.params["alpha"]
         self.gold_cfg = self.params["gold_model"]
         self.forget_part = self.params["forget_part"]
+       
 
         # Gold Model creation
         '''dataset = self.global_ctx.factory.get_object(Local(self.global_ctx.config.data))
@@ -430,6 +431,7 @@ class AINGraph(GraphMeasure):
         gold_model_unlearner = self.global_ctx.factory.get_object(current)
         self.gold_model = gold_model_unlearner.unlearn()
         self.removal_type = self.global_ctx.removal_type
+        self.device = self.gold_model.device
         
 
     def check_configuration(self):
@@ -453,11 +455,12 @@ class AINGraph(GraphMeasure):
         max_accuracy = (1-self.alpha) * original_forget_accuracy
 
 
+
         # relearn time of Unlearned model on forget
-        rt_unlearned = compute_relearn_time_graph(graph, e.unlearned_model, self.forget_part, max_accuracy=max_accuracy)
+        rt_unlearned = compute_relearn_time_graph(graph, e.unlearned_model, self.forget_part, self.device, max_accuracy=max_accuracy)
 
         # relearn time of Gold model on forget
-        rt_gold = compute_relearn_time_graph(graph, deepcopy(self.gold_model), self.forget_part, max_accuracy=max_accuracy)
+        rt_gold = compute_relearn_time_graph(graph, deepcopy(self.gold_model), self.forget_part, self.device, max_accuracy=max_accuracy)
 
         epsilon = 0.01
         ain = (rt_unlearned + epsilon) / (rt_gold + epsilon)
@@ -481,10 +484,11 @@ class RelearnTimeGraph(GraphMeasure):
     def process(self, e: Evaluation):
         # evaluate the original model accuracy on Forget set
 
-
         self.hops = len(e.predictor.model.hidden_channels)
 
         graph = e.unlearner.dataset.partitions['all']
+
+        self.device = e.unlearner.device
 
         self.forget_part = e.unlearner.dataset.partitions[self.forget_part]
 

@@ -8,11 +8,12 @@ import numpy as np
 from erasure.core.factory_base import get_instance_kvargs
 from torch_geometric.transforms import Pad
 from torch_geometric.data import Data
-
-from torch.serialization import add_safe_globals
+import os
 from torch_geometric.data import Data, EdgeAttr, TensorAttr
-from torch_geometric.data.data import DataEdgeAttr, DataTensorAttr
+from torch_geometric.data.data import DataEdgeAttr
 from torch_geometric.data.storage import GlobalStorage
+
+
 
 class GeometricWrapper(DatasetWrapper):
     def __init__(self, data, preprocess):
@@ -124,38 +125,40 @@ class GeometricWrapper(DatasetWrapper):
 
         return GeometricWrapper([data_sub], self.preprocess)
 
-class TorchGeometricDataSource(DataSource):
+class EdgeFileDataSource(DataSource):
     def __init__(self, global_ctx: Global, local_ctx: Local):
         super().__init__(global_ctx, local_ctx)
-
-        self.dataset = None
-
-        add_safe_globals([Data, EdgeAttr, TensorAttr, DataEdgeAttr, GlobalStorage, DataTensorAttr])
-    
-        self.dataset = get_instance_kvargs(self.local_config['parameters']['datasource']['class'],
-                        self.local_config['parameters']['datasource']['parameters'])
         
-        self.name = self.local_config['parameters']['datasource']['parameters']['name']
+        self.path = self.local_config['parameters']['path']
+        self.name = self.local_config['parameters']['name']
 
 
     def get_name(self):
         return self.name
-
+    
+    def load_edge_list(self,path):
+        edges = []
+        with open(path, 'r') as f:
+            for line in f:
+                if line.startswith("#") or line.strip() == "":
+                    continue
+                src, dst = map(int, line.strip().split())
+                edges.append((src, dst))
+        return torch.tensor(edges, dtype=torch.long).t().contiguous()
 
     def create_data(self):
 
-        #Remove empty graphs
-        filtered_data_list = [data for data in self.dataset if data.x is not None and data.x.shape[0] > 0]
-        filtered_dataset = self.dataset.__class__(root=self.dataset.root, name=self.name)  
-        filtered_dataset.data, filtered_dataset.slices = self.dataset.collate(filtered_data_list)  
+        #read the file
 
-
-        return GeometricWrapper(filtered_dataset, self.preprocess)
+        edge_index = self.load_edge_list(self.path)
+        data = Data(edge_index=edge_index)
+        return GeometricWrapper([data], self.preprocess)
 
     def get_simple_wrapper(self, data):
-        return GeometricWrapper(data, self.preprocess)
+        return GeometricWrapper([data], self.preprocess)
     
 
     def check_configuration(self):
-        super().check_configuration()
+        super().check_configuration()        
+
 

@@ -1,6 +1,7 @@
 from erasure.core.measure import GraphMeasure
 from erasure.evaluations.manager import Evaluation
 import torch
+import random
 from tqdm import tqdm
 from sklearn import metrics
 import numpy as np
@@ -41,6 +42,10 @@ class LinkTeller(GraphMeasure):
 
         self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
 
+        self.model.model = self.model.model.to(self.model.device)
+        self.features = self.features.to(self.model.device)
+        self.edge_index = self.edge_index.to(self.model.device)
+
 
         self.exist_edges, self.nonexist_edges = self.get_edges(self.forget)
         norm_exist = []
@@ -55,8 +60,6 @@ class LinkTeller(GraphMeasure):
 
             i = 0
             for u, v in tqdm(self.nonexist_edges):
-                if i > 1000:
-                    break 
 
                 i += 1 
 
@@ -74,7 +77,6 @@ class LinkTeller(GraphMeasure):
         auc = metrics.auc(fpr, tpr)
         print('auc =', auc)
 
-        precision, recall, thresholds_2 = metrics.precision_recall_curve(y, pred)
         ap = metrics.average_precision_score(y,pred)
         print('ap =', ap)
 
@@ -181,6 +183,8 @@ class LinkTeller(GraphMeasure):
 
         non_existent_edges = list(all_possible - edge_set)
 
+        non_existent_edges = random.sample(non_existent_edges, len(existent_edges))
+
         return existent_edges, non_existent_edges
 
     
@@ -188,9 +192,9 @@ class LinkTeller(GraphMeasure):
     def get_gradient_eps_mat(self, v):
         pert_1 = torch.zeros_like(self.features)
 
-        pert_1[v] = self.features[v] * self.args.influence
+        pert_1[v] = self.features[v] * self.influence
 
-        grad = (self.model(self.features + pert_1, self.adj).detach() - 
-                self.model(self.features, self.adj).detach()) / self.args.influence
+        grad = (self.model.model(self.features + pert_1, self.edge_index).detach() - 
+                self.model.model(self.features, self.edge_index).detach()) / self.influence
 
         return grad
