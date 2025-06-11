@@ -37,6 +37,10 @@ class BadTeaching(GraphUnlearner):
 
         # label 1 means forget sample
         # label 0 means retain sample
+        labels = labels.to(self.device)
+        bt_output = bt_output.to(self.device)
+        gt_output = gt_output.to(self.device)
+
         overall_teacher_out = labels * bt_output + (1-labels)*gt_output
         overall_teacher_out = F.normalize(overall_teacher_out, p=1, dim=1)
         student_out = F.log_softmax(output / KL_temperature, dim=1)
@@ -49,8 +53,8 @@ class BadTeaching(GraphUnlearner):
         losses = []
 
 
-        x = graph[0][0].x
-        edge_index = graph[0][0].edge_index
+        x = graph[0][0].x.to(self.device)
+        edge_index = graph[0][0].edge_index.to(self.device)
 
 
         with torch.no_grad():
@@ -101,7 +105,7 @@ class BadTeaching(GraphUnlearner):
             torch.ones(len(self.forget_set), dtype=torch.float32),
             torch.zeros(len(self.retain_set), dtype=torch.float32)])
 
-        good_teacher = copy.deepcopy(self.predictor.model)
+        good_teacher = copy.deepcopy(self.predictor.model).to(self.device)
 
         good_teacher.eval()
         self.bad_teacher.model.eval()        

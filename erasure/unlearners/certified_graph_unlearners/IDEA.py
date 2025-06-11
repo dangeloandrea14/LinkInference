@@ -96,7 +96,11 @@ class IDEA(TorchUnlearner):
 
 
         self.labels = self.dataset.partitions['all'][0][1]
-        self.labels = torch.tensor(self.labels)
+        if not isinstance(self.labels, torch.Tensor):
+            self.labels = torch.tensor(self.labels, device=self.device)
+        else:
+            self.labels = self.labels.to(self.device)
+            
         og_graph =  self.dataset.partitions['all'] 
         edges_to_forget = self.dataset.partitions['forget']
         
@@ -116,10 +120,11 @@ class IDEA(TorchUnlearner):
         #out1 is a forward pass of the model on all data
         #out2 is the forward pass of the model if the data was removed beforehand
 
-        self.x = og_graph[0][0].x
-        self.edge_index = og_graph[0][0].edge_index
-        self.x_unlearned = new_graph[0][0].x
-        self.edge_index_unlearned = new_graph[0][0].edge_index
+        self.x = og_graph[0][0].x.to(self.device)
+        self.edge_index = og_graph[0][0].edge_index.to(self.device)
+        self.x_unlearned = new_graph[0][0].x.to(self.device)
+        self.edge_index_unlearned = new_graph[0][0].edge_index.to(self.device)
+
 
         self.find_k_hops(self.dataset.partitions['train'], self.edge_index)
 
@@ -163,8 +168,6 @@ class IDEA(TorchUnlearner):
         result_tuple = (grad_all, grad1, grad2)
         params_change = self.approxi(result_tuple)
 
-        print("PARAMS CHANGE", params_change)
-
         my_bound, certified_edge_bound, certified_edge_worst_bound, actual_diff = self.alpha_computation(params_change)
 
         """Use influence to update the model"""
@@ -195,24 +198,29 @@ class IDEA(TorchUnlearner):
         
         return self.predictor
 
-
     def find_k_hops(self, unique_nodes, edge_index):
+        edge_src = edge_index[0].cpu().numpy()
+        edge_dst = edge_index[1].cpu().numpy()
 
-        influenced_nodes = unique_nodes
+        influenced_nodes = np.array(unique_nodes, dtype=np.int64)
+
         for _ in range(self.hops):
-            target_nodes_location = np.isin(edge_index[0], influenced_nodes)
-            neighbor_nodes = edge_index[1, target_nodes_location]
-            influenced_nodes = np.append(influenced_nodes, neighbor_nodes)
-            influenced_nodes = np.unique(influenced_nodes)
+            target_nodes_location = np.isin(edge_src, influenced_nodes)
+            neighbor_nodes = edge_dst[target_nodes_location]
+            influenced_nodes = np.unique(np.concatenate((influenced_nodes, neighbor_nodes)))
+
         neighbor_nodes = np.setdiff1d(influenced_nodes, unique_nodes)
+
         if self.removal_type in ['feature', 'partial_feature']:
             self.feature_nodes = unique_nodes
             self.influence_nodes = neighbor_nodes
-        if self.removal_type == 'node':
+        elif self.removal_type == 'node':
             self.deleted_nodes = unique_nodes
             self.influence_nodes = neighbor_nodes
-        if self.removal_type == 'edge':
+        elif self.removal_type == 'edge':
             self.influence_nodes = influenced_nodes
+
+
 
     def approxi(self, res_tuple):
         '''

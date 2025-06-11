@@ -73,7 +73,7 @@ class CEU(TorchUnlearner):
 
 
         self.labels = self.dataset.partitions['all'][0][1]
-        self.labels = torch.tensor(self.labels)
+        self.labels = torch.tensor(self.labels).to(self.device)
         og_graph =  self.dataset.partitions['all'] 
 
         # Retraining and unlearning
@@ -142,8 +142,9 @@ class CEU(TorchUnlearner):
             # I = cg_pert_influence.influences(infected_indices)
             # infl = [- (1 / data.num_train_nodes) * i for i in I]
         
-            """ Reproducing this code is impossible given the authors' code, and as such it is not available. """
+            
         else:
+            """ Reproducing this code is impossible given the authors' code, and as such it is not available. """
             print("Not available.")
             #edge_index = torch.tensor(data.edges, device=self.device).t()
             #edge_index_prime = torch.tensor(data_prime.edges, device=self.device).t()
@@ -179,17 +180,18 @@ class CEU(TorchUnlearner):
                 use_torch=True, device=torch.device('cpu'), return_norm=False):
         parameters = [p for p in model.parameters() if p.requires_grad]
 
-        self.x = data[0][0].x
+        self.x = data[0][0].x.to(self.device)
         all_edges = torch.tensor( data[0][0].edge_index.t().tolist() )
         unlearned_edges = data_prime[0][0].edge_index.t().tolist() 
 
         if self.transductive_edge:
-            edge_index = torch.tensor(all_edges, device=device).t()
-            edge_index_prime = torch.tensor(unlearned_edges, device=device).t()
+            edge_index = torch.tensor(all_edges, device=device).t().to(self.device)
+            edge_index_prime = torch.tensor(unlearned_edges, device=device).t().to(self.device)
 
         p = 1 / (self.num_train_nodes)
 
         # t1 = time.time()
+        model = model.to(self.device)
         model.eval()
 
         y_hat = model(self.x, edge_index_prime)[infected_nodes]

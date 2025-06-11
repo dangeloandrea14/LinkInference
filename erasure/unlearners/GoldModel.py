@@ -55,6 +55,8 @@ class GoldModelGraph(Unlearner):
     def init(self):
         super().init()
 
+        self.training_set = self.local.config['parameters']['training_set']
+
         #Create Dataset
         if self.local.config['parameters']['data'] == 'global':
             data_manager = deepcopy(self.global_ctx.dataset) 
@@ -62,6 +64,8 @@ class GoldModelGraph(Unlearner):
             data_manager = self.global_ctx.factory.get_object(Local(self.local.config['parameters']['data']))
     
 
+        print("data manager", data_manager)
+        
         og_graph =  data_manager.partitions['all'] 
         gold_training_set = self.local.config['parameters']['training_set']
         gold_training_set = data_manager.partitions[gold_training_set]
@@ -70,19 +74,15 @@ class GoldModelGraph(Unlearner):
             new_graph, remapped_partitions = og_graph.revise_graph_nodes(gold_training_set, data_manager.partitions)
         if self.removal_type == 'edge':
             new_graph = og_graph.revise_graph_edges(gold_training_set)
-            remapped_partitions = copy.deepcopy(self.dataset.partitions)
+            remapped_partitions = copy.deepcopy(data_manager.partitions)
         
-        print("graph", new_graph.data[0].edge_index)
-
-        data_manager.partitions = {}
+        data_manager.partitions = remapped_partitions
         data_manager.partitions['all'] = new_graph
 
         if self.removal_type == 'node':
-            data_manager.partitions['train'] = list(range(new_graph.num_nodes))
+            data_manager.partitions[self.training_set] = list(range(new_graph.num_nodes))
         if self.removal_type == 'edge':
-            data_manager.partitions['train'] = remapped_partitions['train']
-
-        data_manager.partitions['test'] = remapped_partitions['test']
+            data_manager.partitions[self.training_set] = remapped_partitions['train']
 
         #Create Predictor
         self.current = Local(self.local.config['parameters']['predictor'])
@@ -99,7 +99,7 @@ class GoldModelGraph(Unlearner):
         super().check_configuration()
 
         if 'data' not in self.local.config['parameters']:
-            self.local.config['parameters']['data'] = 'global'#copy.deepcopy(self.global_ctx.dataset.local_config)
+            self.local.config['parameters']['data'] = 'global' 
 
         self.local.config['parameters']['training_set'] = self.local.config['parameters'].get("training_set", 'retain')  # Default train data is retain
         self.local.config['parameters']['cached'] = self.local.config['parameters'].get("cached", False)  # Default cached to False

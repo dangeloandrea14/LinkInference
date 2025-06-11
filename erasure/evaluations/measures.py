@@ -108,8 +108,10 @@ class TorchSKLearnGraph(GraphMeasure):
                 new_graph = erasure_model.dataset.partitions['all'].revise_graph_edges(toremove, remove=True)
                 remapped_partitions = erasure_model.dataset.partitions
 
+
             graph, labels = new_graph[0][0], new_graph[0][1]
-    
+
+        remapped_partitions['forget'] = toremove
 
         var_labels, var_preds = [], []
 
@@ -135,7 +137,7 @@ class TorchSKLearnGraph(GraphMeasure):
             value = self.metric_func(var_labels, var_preds,**self.metric_params)
             self.info(f"{self.metric_name} on partition: \"{self.partition_name}\", target model: {self.target}, unlearned graph: {self.unlearned_graph}: {value} of {erasure_model}")
 
-            e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target,value)
+            e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target+".on_graph:"+str(self.unlearned_graph), value)
 
 
         return e
@@ -431,7 +433,6 @@ class AINGraph(GraphMeasure):
         gold_model_unlearner = self.global_ctx.factory.get_object(current)
         self.gold_model = gold_model_unlearner.unlearn()
         self.removal_type = self.global_ctx.removal_type
-        self.device = self.gold_model.device
         
 
     def check_configuration(self):
@@ -439,8 +440,13 @@ class AINGraph(GraphMeasure):
         self.params["forget_part"] = self.params.get("forget_part", "forget")
 
     def process(self, e: Evaluation):
+
+        self.device = e.predictor.device
         self.hops = len(e.predictor.model.hidden_channels)
 
+        self.gold_model.model = self.gold_model.model.to(self.device)
+        self.gold_model.device = self.device
+        self.gold_model.model.device = self.device
         graph = e.unlearner.dataset.partitions['all']
 
         forget_part = e.unlearner.dataset.partitions[self.forget_part_name]
@@ -456,7 +462,7 @@ class AINGraph(GraphMeasure):
         rt_unlearned = compute_relearn_time_graph(graph, e.unlearned_model, forget_part, self.device, max_accuracy=max_accuracy)
 
         # relearn time of Gold model on forget
-        rt_gold = compute_relearn_time_graph(graph, deepcopy(self.gold_model), forget_part, self.device, max_accuracy=max_accuracy)
+        rt_gold = compute_relearn_time_graph(graph, self.gold_model, forget_part, self.device, max_accuracy=max_accuracy)
 
         epsilon = 0.01
         ain = (rt_unlearned + epsilon) / (rt_gold + epsilon)
@@ -530,6 +536,7 @@ class AUSGraph(GraphMeasure):
 
         if self.removal_type == 'edge':
             forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+
 
         or_test_accuracy = compute_accuracy_graph(graph, or_model.model, test_part)
         ul_test_accuracy = compute_accuracy_graph(graph, ul_model.model, test_part)

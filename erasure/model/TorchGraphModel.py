@@ -78,8 +78,6 @@ class TorchGraphModel(Trainable):
 
             X,edge_index= graph.x,graph.edge_index
 
-            print("graph has edges ", graph.edge_index.shape)
-
             X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
                 
             pred = self.model(X,edge_index)
@@ -117,6 +115,29 @@ class TorchGraphModel(Trainable):
         local_config['parameters']['alias'] = local_config['parameters']['model']['class']
         local_config['parameters']['training_set'] = local_config['parameters'].get("training_set", "train")
 
+    '''
+    def rebuild_optimizer_and_scheduler(self):
+        self.optimizer = get_instance_kvargs(
+            self.local_config['parameters']['optimizer']['class'],
+            {
+                'params': self.model.parameters(),
+                **self.local_config['parameters']['optimizer']['parameters']
+            }
+        )
+
+        if 'lr_scheduler' in self.local_config['parameters']:
+            self.lr_scheduler = get_instance_kvargs(
+                self.local_config['parameters']['lr_scheduler']['class'],
+                {
+                    'optimizer': self.optimizer,
+                    **self.local_config['parameters']['lr_scheduler']['parameters']
+                }
+            )
+        else:
+            self.lr_scheduler = lr_scheduler.LinearLR(
+                self.optimizer, start_factor=1.0, end_factor=0.5, total_iters=self.epochs
+            )
+    '''
         
     def accuracy(self, testy, probs):
         acc = accuracy_score(testy, np.argmax(probs, axis=1))

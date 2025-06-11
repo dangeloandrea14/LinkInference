@@ -85,8 +85,8 @@ class LinkTeller(GraphMeasure):
                 "ap":ap
             }
 
-        self.info(f'LinkTeller : {lt}')
-        e.add_value('LinkTeller:', lt)
+        self.info(f'LinkTeller {self.target}: {lt}')
+        e.add_value(f'LinkTeller {self.target}:', lt)
 
 
         return e

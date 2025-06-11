@@ -24,11 +24,15 @@ def compute_accuracy(test_loader, model):
 def compute_accuracy_graph(graph,model,subset):
 
     device = model.device
+
     x = graph[0][0].x.to(device).float()
     edge_index = graph[0][0].edge_index.to(device).long()
 
-    subset = torch.tensor(subset, dtype=torch.long)
-    labels = graph[0][1][subset].to(device).long()
+    subset = torch.tensor(subset).to(device).int()
+    labels = graph[0][1].to(device)
+    labels = labels[subset].long()
+
+    
     model = model.to(device).float()
     
     #subset should be a partition, already instantiated.
@@ -92,10 +96,18 @@ def compute_relearn_time_graph(graph, model, subset, device, max_accuracy=0.8, m
 
     x = graph[0][0].x.to(device).float()
     edge_index = graph[0][0].edge_index.to(device).long()
-    subset = torch.tensor(subset, dtype=torch.long)
-    labels = graph[0][1][subset].to(device).long()
+
+    subset = torch.as_tensor(subset).to(device).int()
+
+    labels = graph[0][1].to(device)
+    labels = labels[subset].to(device).long()
 
     model.model = model.model.to(device).float()
+
+    for state in model.optimizer.state.values():
+        for k, v in state.items():
+            if isinstance(v, torch.Tensor):
+                state[k] = v.to(device)
 
     while (curr_accuracy < max_accuracy  
     and epochs < max_epochs):  
