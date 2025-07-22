@@ -12,6 +12,7 @@ class GAT(nn.Module):
         self.convs = nn.ModuleList()
         self.dropout = dropout
         self.n_heads = n_heads
+        self.hidden_channels = hidden_channels
 
         self.convs.append(GATConv(in_channels, hidden_channels[0] // n_heads, heads=n_heads, dropout=dropout))
 

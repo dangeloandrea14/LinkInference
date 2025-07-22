@@ -111,7 +111,7 @@ class TorchSKLearnGraph(GraphMeasure):
 
             graph, labels = new_graph[0][0], new_graph[0][1]
 
-        remapped_partitions['forget'] = toremove
+            remapped_partitions['forget'] = toremove
 
         var_labels, var_preds = [], []
 
