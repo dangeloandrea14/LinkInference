@@ -34,7 +34,7 @@ class LinkStealing3(GraphMeasure):
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
 
-        self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
+        self.model = self.get_model(e)
 
         self.model.model = self.model.model.to(self.model.device)
         self.features = self.features.to(self.model.device)

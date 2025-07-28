@@ -105,6 +105,7 @@ class Attack(MembershipInference):
         attack_labels = []
 
         with torch.no_grad():
+            model.model.eval()
             for X, labels in loader:
                 X = X.to(model.device)
                 labels = labels.to(model.device)
@@ -135,6 +136,7 @@ class Attack(MembershipInference):
 
         attack_predictions = []
         with torch.no_grad():
+            target_model.model.eval()
             for batch, (X, labels) in enumerate(dataloader):
                 X = X.to(target_model.device)
                 labels = labels.to(target_model.device)

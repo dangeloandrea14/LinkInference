@@ -13,6 +13,17 @@ class Measure(Configurable, metaclass=ABCMeta):
 
 class GraphMeasure(Measure):
 
+    def get_model(self,e: Evaluation):
+
+        if hasattr(self, "target") and self.target == 'unlearned':
+            erasure_model = e.unlearned_model
+        else:
+            erasure_model = e.predictor
+
+        erasure_model.model.eval()
+
+        return erasure_model
+
     def infected_nodes(self, unlearner, edges_to_forget, hops):
 
         G = nx.Graph()

@@ -47,6 +47,8 @@ class Attack(GraphMeasure):
         # Target Model (unlearned model)
         target_model = e.unlearned_model
 
+        target_model.model.eval()
+
         # generate dataset from sampling the target model
         self.info("Creating attack dataset")
         attack_dataset = self.create_attack_dataset(target_model)
@@ -158,6 +160,7 @@ class Attack(GraphMeasure):
 
 
         with torch.no_grad():
+            model.model.eval()
             X = X.to(model.device)
             labels = labels.to(model.device)
 

@@ -40,8 +40,8 @@ class LinkTeller(GraphMeasure):
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
 
-        self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
-
+        self.model = self.get_model(e)
+        
         self.model.model = self.model.model.to(self.model.device)
         self.features = self.features.to(self.model.device)
         self.edge_index = self.edge_index.to(self.model.device)
@@ -52,8 +52,8 @@ class LinkTeller(GraphMeasure):
         norm_nonexist = []
 
         with torch.no_grad():
-            for u, v in self.exist_edges:
 
+            for u, v in self.exist_edges:
                 grad = self.get_gradient_eps(u, v) if self.approx else self.get_gradient(u, v)
                 norm_exist.append(grad.norm().item())
 
@@ -102,7 +102,7 @@ class LinkTeller(GraphMeasure):
         influence_val = np.zeros((self.args.n_test, self.args.n_test))
 
         with torch.no_grad():
-
+            self.model.model.eval()
             for i in range(self.args.n_test):
                 u = self.test_nodes[i]
                 grad_mat = self.get_gradient_eps_mat(u)
@@ -133,6 +133,7 @@ class LinkTeller(GraphMeasure):
 
 
     def get_gradient_eps(self, u, v):
+        self.model.model.eval()
         pert_1 = torch.zeros_like(self.features)
 
         pert_1[v] = self.features[v] * self.influence
@@ -183,6 +184,8 @@ class LinkTeller(GraphMeasure):
 
         non_existent_edges = list(all_possible - edge_set)
 
+        random.seed(42)
+
         non_existent_edges = random.sample(non_existent_edges, len(existent_edges))
 
         return existent_edges, non_existent_edges
@@ -190,6 +193,7 @@ class LinkTeller(GraphMeasure):
     
 
     def get_gradient_eps_mat(self, v):
+        self.model.model.eval()
         pert_1 = torch.zeros_like(self.features)
 
         pert_1[v] = self.features[v] * self.influence

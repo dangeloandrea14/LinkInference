@@ -86,10 +86,9 @@ class TorchSKLearnGraph(GraphMeasure):
 
 
     def process(self, e: Evaluation):
-        erasure_model = e.predictor
 
-        if self.target == 'unlearned':
-            erasure_model = e.unlearned_model
+
+        erasure_model = self.get_model(e)
 
         self.device = erasure_model.model.device
 
@@ -441,6 +440,8 @@ class AINGraph(GraphMeasure):
 
     def process(self, e: Evaluation):
 
+        e.predictor = self.get_model(e)
+
         self.device = e.predictor.device
         self.hops = len(e.predictor.model.hidden_channels)
 
@@ -525,7 +526,10 @@ class AUSGraph(GraphMeasure):
 
     def process(self, e: Evaluation):
         or_model = e.predictor
-        ul_model = e.unlearned_model
+        ul_model = e.unlearned_model 
+
+        or_model.model.eval()
+        ul_model.model.eval()
 
         self.hops = len(e.predictor.model.hidden_channels)
 

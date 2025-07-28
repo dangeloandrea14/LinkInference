@@ -139,6 +139,7 @@ class Attack(Measure):
         attack_labels = []
 
         with torch.no_grad():
+            model.model.eval()
             for X, labels in loader:
                 X = X.to(model.device)
                 labels = labels.to(model.device)

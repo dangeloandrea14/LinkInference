@@ -12,6 +12,8 @@ class Unlearner(Configurable, metaclass=ABCMeta):
             self.dataset = local_ctx.dataset
         if hasattr(local_ctx,'predictor'):
             self.predictor = local_ctx.predictor
+            print("2p: ", self.predictor)
+            print("2: ", model_weight_norm(self.predictor.model))
             self.device = self.predictor.device
         else:
             self.predictor = 'global'
@@ -21,9 +23,14 @@ class Unlearner(Configurable, metaclass=ABCMeta):
 
     def unlearn(self):
         self.__preprocess__()
-        self.info('Unlearning copyed predictor: '+str(self.predictor))
+        print("3p: ", self.predictor)
+        print("3: ", model_weight_norm(self.predictor.model))
+        self.info('Unlearning copied predictor: '+str(self.predictor))
+        print("4: ", model_weight_norm(self.predictor.model))
         new_model = self.__unlearn__()
+        print("5: ", model_weight_norm(self.predictor.model))
         self.__postprocess__()
+        print("6: ", model_weight_norm(self.predictor.model))
         return new_model
 
     def init(self):
@@ -39,3 +46,10 @@ class Unlearner(Configurable, metaclass=ABCMeta):
     def __postprocess__(self):
         pass
         
+
+def model_weight_norm(model):
+    total_norm = 0.0
+    for param in model.parameters():
+        total_norm += param.norm(2).item() ** 2
+    total_norm = total_norm ** 0.5
+    print(f"Total L2 norm of model weights: {total_norm:.6f}")

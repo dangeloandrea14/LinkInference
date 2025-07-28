@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 def compute_accuracy(test_loader, model):
     var_labels, var_preds = [], [],
     with torch.no_grad():
+        model.eval()
         for batch, (X, labels) in enumerate(test_loader):
             _, pred = model(X.to(model.device))
 
@@ -37,6 +38,7 @@ def compute_accuracy_graph(graph,model,subset):
     
     #subset should be a partition, already instantiated.
     with torch.no_grad():
+        model.eval()
         pred = model(x,edge_index)[subset]
 
     labels = labels.detach().cpu().numpy()   
