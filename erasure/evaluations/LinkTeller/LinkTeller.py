@@ -2,10 +2,12 @@ from erasure.core.measure import GraphMeasure
 from erasure.evaluations.manager import Evaluation
 import torch
 import random
+import networkx as nx
 from tqdm import tqdm
+from torch_geometric.utils import to_networkx
 from sklearn import metrics
 import numpy as np
-from erasure.evaluations.LinkTeller.utils import construct_edge_sets, construct_edge_sets_from_random_subgraph, construct_edge_sets_through_bfs, construct_balanced_edge_sets
+from erasure.evaluations.LinkTeller.utils import construct_edge_sets, construct_edge_sets_from_random_subgraph, construct_balanced_edge_sets
 
 
 class LinkTeller(GraphMeasure):
@@ -40,20 +42,24 @@ class LinkTeller(GraphMeasure):
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
 
-        self.model = self.get_model(e)
-        
+        self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
+
         self.model.model = self.model.model.to(self.model.device)
         self.features = self.features.to(self.model.device)
         self.edge_index = self.edge_index.to(self.model.device)
 
 
-        self.exist_edges, self.nonexist_edges = self.get_edges(self.forget)
+        #self.exist_edges, self.nonexist_edges = self.get_edges(self.forget)
+        sampler = self.get_edge_sampler(self.edge_sampler)
+
+        self.exist_edges, self.nonexist_edges = sampler(graph, self.forget)
+
         norm_exist = []
         norm_nonexist = []
 
         with torch.no_grad():
-
             for u, v in self.exist_edges:
+
                 grad = self.get_gradient_eps(u, v) if self.approx else self.get_gradient(u, v)
                 norm_exist.append(grad.norm().item())
 
@@ -70,10 +76,26 @@ class LinkTeller(GraphMeasure):
         y = [1] * len(norm_exist) + [0] * len(norm_nonexist)
         pred = norm_exist + norm_nonexist
 
+        print(f"[Norm Stats] Exist Edges: mean={np.mean(norm_exist):.4f}, std={np.std(norm_exist):.4f}, min={np.min(norm_exist):.4f}, max={np.max(norm_exist):.4f}")
+        print(f"[Norm Stats] Non-Exist Edges: mean={np.mean(norm_nonexist):.4f}, std={np.std(norm_nonexist):.4f}, min={np.min(norm_nonexist):.4f}, max={np.max(norm_nonexist):.4f}")
 
+
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(8, 4))
+        plt.hist(norm_exist, bins=50, alpha=0.5, label='Exist Edges')
+        plt.hist(norm_nonexist, bins=50, alpha=0.5, label='Non-Exist Edges')
+        plt.xlabel("Gradient Norm")
+        plt.ylabel("Frequency")
+        plt.legend()
+        plt.title("Distribution of Gradient Norms")
+        plt.savefig('test.png'
+                    )
         #y - pred evaluation
 
         fpr, tpr, thresholds = metrics.roc_curve(y, pred)
+        print(f"[ROC Thresholds] Sample thresholds: {thresholds[:5]}")
+        print(f"[ROC] FPR: {fpr[:5]}, TPR: {tpr[:5]}")
         auc = metrics.auc(fpr, tpr)
         print('auc =', auc)
 
@@ -89,6 +111,11 @@ class LinkTeller(GraphMeasure):
         e.add_value(f'LinkTeller {self.target}:', lt)
 
 
+        for score, label in zip(pred, y):
+            if (score > 0.5 and label == 0) or (score < 0.5 and label == 1):
+                print(f"[Misclassified] score={score:.4f}, label={label}")
+
+
         return e
 
 
@@ -102,7 +129,7 @@ class LinkTeller(GraphMeasure):
         influence_val = np.zeros((self.args.n_test, self.args.n_test))
 
         with torch.no_grad():
-            self.model.model.eval()
+
             for i in range(self.args.n_test):
                 u = self.test_nodes[i]
                 grad_mat = self.get_gradient_eps_mat(u)
@@ -133,13 +160,15 @@ class LinkTeller(GraphMeasure):
 
 
     def get_gradient_eps(self, u, v):
-        self.model.model.eval()
         pert_1 = torch.zeros_like(self.features)
 
         pert_1[v] = self.features[v] * self.influence
 
         grad = (self.model.model(self.features + pert_1, self.edge_index).detach() - 
                 self.model.model(self.features, self.edge_index).detach()) / self.influence
+        
+        print(f"[get_gradient_eps] Norm(perturbation[{v}]): {pert_1[v].norm().item():.6f}")
+
 
         return grad[u]
     
@@ -154,17 +183,21 @@ class LinkTeller(GraphMeasure):
                         self.model.model(self.features - pert, self.edge_index).detach()) / (2 * h)
                 ret[i] = grad[u].sum()
 
+        print(f"[get_gradient] Sum of finite diff grad vector: {ret.norm().item():.4f}")
+
+
         return ret
 
 
-    def get_edge_sampler(name):
+    def get_edge_sampler(self,name):
         func_map = {
-            'balanced': construct_edge_sets,
+            'balanced': self.get_edges,
             'balanced-full': construct_balanced_edge_sets,
             'unbalanced': construct_edge_sets_from_random_subgraph,
             'unbalanced-lo': construct_edge_sets_from_random_subgraph,
             'unbalanced-hi': construct_edge_sets_from_random_subgraph,
-            'bfs': construct_edge_sets_through_bfs,
+            'bfs': self.construct_edge_sets_through_bfs,
+            'bfs+': self.construct_edge_sets_through_bfs_plus
         }
         return func_map.get(name)
     
@@ -184,16 +217,18 @@ class LinkTeller(GraphMeasure):
 
         non_existent_edges = list(all_possible - edge_set)
 
-        random.seed(42)
-
         non_existent_edges = random.sample(non_existent_edges, len(existent_edges))
+
+        print(f"[Edge Sampling] #Exist: {len(existent_edges)} | #Non-Exist: {len(non_existent_edges)}")
+        print(f"[Sample Exist] {existent_edges[:5]}")
+        print(f"[Sample Non-Exist] {non_existent_edges[:5]}")
+
 
         return existent_edges, non_existent_edges
 
     
 
     def get_gradient_eps_mat(self, v):
-        self.model.model.eval()
         pert_1 = torch.zeros_like(self.features)
 
         pert_1[v] = self.features[v] * self.influence
@@ -202,3 +237,100 @@ class LinkTeller(GraphMeasure):
                 self.model.model(self.features, self.edge_index).detach()) / self.influence
 
         return grad
+    
+    def construct_edge_sets_through_bfs(self, graph, subset_nodes, max_hops=2):
+        print("am here")
+        """
+        Generate (pos, neg) edge pairs from subset_nodes using BFS.
+
+        Positive: existing edges within subset.
+        Negative: node pairs within max_hops in BFS but not connected.
+
+        Returns:
+            - existent_edges: list of (u, v)
+            - non_existent_edges: list of (u, v)
+        """
+        G = to_networkx(graph, to_undirected=True)
+        subset_nodes = list(set(subset_nodes))
+
+        edge_set = set()
+        existent_edges = set()
+        
+        for u, v in G.edges():
+            if u != v and u in subset_nodes and v in subset_nodes:
+                edge = tuple(sorted((u, v)))
+                edge_set.add(edge)
+                existent_edges.add(edge)
+
+        # Prepare candidate negatives: node pairs within max_hops that are not in edge_set
+        negative_candidates = set()
+        for u in subset_nodes:
+            neighbors = nx.single_source_shortest_path_length(G, u, cutoff=max_hops)
+            for v in neighbors:
+                if u < v and v in subset_nodes and (u, v) not in edge_set:
+                    negative_candidates.add((u, v))
+
+        # Sample negatives to match the number of positives
+        existent_edges = list(existent_edges)
+        negative_candidates = list(negative_candidates)
+        random.seed(42)
+
+        non_existent_edges = random.sample(
+            negative_candidates, min(len(existent_edges), len(negative_candidates))
+        )
+
+        return existent_edges, non_existent_edges
+    
+
+
+    def construct_edge_sets_through_bfs_plus(self,graph, subset_nodes, max_hops=3, min_shared_neighbors=2, max_degree_diff=2):
+        """
+        Generate (pos, neg) edge pairs from subset_nodes using BFS traversal,
+        and filter negative candidates by structural similarity.
+
+        Positive: existing edges within subset.
+        Negative: node pairs within max_hops, not connected, but with:
+            - degree difference ≤ max_degree_diff
+            - at least min_shared_neighbors neighbors in common
+
+        Returns:
+            - existent_edges: list of (u, v)
+            - non_existent_edges: list of (u, v)
+        """
+        G = to_networkx(graph, to_undirected=True)
+        subset_nodes = list(set(subset_nodes))
+
+        # collect actual existing edges in the subset
+        existent_edges = set()
+        for u, v in G.edges():
+            if u != v and u in subset_nodes and v in subset_nodes:
+                edge = tuple(sorted((u, v)))
+                existent_edges.add(edge)
+
+        # prepare hard negatives
+        negative_candidates = set()
+        for u in subset_nodes:
+            # BFS up to max_hops
+            neighbors = nx.single_source_shortest_path_length(G, u, cutoff=max_hops)
+            for v in neighbors:
+                if u < v and v in subset_nodes:
+                    edge = (u, v)
+                    if edge in existent_edges:
+                        continue  # skip real edges
+
+                    # Filter by structural similarity
+                    degree_diff = abs(G.degree[u] - G.degree[v])
+                    shared_nbrs = set(G.neighbors(u)).intersection(G.neighbors(v))
+
+                    if degree_diff <= max_degree_diff and len(shared_nbrs) >= min_shared_neighbors:
+                        negative_candidates.add(edge)
+
+        # Balance number of negatives and positives
+        existent_edges = list(existent_edges)
+        negative_candidates = list(negative_candidates)
+        random.seed(42)
+        non_existent_edges = random.sample(
+            negative_candidates, min(len(existent_edges), len(negative_candidates))
+        )
+
+        return existent_edges, non_existent_edges

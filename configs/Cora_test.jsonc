@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Citeseer"},
+                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Cora"},
                         "preprocess":[
                           ]}
                     }}, 
@@ -18,11 +18,11 @@
     "predictor": {
         "class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "parameters": {
-          "epochs": 50,
+          "epochs": 100,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
-              "lr": 0.001            }
+              "lr": 0.5            }
           },
           "loss_fn": {
             "class": "torch.nn.CrossEntropyLoss",
@@ -31,51 +31,35 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GAT.GAT","parameters": { "in_channels":3703, "hidden_channels":[100], "out_channels":6 }
+            "class": "erasure.model.graphs.SGC.SGC","parameters": { "in_channels":1433,  "out_channels":7 }
           }
         }
       },
 
     "unlearners":[
-       
-        {"compose_idt" : "configs/snippets/u_id.json"} 
+      /* {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
+        "parameters": {}}, */
+      {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}}
+         
+        /*{
+        "class": "erasure.unlearners.GoldModel.GoldModelGraph",
+        "parameters": {
+          "training_set": "retain"
+        }
+        },
+        {"compose_idt" : "configs/snippets/u_id.json"} */
     ],
       "evaluator":{
           "class": "erasure.evaluations.manager.Evaluator",
           "parameters": {
             "measures":[
-              {"class":"erasure.evaluations.running.RunTime"},
-              {"class": "erasure.evaluations.measures.AUSGraph", "parameters":{"forget_part": "forget","test_part": "test"}},
-              {
-                "class": "erasure.evaluations.MIA.graph_umia.Attack",
-
-                "parameters": {
-                  "attack_in_data": {
-                    "class": "erasure.data.datasets.DatasetManager.DatasetManager",
-                    "parameters": {
-                      "DataSource": {
-                        "class": "erasure.data.data_sources.TorchFileDataSource.TorchFileDataSource",
-                        "parameters": {
-                          "path": "resources/data/umia/umia.pt"
-                        }
-                      },
-                      "partitions": [
-                        { "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
-                          "parameters": {"parts_names": ["train", "test"], "percentage": 0.5, "ref_data": "all"}
-                        }
-                      ],
-                      "batch_size": 128
-                    }
-                  }
-                }
-              },
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":true}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original", "unlearned_graph":true}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":false}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"original", "unlearned_graph":false}},
-              {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"unlearn"}},
-              {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"original"}}, 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/test.json"}}
+              {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"unlearn", "edge_sampler": "bfs+"}},
+              {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"original", "edge_sampler": "bfs+"}}, 
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Cora_edge_test_1.json"}}
             ]
           }
         },
