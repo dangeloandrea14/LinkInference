@@ -21,14 +21,9 @@ class Unlearner(Configurable, metaclass=ABCMeta):
 
     def unlearn(self):
         self.__preprocess__()
-        print("3p: ", self.predictor)
-        print("3: ", model_weight_norm(self.predictor.model))
         self.info('Unlearning copied predictor: '+str(self.predictor))
-        print("4: ", model_weight_norm(self.predictor.model))
         new_model = self.__unlearn__()
-        print("5: ", model_weight_norm(self.predictor.model))
         self.__postprocess__()
-        print("6: ", model_weight_norm(self.predictor.model))
         return new_model
 
     def init(self):

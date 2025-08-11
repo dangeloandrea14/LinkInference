@@ -62,10 +62,7 @@ class GoldModelGraph(Unlearner):
             data_manager = deepcopy(self.global_ctx.dataset) 
         else:
             data_manager = self.global_ctx.factory.get_object(Local(self.local.config['parameters']['data']))
-    
-
-        print("data manager", data_manager)
-        
+            
         og_graph =  data_manager.partitions['all'] 
         gold_training_set = self.local.config['parameters']['training_set']
         gold_training_set = data_manager.partitions[gold_training_set]

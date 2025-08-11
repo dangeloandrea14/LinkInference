@@ -22,6 +22,7 @@ class LinkTeller(GraphMeasure):
         self.edge_sampler = self.params["edge_sampler"]
         self.target = self.params["target"]
         self.forget_part = self.params["forget_part"]
+        self.retain_part = self.params["retain_part"]
         
 
     def check_configuration(self):
@@ -29,7 +30,8 @@ class LinkTeller(GraphMeasure):
         self.params["approx"] = self.params.get("approx", True)
         self.params["edge_sampler"] = self.params.get("edge_sampler", "balanced")
         self.params["target"] = self.params.get("target","unlearned")
-        self.params["forget_part"] = self.params.get("forget_part","test")
+        self.params["forget_part"] = self.params.get("forget_part","forget")
+        self.params["retain_part"] = self.params.get("retain_part","retain")
 
 
 
@@ -41,6 +43,7 @@ class LinkTeller(GraphMeasure):
         self.n_features = len(graph.x[0])
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
+        self.retain = e.unlearner.dataset.partitions[self.retain_part]
 
         self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
 
@@ -48,11 +51,9 @@ class LinkTeller(GraphMeasure):
         self.features = self.features.to(self.model.device)
         self.edge_index = self.edge_index.to(self.model.device)
 
-
-        #self.exist_edges, self.nonexist_edges = self.get_edges(self.forget)
         sampler = self.get_edge_sampler(self.edge_sampler)
 
-        self.exist_edges, self.nonexist_edges = sampler(graph, self.forget)
+        self.exist_edges, self.nonexist_edges = sampler(graph, self.forget, self.retain)
 
         norm_exist = []
         norm_nonexist = []
@@ -202,29 +203,23 @@ class LinkTeller(GraphMeasure):
         return func_map.get(name)
     
     
-    def get_edges(self, subset_nodes):
-        subset_nodes = set(subset_nodes)
-        edge_set = set()
-
-        for u, v in self.edge_index.t().tolist():
-            if u != v and u in subset_nodes and v in subset_nodes:
-                edge_set.add(tuple(sorted((u, v))))
-
-        existent_edges = list(edge_set)
-
-        subset_list = sorted(subset_nodes)
-        all_possible = set((i, j) for idx, i in enumerate(subset_list) for j in subset_list[idx+1:])
-
-        non_existent_edges = list(all_possible - edge_set)
-
-        non_existent_edges = random.sample(non_existent_edges, len(existent_edges))
-
-        print(f"[Edge Sampling] #Exist: {len(existent_edges)} | #Non-Exist: {len(non_existent_edges)}")
-        print(f"[Sample Exist] {existent_edges[:5]}")
-        print(f"[Sample Non-Exist] {non_existent_edges[:5]}")
+    def get_edges(self, graph, forget_set, retain_set):
 
 
-        return existent_edges, non_existent_edges
+        print("FORGET SET IS ", forget_set)
+        forget_edges = list(forget_set)
+
+        print("RETAIN SET IS ", retain_set)
+        retain_edges = list(retain_set)
+
+        retain_edges = random.sample(retain_edges, len(forget_edges))
+
+        print(f"[Edge Sampling] #Exist: {len(forget_edges)} | #Non-Exist: {len(retain_edges)}")
+        print(f"[Sample Exist] {forget_edges[:5]}")
+        print(f"[Sample Non-Exist] {retain_edges[:5]}")
+
+
+        return forget_edges, retain_edges
 
     
 
