@@ -23,6 +23,7 @@ class LinkTeller(GraphMeasure):
         self.target = self.params["target"]
         self.forget_part = self.params["forget_part"]
         self.retain_part = self.params["retain_part"]
+        self.removal_type = self.global_ctx.removal_type
         
 
     def check_configuration(self):
@@ -36,11 +37,14 @@ class LinkTeller(GraphMeasure):
 
 
     def process(self, e: Evaluation):
+
+        unlearned_graph, labels, remapped_partitions = self.get_unlearned_graph(e.predictor, self.removal_type)
         
-        graph = e.unlearner.dataset.partitions['all'][0][0]
-        self.features = graph.x
-        self.edge_index = graph.edge_index
-        self.n_features = len(graph.x[0])
+        og_graph = e.predictor.dataset.partitions['all'][0][0]
+
+        self.features = unlearned_graph.x
+        self.edge_index = unlearned_graph.edge_index
+        self.n_features = len(unlearned_graph.x[0])
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
         self.retain = e.unlearner.dataset.partitions[self.retain_part]
@@ -48,18 +52,19 @@ class LinkTeller(GraphMeasure):
         self.model = e.unlearned_model if 'unlearn' in self.target else e.predictor
 
         self.model.model = self.model.model.to(self.model.device)
+        self.model.model.eval()
         self.features = self.features.to(self.model.device)
         self.edge_index = self.edge_index.to(self.model.device)
 
         sampler = self.get_edge_sampler(self.edge_sampler)
 
-        self.exist_edges, self.nonexist_edges = sampler(graph, self.forget, self.retain)
+        self.forget_edges, self.nonexist_edges = sampler(og_graph, self.forget)
 
         norm_exist = []
         norm_nonexist = []
 
         with torch.no_grad():
-            for u, v in self.exist_edges:
+            for u, v in self.forget_edges:
 
                 grad = self.get_gradient_eps(u, v) if self.approx else self.get_gradient(u, v)
                 norm_exist.append(grad.norm().item())
@@ -110,11 +115,6 @@ class LinkTeller(GraphMeasure):
 
         self.info(f'LinkTeller {self.target}: {lt}')
         e.add_value(f'LinkTeller {self.target}:', lt)
-
-
-        for score, label in zip(pred, y):
-            if (score > 0.5 and label == 0) or (score < 0.5 and label == 1):
-                print(f"[Misclassified] score={score:.4f}, label={label}")
 
 
         return e
@@ -168,8 +168,6 @@ class LinkTeller(GraphMeasure):
         grad = (self.model.model(self.features + pert_1, self.edge_index).detach() - 
                 self.model.model(self.features, self.edge_index).detach()) / self.influence
         
-        print(f"[get_gradient_eps] Norm(perturbation[{v}]): {pert_1[v].norm().item():.6f}")
-
 
         return grad[u]
     
@@ -203,23 +201,27 @@ class LinkTeller(GraphMeasure):
         return func_map.get(name)
     
     
-    def get_edges(self, graph, forget_set, retain_set):
+    def get_edges(self, graph, forget_set):
 
 
-        print("FORGET SET IS ", forget_set)
         forget_edges = list(forget_set)
 
-        print("RETAIN SET IS ", retain_set)
-        retain_edges = list(retain_set)
+        existing_edges = set(map(tuple, map(sorted, graph.edge_index.t().tolist())))
 
-        retain_edges = random.sample(retain_edges, len(forget_edges))
+        nodes = list(range(graph.num_nodes))
+        all_pairs = {(u, v) for u in nodes for v in nodes if u < v}
 
-        print(f"[Edge Sampling] #Exist: {len(forget_edges)} | #Non-Exist: {len(retain_edges)}")
+        non_edges = list(all_pairs - existing_edges)
+
+        non_edges = random.sample(non_edges, len(forget_edges))
+
+
+        print(f"[Edge Sampling] #Exist: {len(forget_edges)} | #Non-Exist: {len(non_edges)}")
         print(f"[Sample Exist] {forget_edges[:5]}")
-        print(f"[Sample Non-Exist] {retain_edges[:5]}")
+        print(f"[Sample Non-Exist] {non_edges[:5]}")
 
 
-        return forget_edges, retain_edges
+        return forget_edges, non_edges
 
     
 

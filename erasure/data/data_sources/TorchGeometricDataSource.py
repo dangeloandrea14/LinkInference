@@ -17,8 +17,6 @@ from torch_geometric.data.storage import GlobalStorage
 class GeometricWrapper(DatasetWrapper):
     def __init__(self, data, preprocess):
         super().__init__(data,preprocess)
-        print("data is ", data)
-        print("data[0] is ", data[0])
         self.num_nodes = data[0].num_nodes
         
 

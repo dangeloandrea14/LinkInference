@@ -43,3 +43,17 @@ class GraphMeasure(Measure):
                 infected.update(neighbors)
 
         return list(infected)
+    
+    def get_unlearned_graph(self, predictor, removal_type, forget_part = 'forget'):
+        
+        toremove = predictor.dataset.partitions[forget_part]
+        if removal_type == 'node':
+            new_graph, remapped_partitions = graph.revise_graph_nodes(toremove, predictor.dataset.partitions, remove=True)
+        if removal_type == 'edge':
+            new_graph = predictor.dataset.partitions['all'].revise_graph_edges(toremove, remove=True)
+            remapped_partitions = predictor.dataset.partitions
+
+        graph, labels = new_graph[0][0], new_graph[0][1]
+        remapped_partitions['forget'] = toremove
+
+        return graph, labels, remapped_partitions

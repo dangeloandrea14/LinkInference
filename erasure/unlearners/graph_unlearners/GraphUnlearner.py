@@ -22,6 +22,9 @@ class GraphUnlearner(TorchUnlearner):
         self.edge_index = og_graph[0][0].edge_index.to(self.device).long()
         self.labels = og_graph[0][1].to(self.device).long()
         self.labels = torch.tensor(self.labels)
+        self.forget_part = self.local.config['parameters']['forget_part']
+        self.retain_part = self.local.config['parameters']['retain_part']
+        self.train_part = self.local.config['parameters']['train_part']
         
 
     def infected_nodes(self, edges_to_forget, hops):
@@ -43,3 +46,12 @@ class GraphUnlearner(TorchUnlearner):
                 infected.update(neighbors)
 
         return list(infected)
+    
+
+    def check_configuration(self):
+        super().check_configuration()
+
+        self.local.config['parameters']['forget_part'] = self.local.config['parameters'].get('forget_part','forget')
+        self.local.config['parameters']['retain_part'] = self.local.config['parameters'].get('retain_part','retain')
+        self.local.config['parameters']['train_part'] = self.local.config['parameters'].get('train_part','train')
+
