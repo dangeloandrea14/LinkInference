@@ -135,7 +135,12 @@ class TorchGeometricDataSource(DataSource):
         self.dataset = get_instance_kvargs(self.local_config['parameters']['datasource']['class'],
                         self.local_config['parameters']['datasource']['parameters'])
         
-        self.name = self.local_config['parameters']['datasource']['parameters']['name']
+
+        self.kwargs = self.local_config['parameters']['datasource']['parameters']
+
+        self.name =  self.local_config['parameters']['datasource']['parameters'].get('name',None)
+
+        print(self.kwargs)
 
 
     def get_name(self):
@@ -146,7 +151,7 @@ class TorchGeometricDataSource(DataSource):
 
         #Remove empty graphs
         filtered_data_list = [data for data in self.dataset if data.x is not None and data.x.shape[0] > 0]
-        filtered_dataset = self.dataset.__class__(root=self.dataset.root, name=self.name)  
+        filtered_dataset = self.dataset.__class__(**self.kwargs)  
         filtered_dataset.data, filtered_dataset.slices = self.dataset.collate(filtered_data_list)  
 
 

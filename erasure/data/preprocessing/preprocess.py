@@ -110,3 +110,42 @@ class StringToList(Preprocess):
         self.local_config['parameters']['z'] = self.local_config['parameters'].get('z',False) 
 
         return super().check_configuration()
+    
+
+
+class MakeCentroidFeatures(Preprocess):
+    def __init__(self, global_ctx: Global, local_ctx: Local):
+        super().__init__(global_ctx, local_ctx)
+        
+        self.sigma = self.local_config['parameters']['sigma']
+        self.scale = self.local_config['parameters']['scale']
+
+    def process(self, X, y, Z):
+        data = X
+
+        if y is None:
+            if getattr(data, "y", None) is not None:
+                y = data.y.long()
+            else:
+                y = torch.randint(0, 2, (data.num_nodes,), dtype=torch.long, device=data.x.device)
+        else:
+            y = torch.as_tensor(y, dtype=torch.long, device=data.x.device)
+
+        N, d = data.x.shape
+        C = int(y.max().item() + 1)
+
+        mu  = torch.randn(C, d, device=data.x.device, dtype=data.x.dtype) * self.scale
+        eps = torch.randn(N, d, device=data.x.device, dtype=data.x.dtype) * self.sigma
+        new_x = mu[y] + eps
+
+        data.x = new_x
+        
+        return data, y, Z
+    
+
+    def check_configuration(self):
+        self.local_config['parameters']['sigma'] = self.local_config['parameters'].get('sigma',0.3) 
+        self.local_config['parameters']['scale'] = self.local_config['parameters'].get('scale',3) 
+
+        return super().check_configuration()
+    

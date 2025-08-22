@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Cora"},
+                        "parameters": {"datasource": {"class": "ogb.nodeproppred.PygNodePropPredDataset", "parameters":{"root":"resources/data","name":"ogbn-products"},
                         "preprocess":[
                           ]}
                     }}, 
@@ -16,9 +16,9 @@
         "split_seed":16}
     },
     "predictor": {
-        "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "class": "erasure.model.TorchGraphModelBatched.TorchGraphModelBatched",
         "parameters": {
-          "epochs": 50,
+          "epochs": 5,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
@@ -31,10 +31,11 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GAT.GAT","parameters": { "in_channels":1433, "hidden_channels":[100], "out_channels":7 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":100, "hidden_channels":[100], "out_channels":47 }
           }
         }
       },
+
 
     "unlearners":[
         // Original Model 
@@ -591,7 +592,7 @@
               {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"original"}}, 
 
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Cora_GAT_edge.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/ogbn-products_GAT_edge.json"}}
             ]
           }
         },
