@@ -16,8 +16,10 @@ class GraphMeasure(Measure):
     def get_model(self,e: Evaluation):
 
         if hasattr(self, "target") and self.target == 'unlearned':
+            print("Getting the unlearned model!")
             erasure_model = e.unlearned_model
         else:
+            print("Getting the original model!")
             erasure_model = e.predictor
 
         erasure_model.model.eval()

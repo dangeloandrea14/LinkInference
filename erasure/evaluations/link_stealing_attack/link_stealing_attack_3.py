@@ -18,7 +18,7 @@ class LinkStealing3(GraphMeasure):
         super().init()
         self.influence = self.params["influence"]
 
-        
+        ##target
 
     def check_configuration(self):
         self.params["influence"] = self.params.get("influence", 0.0001)

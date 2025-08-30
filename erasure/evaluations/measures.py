@@ -81,7 +81,7 @@ class TorchSKLearnGraph(GraphMeasure):
         init_dflts_to_of(self.local.config, 'function', 'sklearn.metrics.accuracy_score') # Default empty node for: sklearn.metrics.accuracy_score
         self.local.config['parameters']['partition'] = self.local.config['parameters'].get('partition', 'test')  # Default partition: test
         self.local.config['parameters']['name'] = self.local.config['parameters'].get('name', self.local.config['parameters']['function']['class'])  # Default name as metric name
-        self.local.config['parameters']['target'] = self.local.config['parameters'].get('target', 'unlearned')  # Default partition: test
+        self.local.config['parameters']['target'] = self.local.config['parameters'].get('target', 'unlearned') 
         self.local.config['parameters']['unlearned_graph'] = self.local.config['parameters'].get('unlearned_graph', True)
 
 
@@ -415,6 +415,7 @@ class AINGraph(GraphMeasure):
 
     def init(self):
         super().init()
+        self.target = self.params["target"]
         self.alpha = self.params["alpha"]
         self.gold_cfg = self.params["gold_model"]
         self.forget_part_name = self.params["forget_part"]
@@ -437,6 +438,7 @@ class AINGraph(GraphMeasure):
     def check_configuration(self):
         self.params["alpha"] = self.params.get("alpha", 0.05)
         self.params["forget_part"] = self.params.get("forget_part", "forget")
+        self.params["target"] = self.params.get("target", "unlearned")
 
     def process(self, e: Evaluation):
 

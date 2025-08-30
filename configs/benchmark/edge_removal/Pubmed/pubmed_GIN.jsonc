@@ -31,7 +31,7 @@
           }
         },
         "model": {
-          "class": "erasure.model.graphs.GAT.GAT","parameters": { "in_channels":500, "hidden_channels":[64], "out_channels":3 }
+          "class": "erasure.model.graphs.GIN.GIN","parameters": { "in_channels":500, "hidden_channels":[64], "out_channels":3 }
         }
       }
     },
@@ -564,7 +564,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/pubmed_GAT_edge.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/pubmed_GIN_edge.json"}}
             ]
           }
         },

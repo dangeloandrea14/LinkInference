@@ -18,7 +18,7 @@
     "predictor": {
         "class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "parameters": {
-          "epochs": 5,
+          "epochs": 10,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {

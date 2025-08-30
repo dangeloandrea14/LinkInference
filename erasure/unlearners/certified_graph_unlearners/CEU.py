@@ -109,6 +109,7 @@ class CEU(TorchUnlearner):
             self.predictor.dataset.partitions['train'] = remapped_partitions['train']
 
         self.predictor.dataset.partitions['test'] = remapped_partitions['test']
+        self.predictor.dataset.partitions['forget'] = remapped_partitions['forget']
         
         return self.predictor
 

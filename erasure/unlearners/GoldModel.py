@@ -89,6 +89,7 @@ class GoldModelGraph(Unlearner):
     def __unlearn__(self):
 
         predictor = self.global_ctx.factory.get_object(self.current)
+        self.hops = len(predictor.model.hidden_channels) + 1
             
         return predictor
     
