@@ -5,7 +5,7 @@ from torch_geometric.utils import add_self_loops, degree
 from torch_geometric.typing import Adj, OptTensor
 
 class SGC(nn.Module):
-    def __init__(self, in_channels, out_channels, K=2, alpha=0.5, n_classes=2, add_self_loops=True):
+    def __init__(self, in_channels, out_channels, K=2, alpha=0.5, n_classes=2, add_self_loops=True, hidden_channels=[]):
         super(SGC, self).__init__()
         self.K = K
         self.alpha = alpha

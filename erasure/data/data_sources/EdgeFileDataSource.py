@@ -31,10 +31,6 @@ class GeometricWrapper(DatasetWrapper):
 
         X = Data(sample.x, sample.edge_index, sample.edge_attr)
 
-        print("sample.x is: ", sample.x)
-
-        print("X is: ", X)
-
         y = sample.y
 
         y = y.squeeze().long()

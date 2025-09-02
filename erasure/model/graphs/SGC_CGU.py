@@ -55,7 +55,7 @@ class SGC_CGU(nn.Module):
     Can be used end-to-end for training, or split during unlearning.
     """
     def __init__(self, in_channels, out_channels, n_classes=2, K=2, alpha=0.0,
-                 XdegNorm=False, add_self_loops=True):
+                 XdegNorm=False, add_self_loops=True, hidden_channels=[]):
         super().__init__()
         self.n_classes = n_classes
         self.feat_prop = FeaturePropagator(K=K, alpha=alpha,

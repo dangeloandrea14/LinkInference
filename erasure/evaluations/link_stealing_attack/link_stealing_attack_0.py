@@ -16,7 +16,7 @@ from erasure.evaluations.LinkTeller.utils import construct_edge_sets, construct_
 class LinkStealing0(GraphMeasure):
     """ LinkStealing attack, version 0
        https://arxiv.org/pdf/2308.01469
-       https://github.com/xinleihe/link_stealing_attack/blob/master/stealing_link/attack_3.py
+       https://github.com/xinleihe/link_stealing_attack/blob/master/stealing_link/attack_0.py
     """
 
     def init(self):
