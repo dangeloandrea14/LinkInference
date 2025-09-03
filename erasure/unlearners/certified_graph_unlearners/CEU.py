@@ -46,7 +46,8 @@ class CEU(TorchUnlearner):
         self.local.config['parameters']['cg_approx'] = self.local.config['parameters'].get("cg_approx", True)
         self.local.config['parameters']['transductive_edge'] = self.local.config['parameters'].get("transductive_edge", True)
         self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam", 1e-4) #same as CGU
-        self.local.config['parameters']['damping'] = self.local.config['parameters'].get("damping", 0) 
+        self.local.config['parameters']['damping'] = self.local.config['parameters'].get("damping", 1e-2)
+
 
 
     def __unlearn__(self):

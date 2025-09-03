@@ -133,7 +133,7 @@
         "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
         "parameters": {
             "last_trainable_layers": 2,
-            "epochs": 10, 
+            "epochs": 50, 
             "ref_data":"retain",
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
         }
@@ -142,7 +142,7 @@
         "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
         "parameters": {
             "last_trainable_layers": 2,
-            "epochs": 10, 
+            "epochs": 50, 
             "ref_data":"retain",
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.1}}
         }
@@ -151,7 +151,7 @@
         "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
         "parameters": {
             "last_trainable_layers": 2,
-            "epochs": 10, 
+            "epochs": 50, 
             "ref_data":"retain",
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 1}}
         }

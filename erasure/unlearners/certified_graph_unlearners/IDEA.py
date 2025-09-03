@@ -47,7 +47,7 @@ class IDEA(TorchUnlearner):
         self.c1 = self.local.config['parameters']['c1']
         self.damp = self.local.config['parameters']['damp']
         self.training_set = self.local.config['parameters']['training_set']
-        self.hops = len(self.predictor.model.hidden_channels)
+        self.hops = len(self.predictor.model.hidden_channels) + 1
         self.deleted_nodes = np.array([])     
         self.feature_nodes = np.array([])
         self.influence_nodes = np.array([]) 

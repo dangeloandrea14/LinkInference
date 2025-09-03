@@ -112,11 +112,6 @@ def get_link(adj, node_num):
             link.append([r_index, c_index])
             existing_set.add(",".join([str(r_index), str(c_index)]))
 
-    random.seed(1)
-    while len(unlink) < len(link):
-        if len(unlink) % 1000 == 0:
-            print(len(unlink))
-
         row = random.randint(0, node_num - 1)
         col = random.randint(0, node_num - 1)
         if row > col:
