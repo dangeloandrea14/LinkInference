@@ -68,7 +68,7 @@ def write_auc(pred_prob_list, label, desc):
             i_auc = roc_auc_score(label, pred)
             if i_auc < 0.5:
                 i_auc = 1 - i_auc
-            print(sim_list_str[i], i_auc)
+
             wf.write(
                 "%s,%s,%d,%0.5f,%s\n" %
                 (dataset, "attack0_%s_%s" %

@@ -73,8 +73,14 @@ class CEU(TorchUnlearner):
         self.val_mask[self.dataset.partitions['validation']] = True
 
 
-        self.labels = self.dataset.partitions['all'][0][1]
-        self.labels = torch.tensor(self.labels).to(self.device)
+        labels = self.dataset.partitions['all'][0][1]
+        if not isinstance(labels, torch.Tensor):
+            self.labels = torch.as_tensor(labels, device=self.device, dtype=torch.long)
+        else:
+            self.labels = labels.to(self.device)
+            if self.labels.dtype != torch.long:
+                self.labels = self.labels.long()
+
         og_graph =  self.dataset.partitions['all'] 
 
         # Retraining and unlearning
@@ -162,6 +168,7 @@ class CEU(TorchUnlearner):
 
         G = nx.Graph()
         all_edges = self.dataset.partitions['all'][0][0].edge_index.t().tolist()  
+
         G.add_edges_from(all_edges)
 
         edge_nodes = set()
@@ -209,6 +216,8 @@ class CEU(TorchUnlearner):
         # print(f'CEU, grad old duration: {(time.time() - t1):.4f}.')
 
         v = [gg1 - gg2 for gg1, gg2 in zip(g1, g2)]
+
+        v = self._sanitize_and_clip(v, max_norm=1e3)
         # ihvp = inverse_hvp(data, model, edge_index, v, args.damping, device)
         # ihvp, (cg_grad, status) = inverse_hvp_cg_sep(data, model, edge_index, v, args.damping, device, use_torch)
 
@@ -277,12 +286,10 @@ class CEU(TorchUnlearner):
                 f=fmin_loss_fn,
                 x0=self.to_vector(vs),
                 fprime=fmin_grad_fn,
-                gtol=1E-4,
-                # norm='fro',
-                # callback=cg_callback,
+                gtol=1e-3,        
                 disp=False,
                 full_output=True,
-                maxiter=100,
+                maxiter=50,       
             )
             # inverse_hvp.append(to_list(res[0], sizes, device)[0])
             inverse_hvp = self.to_list(torch.from_numpy(res[0]), sizes, device)
@@ -393,16 +400,14 @@ class CEU(TorchUnlearner):
                                         use_torch=use_torch)
             if use_torch:
                 res = fmin_cg(
-                    f=fmin_loss_fn,
-                    x0=self.to_vector(v),
-                    fprime=fmin_grad_fn,
-                    gtol=1E-4,
-                    # norm='fro',
-                    # callback=cg_callback,
-                    disp=False,
-                    full_output=True,
-                    maxiter=100,
-                )
+                f=fmin_loss_fn,
+                x0=self.to_vector(v),
+                fprime=fmin_grad_fn,
+                gtol=1e-3,        
+                disp=False,
+                full_output=True,
+                maxiter=50,       
+            )
                 inverse_hvp.append(self.to_list(torch.from_numpy(res[0]), sizes, device)[0])
                 # inverse_hvp = to_list(torch.from_numpy(res[0]), sizes, device)
                 # cg_grad = np.linalg.norm(fmin_grad_fn(res[0]))
@@ -788,3 +793,19 @@ class CEU(TorchUnlearner):
 
     def loss_sum(self, y_hat, y_true):
         return F.cross_entropy(y_hat, y_true, reduction='sum')
+
+
+
+    def _sanitize_and_clip(self, tensors, max_norm=1e3):
+        clean = []
+        for t in tensors:
+            t = torch.nan_to_num(t, nan=0.0, posinf=0.0, neginf=0.0)
+            t = torch.clamp(t, min=-max_norm, max=max_norm)
+            clean.append(t)
+
+        flat = torch.cat([c.view(-1) for c in clean])
+        n = torch.linalg.norm(flat).item()
+        if n > max_norm:
+            scale = max_norm / (n + 1e-9)
+            clean = [c * scale for c in clean]
+        return clean

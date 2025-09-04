@@ -182,8 +182,6 @@ x_test = ss.fit_transform(x_test)
 x_train_shape = x_train.shape[-1]
 x_test_shape = x_train_shape
 
-print(x_train.shape[0], 'train samples')
-print(x_test.shape[0], 'test samples')
 # convert class vectors to binary class matrices
 y_train = keras.utils.np_utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.np_utils.to_categorical(y_test, num_classes)

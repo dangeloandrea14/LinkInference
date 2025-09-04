@@ -8,7 +8,7 @@ class FeaturePropagator(nn.Module):
     Feature propagation module using SGC-style K-step propagation.
     This matches the propagation behavior in the certified removal framework.
     """
-    def __init__(self,  K=2, alpha=0.0, XdegNorm=False, add_self_loops=True):
+    def __init__(self,  K=1, alpha=0.5, XdegNorm=False, add_self_loops=True):
         super().__init__()
         self.K = K
         self.alpha = alpha
