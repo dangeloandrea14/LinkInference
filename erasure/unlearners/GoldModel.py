@@ -81,12 +81,16 @@ class GoldModelGraph(Unlearner):
         if self.removal_type == 'edge':
             data_manager.partitions[self.training_set] = remapped_partitions['train']
 
-        #Create Predictor
-        self.current = Local(self.local.config['parameters']['predictor'])
-        self.current.dataset = data_manager
+        self.data_manager = data_manager
+
     
 
     def __unlearn__(self):
+
+        #Create Predictor
+        self.current = Local(self.local.config['parameters']['predictor'])
+        self.current.dataset = self.data_manager
+        
 
         predictor = self.global_ctx.factory.get_object(self.current)
         self.hops = len(predictor.model.hidden_channels) + 1

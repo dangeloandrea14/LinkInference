@@ -24,7 +24,12 @@ class TorchGraphModel(Trainable):
                                    self.local_config['parameters']['model']['parameters'])
         
         self.model.apply(init_weights)
-        
+
+        self.global_ctx.logger.info(
+            f"[DBG] model cfg: epochs={self.epochs} | hidden={getattr(self.model,'hidden_channels','?')} "
+            f"| out={getattr(self.model,'out_channels','?')}"
+        )
+                
         self.optimizer = get_instance_kvargs(self.local_config['parameters']['optimizer']['class'],
                                       {'params':self.model.parameters(), **self.local_config['parameters']['optimizer']['parameters']})
         
@@ -69,7 +74,17 @@ class TorchGraphModel(Trainable):
 
         test_mask = torch.zeros(num_nodes, dtype=torch.bool)
         test_mask[self.dataset.partitions['test']] = True
-                         
+
+
+        g = self.dataset.partitions['all'][0][0]
+        train_idx = self.dataset.partitions[self.training_set]
+        test_idx  = self.dataset.partitions.get('test', [])
+
+        self.global_ctx.logger.info(
+            f"[DBG] graph: nodes={g.num_nodes}, edges={g.edge_index.size(1)} | "
+            f"train_len={len(train_idx)} | test_len={len(test_idx)} | training_set='{self.training_set}'"
+        )
+                                
         for epoch in range(self.epochs):
             losses, preds, labels_list = [], [], []
             self.model.train()
@@ -81,6 +96,11 @@ class TorchGraphModel(Trainable):
             X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
                 
             pred = self.model(X,edge_index)
+
+            self.global_ctx.logger.info(
+            f"[DBG] devices: model={next(self.model.parameters()).device} "
+            f"| x={graph.x.device} | ei={graph.edge_index.device} | y={labels.device}"
+            )
 
             loss = self.loss_fn(pred[train_mask], labels[train_mask])
                 

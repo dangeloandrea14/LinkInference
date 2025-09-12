@@ -10,7 +10,7 @@
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":false}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["validation","train"], "percentage":0.1, "ref_data":"train_0", "shuffle":false}},
-          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.2, "ref_data":"train", "shuffle":false, "edge_removal":true}}
+          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.5, "ref_data":"train", "shuffle":false, "edge_removal":true}}
                     ],
         "batch_size":4,
         "split_seed":16}
@@ -255,7 +255,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Citeseer_GCN_edge.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/Citeseer_GCN_50forget_edge.json"}}
             ]
           }
         },

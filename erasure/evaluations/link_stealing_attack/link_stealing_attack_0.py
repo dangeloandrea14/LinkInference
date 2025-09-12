@@ -138,8 +138,6 @@ def get_link_from_edge_index(edge_index, node_num):
     unlink = []
     random.seed(1)
     while len(unlink) < len(link):
-        if len(unlink) % 1000 == 0:
-            print(len(unlink))
         u = random.randint(0, node_num - 1)
         v = random.randint(0, node_num - 1)
         if u == v:
