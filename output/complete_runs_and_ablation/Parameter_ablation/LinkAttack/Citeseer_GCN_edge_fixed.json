@@ -1,0 +1,2093 @@
+{
+    "unlearner": "Identity",
+    "dataset": "Citeseer",
+    "parameters": {},
+    "RunTime": 0.00013494491577148438,
+    "PeakRSS_MB": 3760.421875,
+    "CudaPeak_MB": 2250.412109375,
+    "AIN": 0.0014265335235378032,
+    "AUS": 0.9544096766656481,
+    "UMIA": 0.4984990619136961,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7147147147147147,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7613365155131265,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7615866388308977,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7252252252252253,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7252252252252253,
+    "f1_macro.test.unlearned.on_graph:True": 0.6243669408227542,
+    "f1_macro.test.original.on_graph:True": 0.6243669408227542,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6670186925453218,
+    "f1_macro.forget.original.on_graph:True": 0.6670186925453218,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7593954408686552,
+        "ap": 0.9135861055065715
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7584576138147566,
+        "ap": 0.9134784492754161
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8962444149257336,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8788890230648472
+},{
+    "unlearner": "GoldModelGraph",
+    "dataset": "Citeseer",
+    "parameters": {
+        "training_set": "retain",
+        "data": "global",
+        "cached": false,
+        "predictor": {
+            "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+            "parameters": {
+                "epochs": 10,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001,
+                        "betas": [
+                            0.9,
+                            0.999
+                        ],
+                        "eps": 1e-08,
+                        "weight_decay": 0,
+                        "amsgrad": false,
+                        "maximize": false,
+                        "capturable": false,
+                        "differentiable": false,
+                        "decoupled_weight_decay": false
+                    }
+                },
+                "loss_fn": {
+                    "class": "torch.nn.CrossEntropyLoss",
+                    "parameters": {
+                        "ignore_index": -100,
+                        "reduction": "mean",
+                        "label_smoothing": 0.0
+                    }
+                },
+                "model": {
+                    "class": "erasure.model.graphs.GCN.GCN",
+                    "parameters": {
+                        "in_channels": 3703,
+                        "hidden_channels": [
+                            100
+                        ],
+                        "out_channels": 6,
+                        "n_classes": 6
+                    }
+                },
+                "cached": false,
+                "fold_id": -1,
+                "training_set": "retain",
+                "batch_size": 4,
+                "early_stopping_threshold": null,
+                "alias": "erasure.model.graphs.GCN.GCN"
+            }
+        }
+    },
+    "RunTime": 0.21065378189086914,
+    "PeakRSS_MB": 3846.69140625,
+    "CudaPeak_MB": 2414.65380859375,
+    "AIN": 1.0,
+    "AUS": 0.9470383946373775,
+    "UMIA": 0.5654784240150093,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7012012012012012,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7649164677804295,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7757828810020877,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7012012012012012,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7012012012012012,
+    "f1_macro.test.unlearned.on_graph:True": 0.6225844223217162,
+    "f1_macro.test.original.on_graph:True": 0.6225844223217162,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6720610780713616,
+    "f1_macro.forget.original.on_graph:True": 0.6720610780713616,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7627100319035802,
+        "ap": 0.9217780990245461
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.762305919886565,
+        "ap": 0.9217489002584758
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8909576138147567,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8762558869701726
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12548041343688965,
+    "PeakRSS_MB": 3928.54296875,
+    "CudaPeak_MB": 2455.77392578125,
+    "AIN": 1.0,
+    "AUS": 0.9595108342126946,
+    "UMIA": 0.5112570356472795,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7327327327327328,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7696897374701671,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7753653444676409,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7387387387387387,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7387387387387387,
+    "f1_macro.test.unlearned.on_graph:True": 0.6488985659013234,
+    "f1_macro.test.original.on_graph:True": 0.6488985659013234,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6791828131924315,
+    "f1_macro.forget.original.on_graph:True": 0.6791828131924315,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7594682103610675,
+        "ap": 0.9134757568880779
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7595238095238095,
+        "ap": 0.913507806738428
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9036927907257578,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8897391619369641
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12785816192626953,
+    "PeakRSS_MB": 4037.2578125,
+    "CudaPeak_MB": 2461.44287109375,
+    "AIN": 0.0014265335235378032,
+    "AUS": 0.9958343126615892,
+    "UMIA": 0.49249530956848026,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7732732732732732,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.779236276849642,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7716075156576201,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7867867867867868,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7867867867867868,
+    "f1_macro.test.unlearned.on_graph:True": 0.6880588358771605,
+    "f1_macro.test.original.on_graph:True": 0.6880588358771605,
+    "f1_macro.forget.unlearned.on_graph:True": 0.7032613065796091,
+    "f1_macro.forget.original.on_graph:True": 0.7032613065796091,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.759637051936159,
+        "ap": 0.9140040326382628
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7591697736787022,
+        "ap": 0.9139339965164295
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9326065692549209,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9336662238860041
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12780380249023438,
+    "PeakRSS_MB": 4051.0,
+    "CudaPeak_MB": 2455.056640625,
+    "AIN": 1.0,
+    "AUS": 0.9977115672945764,
+    "UMIA": 0.49080675422138836,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7582582582582582,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7565632458233891,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7494780793319415,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7702702702702703,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7702702702702703,
+    "f1_macro.test.unlearned.on_graph:True": 0.6620088486568361,
+    "f1_macro.test.original.on_graph:True": 0.6620088486568361,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6526977004958067,
+    "f1_macro.forget.original.on_graph:True": 0.6526977004958067,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7614280808477237,
+        "ap": 0.9156196166006629
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7614162251439037,
+        "ap": 0.9155638705796363
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8708018355271103,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8724212051684579
+},{
+    "unlearner": "SuccessiveRandomLabels",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.266994953155518,
+    "PeakRSS_MB": 4051.0,
+    "CudaPeak_MB": 2456.47265625,
+    "AIN": 1.0,
+    "AUS": 0.9611398494825285,
+    "UMIA": 0.5086303939962477,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7192192192192193,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7577565632458234,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7745302713987474,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7342342342342343,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7342342342342343,
+    "f1_macro.test.unlearned.on_graph:True": 0.6325154345833331,
+    "f1_macro.test.original.on_graph:True": 0.6325154345833331,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6698019182005545,
+    "f1_macro.forget.original.on_graph:True": 0.6698019182005545,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7586530285191,
+        "ap": 0.9134482584351357
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7584678342490843,
+        "ap": 0.9134097804496929
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9045513826832507,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8877055911121845
+},{
+    "unlearner": "SuccessiveRandomLabels",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.246492862701416,
+    "PeakRSS_MB": 4051.0,
+    "CudaPeak_MB": 2458.60595703125,
+    "AIN": 1.0,
+    "AUS": 0.9554732407611772,
+    "UMIA": 0.5118198874296436,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.21771771771771772,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.18615751789976134,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.20167014613778705,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.23723723723723725,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.23723723723723725,
+    "f1_macro.test.unlearned.on_graph:True": 0.11217239290932779,
+    "f1_macro.test.original.on_graph:True": 0.11217239290932779,
+    "f1_macro.forget.unlearned.on_graph:True": 0.10281549835882431,
+    "f1_macro.forget.original.on_graph:True": 0.10281549835882431,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.6683432267137623,
+        "ap": 0.8577858869518384
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.6673166862899007,
+        "ap": 0.8578100893737498
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7181644728897476,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.6856043956043956
+},{
+    "unlearner": "SuccessiveRandomLabels",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.08804702758789,
+    "PeakRSS_MB": 4051.0,
+    "CudaPeak_MB": 2460.02197265625,
+    "AIN": 1.0,
+    "AUS": 0.9768461742227281,
+    "UMIA": 0.5536585365853659,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.24324324324324326,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.21957040572792363,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.20417536534446765,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.23273273273273273,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.23273273273273273,
+    "f1_macro.test.unlearned.on_graph:True": 0.1655448540267818,
+    "f1_macro.test.original.on_graph:True": 0.1655448540267818,
+    "f1_macro.forget.unlearned.on_graph:True": 0.17893876546570409,
+    "f1_macro.forget.original.on_graph:True": 0.17893876546570409,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.6329780710361068,
+        "ap": 0.8538059179885131
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.6326003237833595,
+        "ap": 0.8537086379054655
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7638521917642797,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7532927786499215
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12308263778686523,
+    "PeakRSS_MB": 4052.60546875,
+    "CudaPeak_MB": 2461.43798828125,
+    "AIN": 1.0,
+    "AUS": 0.9600532254040418,
+    "UMIA": 0.4887429643527204,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7327327327327328,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7684964200477327,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7728601252609604,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7372372372372372,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7372372372372372,
+    "f1_macro.test.unlearned.on_graph:True": 0.6486402781548753,
+    "f1_macro.test.original.on_graph:True": 0.6486402781548753,
+    "f1_macro.forget.unlearned.on_graph:True": 0.67830108346873,
+    "f1_macro.forget.original.on_graph:True": 0.67830108346873,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.759839007718472,
+        "ap": 0.9136002714825999
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7596358254840397,
+        "ap": 0.9135543064938526
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9036710542205048,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8897258785170873
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12462425231933594,
+    "PeakRSS_MB": 4067.40234375,
+    "CudaPeak_MB": 2462.85400390625,
+    "AIN": 1.0,
+    "AUS": 0.9955891083849439,
+    "UMIA": 0.4879924953095685,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7747747747747747,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7816229116945107,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7728601252609604,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7852852852852853,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7852852852852853,
+    "f1_macro.test.unlearned.on_graph:True": 0.6906065183279205,
+    "f1_macro.test.original.on_graph:True": 0.6906065183279205,
+    "f1_macro.forget.unlearned.on_graph:True": 0.7021218512296054,
+    "f1_macro.forget.original.on_graph:True": 0.7021218512296054,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7606112637362638,
+        "ap": 0.9145779995912298
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7609902374411303,
+        "ap": 0.9146024744626671
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.937534114237411,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9385412389807994
+},{
+    "unlearner": "Finetuning",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 1,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12686586380004883,
+    "PeakRSS_MB": 4081.828125,
+    "CudaPeak_MB": 2464.27001953125,
+    "AIN": 1.0,
+    "AUS": 0.9998619211042294,
+    "UMIA": 0.49906191369606,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7627627627627628,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7625298329355609,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7574112734864301,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7732732732732732,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7732732732732732,
+    "f1_macro.test.unlearned.on_graph:True": 0.6653351420538568,
+    "f1_macro.test.original.on_graph:True": 0.6653351420538568,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6583309238614642,
+    "f1_macro.forget.original.on_graph:True": 0.6583309238614642,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7614497481684982,
+        "ap": 0.9156345434907962
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7607420852956568,
+        "ap": 0.9155534592601686
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8738419273034658,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8752916314454776
+},{
+    "unlearner": "eu_k",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 10,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.16374897956848145,
+    "PeakRSS_MB": 4148.7265625,
+    "CudaPeak_MB": 2469.93896484375,
+    "AIN": 0.000999000999000999,
+    "RelearnTime": 0,
+    "AUS": 0.9920070141004341,
+    "UMIA": 0.5013133208255159,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7942942942942943,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.8042959427207638,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.8004175365344468,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7987987987987988,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7987987987987988,
+    "f1_macro.test.unlearned.on_graph:True": 0.7255448992161235,
+    "f1_macro.test.original.on_graph:True": 0.7255448992161235,
+    "f1_macro.forget.unlearned.on_graph:True": 0.741679895378455,
+    "f1_macro.forget.original.on_graph:True": 0.741679895378455,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7594350961538462,
+        "ap": 0.9136453579132331
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.760521323914181,
+        "ap": 0.913789523651425
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9512933220625528,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9511822243690375
+},{
+    "unlearner": "eu_k",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 10,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.16533207893371582,
+    "PeakRSS_MB": 4148.7265625,
+    "CudaPeak_MB": 2471.35009765625,
+    "AIN": 1.0,
+    "AUS": 0.9870652586080841,
+    "UMIA": 0.4919324577861163,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7417417417417418,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7428400954653938,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7553235908141962,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7402402402402403,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7402402402402403,
+    "f1_macro.test.unlearned.on_graph:True": 0.6535517507550246,
+    "f1_macro.test.original.on_graph:True": 0.6535517507550246,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6525298678308968,
+    "f1_macro.forget.original.on_graph:True": 0.6525298678308968,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7012910452642594,
+        "ap": 0.8801231721761934
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7006733222135008,
+        "ap": 0.8800193623341077
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9461043352252143,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9427122328221229
+},{
+    "unlearner": "eu_k",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": 2,
+        "epochs": 10,
+        "ref_data": "retain",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.16550898551940918,
+    "PeakRSS_MB": 4148.7265625,
+    "CudaPeak_MB": 2472.76611328125,
+    "AIN": 1.0,
+    "AUS": 0.9772068971862865,
+    "UMIA": 0.5048780487804878,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.6246246246246246,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.5984486873508353,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.6041753653444677,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.6441441441441441,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.6441441441441441,
+    "f1_macro.test.unlearned.on_graph:True": 0.563637613460238,
+    "f1_macro.test.original.on_graph:True": 0.563637613460238,
+    "f1_macro.forget.unlearned.on_graph:True": 0.5352770233021734,
+    "f1_macro.forget.original.on_graph:True": 0.5352770233021734,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.5086558902407117,
+        "ap": 0.796949246783252
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.5113087061747775,
+        "ap": 0.7966931367434248
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.785752928390291,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7844556816809565
+},{
+    "unlearner": "NegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.12911295890808105,
+    "PeakRSS_MB": 4148.7265625,
+    "CudaPeak_MB": 2469.93408203125,
+    "AIN": 1.0,
+    "AUS": 0.9415463831004495,
+    "UMIA": 0.5136960600375234,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.6936936936936937,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7458233890214797,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7528183716075156,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.6966966966966966,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.6966966966966966,
+    "f1_macro.test.unlearned.on_graph:True": 0.6041046293753379,
+    "f1_macro.test.original.on_graph:True": 0.6041046293753379,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6467385811897295,
+    "f1_macro.forget.original.on_graph:True": 0.6467385811897295,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7587176216640502,
+        "ap": 0.9133758705936419
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7587613651229723,
+        "ap": 0.913431082328767
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8919949281487743,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8721458761019201
+},{
+    "unlearner": "NegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.10492420196533203,
+    "PeakRSS_MB": 4148.7265625,
+    "CudaPeak_MB": 2471.35009765625,
+    "AIN": 1.0,
+    "AUS": 0.9660790002231645,
+    "UMIA": 0.5215759849906192,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.07207207207207207,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.042362768496420046,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.05970772442588727,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.07357357357357357,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.07357357357357357,
+    "f1_macro.test.unlearned.on_graph:True": 0.03502871506944827,
+    "f1_macro.test.original.on_graph:True": 0.03502871506944827,
+    "f1_macro.forget.unlearned.on_graph:True": 0.02730842383025109,
+    "f1_macro.forget.original.on_graph:True": 0.02730842383025109,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7015187565410779,
+        "ap": 0.8854416342758817
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7017174417844061,
+        "ap": 0.8853994800643367
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7913585315783118,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7735557299843014
+},{
+    "unlearner": "NegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 0.10917544364929199,
+    "PeakRSS_MB": 4218.84375,
+    "CudaPeak_MB": 2472.76611328125,
+    "AIN": 1.0,
+    "AUS": 0.9694806909839329,
+    "UMIA": 0.5120075046904315,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.15465465465465467,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.13305489260143197,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.1444676409185804,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.16066066066066065,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.16066066066066065,
+    "f1_macro.test.unlearned.on_graph:True": 0.11037417815648369,
+    "f1_macro.test.original.on_graph:True": 0.11037417815648369,
+    "f1_macro.forget.unlearned.on_graph:True": 0.12258634915835147,
+    "f1_macro.forget.original.on_graph:True": 0.12258634915835147,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.6848287872841445,
+        "ap": 0.8778371535834459
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.6851660616169545,
+        "ap": 0.8778685810860851
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8468584711991305,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8599329791088033
+},{
+    "unlearner": "AdvancedNegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "training_set": "train"
+    },
+    "RunTime": 30.636855602264404,
+    "PeakRSS_MB": 4227.76953125,
+    "CudaPeak_MB": 2478.43505859375,
+    "AIN": 1.0,
+    "AUS": 0.9471070842548335,
+    "UMIA": 0.4943714821763602,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7057057057057057,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.752983293556086,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7674321503131524,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7117117117117117,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7117117117117117,
+    "f1_macro.test.unlearned.on_graph:True": 0.6202511648229015,
+    "f1_macro.test.original.on_graph:True": 0.6202511648229015,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6533527760846638,
+    "f1_macro.forget.original.on_graph:True": 0.6533527760846638,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7577900150444794,
+        "ap": 0.9132113719847923
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7572634582679225,
+        "ap": 0.9130384260179429
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9032230406955681,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8863543050356237
+},{
+    "unlearner": "AdvancedNegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "training_set": "train"
+    },
+    "RunTime": 30.60734796524048,
+    "PeakRSS_MB": 4253.125,
+    "CudaPeak_MB": 2479.85107421875,
+    "AIN": 1.0,
+    "AUS": 0.9585962885406889,
+    "UMIA": 0.5427767354596623,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.19369369369369369,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.15572792362768498,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.19206680584551147,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.19369369369369369,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.19369369369369369,
+    "f1_macro.test.unlearned.on_graph:True": 0.10295031774687378,
+    "f1_macro.test.original.on_graph:True": 0.10295031774687378,
+    "f1_macro.forget.unlearned.on_graph:True": 0.04710378983634798,
+    "f1_macro.forget.original.on_graph:True": 0.04710378983634798,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7600086669283098,
+        "ap": 0.915169936976681
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.760576923076923,
+        "ap": 0.915178651245375
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7202149498852796,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7263343799058084
+},{
+    "unlearner": "AdvancedNegGrad",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "training_set": "train"
+    },
+    "RunTime": 30.519150257110596,
+    "PeakRSS_MB": 4301.83203125,
+    "CudaPeak_MB": 2477.01416015625,
+    "AIN": 1.0,
+    "AUS": 0.9480652725043741,
+    "UMIA": 0.5195121951219512,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.17867867867867868,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.1247016706443914,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.1649269311064718,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.17267267267267267,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.17267267267267267,
+    "f1_macro.test.unlearned.on_graph:True": 0.08384884910057168,
+    "f1_macro.test.original.on_graph:True": 0.08384884910057168,
+    "f1_macro.forget.unlearned.on_graph:True": 0.04556784382723807,
+    "f1_macro.forget.original.on_graph:True": 0.04556784382723807,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7606370192307692,
+        "ap": 0.9148423579828295
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7597233124018838,
+        "ap": 0.9147471507161512
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.6223384856901341,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.63141891075957
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.UNSIR.UNSIR",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "noise_lr": 0.1,
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.001
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "sample_type": "default"
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data": "retain",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.001
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 0.27117276191711426,
+    "PeakRSS_MB": 4301.83203125,
+    "CudaPeak_MB": 2492.38623046875,
+    "AIN": 1.0,
+    "AUS": 0.9671663973131838,
+    "UMIA": 0.499437148217636,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7477477477477478,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7810262529832935,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7841336116910229,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7507507507507507,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7507507507507507,
+    "f1_macro.test.unlearned.on_graph:True": 0.6623353443941679,
+    "f1_macro.test.original.on_graph:True": 0.6623353443941679,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6939615793260954,
+    "f1_macro.forget.original.on_graph:True": 0.6939615793260954,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7590430402930403,
+        "ap": 0.9134547011424754
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7591750883045526,
+        "ap": 0.9134906156188018
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9118657167008816,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.90140019321338
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.UNSIR.UNSIR",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "noise_lr": 0.1,
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "sample_type": "default"
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data": "retain",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 0.6752867698669434,
+    "PeakRSS_MB": 4301.83203125,
+    "CudaPeak_MB": 2494.7451171875,
+    "AIN": 1.0,
+    "AUS": 0.9515535963874852,
+    "UMIA": 0.4951219512195122,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.3213213213213213,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.2678997613365155,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.27724425887265136,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.32432432432432434,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.32432432432432434,
+    "f1_macro.test.unlearned.on_graph:True": 0.22246122245590075,
+    "f1_macro.test.original.on_graph:True": 0.22246122245590075,
+    "f1_macro.forget.unlearned.on_graph:True": 0.18246968892007062,
+    "f1_macro.forget.original.on_graph:True": 0.18246968892007062,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7552336800104658,
+        "ap": 0.9122301188734706
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.757189871140764,
+        "ap": 0.9124410061567626
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7667352976693637,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7676482308899891
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.UNSIR.UNSIR",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "noise_lr": 0.1,
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "sample_type": "default"
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
+                "parameters": {
+                    "epochs": 1,
+                    "ref_data": "retain",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 0.2384815216064453,
+    "PeakRSS_MB": 4301.83203125,
+    "CudaPeak_MB": 2499.505859375,
+    "AIN": 1.0,
+    "AUS": 0.9530119919742429,
+    "UMIA": 0.525515947467167,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.23723723723723725,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.2863961813842482,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.27348643006263046,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.23873873873873874,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.23873873873873874,
+    "f1_macro.test.unlearned.on_graph:True": 0.12859411120280687,
+    "f1_macro.test.original.on_graph:True": 0.12859411120280687,
+    "f1_macro.forget.unlearned.on_graph:True": 0.14376686364394806,
+    "f1_macro.forget.original.on_graph:True": 0.14376686364394806,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.759549565018315,
+        "ap": 0.9150050390911932
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7599248593668237,
+        "ap": 0.9150546881577872
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7348031638690979,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7350386426760053
+},{
+    "unlearner": "BadTeaching",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "KL_temperature": 1.0,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "transform": null,
+        "bad_teacher": {
+            "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+            "parameters": {
+                "epochs": 0,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001,
+                        "betas": [
+                            0.9,
+                            0.999
+                        ],
+                        "eps": 1e-08,
+                        "weight_decay": 0,
+                        "amsgrad": false,
+                        "maximize": false,
+                        "capturable": false,
+                        "differentiable": false,
+                        "decoupled_weight_decay": false
+                    }
+                },
+                "loss_fn": {
+                    "class": "torch.nn.CrossEntropyLoss",
+                    "parameters": {
+                        "ignore_index": -100,
+                        "reduction": "mean",
+                        "label_smoothing": 0.0
+                    }
+                },
+                "model": {
+                    "class": "erasure.model.graphs.GCN.GCN",
+                    "parameters": {
+                        "in_channels": 3703,
+                        "hidden_channels": [
+                            100
+                        ],
+                        "out_channels": 6,
+                        "n_classes": 6
+                    }
+                },
+                "cached": false,
+                "fold_id": -1,
+                "training_set": "retain",
+                "batch_size": 4,
+                "early_stopping_threshold": null,
+                "alias": "erasure.model.graphs.GCN.GCN"
+            }
+        }
+    },
+    "RunTime": 30.48163676261902,
+    "PeakRSS_MB": 4301.83203125,
+    "CudaPeak_MB": 2482.67822265625,
+    "AIN": 1.0,
+    "AUS": 0.958044018719803,
+    "UMIA": 0.5273921200750469,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7372372372372372,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7780429594272077,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7870563674321504,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7417417417417418,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7417417417417418,
+    "f1_macro.test.unlearned.on_graph:True": 0.656835858931437,
+    "f1_macro.test.original.on_graph:True": 0.656835858931437,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6936359162132684,
+    "f1_macro.forget.original.on_graph:True": 0.6936359162132684,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7574016385400313,
+        "ap": 0.913068238228182
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7574527407116693,
+        "ap": 0.9130348673232844
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8985050114720444,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.880457674193938
+},{
+    "unlearner": "BadTeaching",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "KL_temperature": 1.0,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "transform": null,
+        "bad_teacher": {
+            "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+            "parameters": {
+                "epochs": 0,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001,
+                        "betas": [
+                            0.9,
+                            0.999
+                        ],
+                        "eps": 1e-08,
+                        "weight_decay": 0,
+                        "amsgrad": false,
+                        "maximize": false,
+                        "capturable": false,
+                        "differentiable": false,
+                        "decoupled_weight_decay": false
+                    }
+                },
+                "loss_fn": {
+                    "class": "torch.nn.CrossEntropyLoss",
+                    "parameters": {
+                        "ignore_index": -100,
+                        "reduction": "mean",
+                        "label_smoothing": 0.0
+                    }
+                },
+                "model": {
+                    "class": "erasure.model.graphs.GCN.GCN",
+                    "parameters": {
+                        "in_channels": 3703,
+                        "hidden_channels": [
+                            100
+                        ],
+                        "out_channels": 6,
+                        "n_classes": 6
+                    }
+                },
+                "cached": false,
+                "fold_id": -1,
+                "training_set": "retain",
+                "batch_size": 4,
+                "early_stopping_threshold": null,
+                "alias": "erasure.model.graphs.GCN.GCN"
+            }
+        }
+    },
+    "RunTime": 30.297564268112183,
+    "PeakRSS_MB": 4335.33203125,
+    "CudaPeak_MB": 2489.73779296875,
+    "AIN": 1.0,
+    "AUS": 0.977415542965687,
+    "UMIA": 0.5303939962476547,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.0945945945945946,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.0733890214797136,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.0709812108559499,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.0945945945945946,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.0945945945945946,
+    "f1_macro.test.unlearned.on_graph:True": 0.028806584362139922,
+    "f1_macro.test.original.on_graph:True": 0.028806584362139922,
+    "f1_macro.forget.unlearned.on_graph:True": 0.022790439132851583,
+    "f1_macro.forget.original.on_graph:True": 0.022790439132851583,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7625372023809525,
+        "ap": 0.9163213129639182
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7631050497121926,
+        "ap": 0.9163691923574537
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.62507245501751,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.6219233788189832
+},{
+    "unlearner": "BadTeaching",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "KL_temperature": 1.0,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "transform": null,
+        "bad_teacher": {
+            "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+            "parameters": {
+                "epochs": 0,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001,
+                        "betas": [
+                            0.9,
+                            0.999
+                        ],
+                        "eps": 1e-08,
+                        "weight_decay": 0,
+                        "amsgrad": false,
+                        "maximize": false,
+                        "capturable": false,
+                        "differentiable": false,
+                        "decoupled_weight_decay": false
+                    }
+                },
+                "loss_fn": {
+                    "class": "torch.nn.CrossEntropyLoss",
+                    "parameters": {
+                        "ignore_index": -100,
+                        "reduction": "mean",
+                        "label_smoothing": 0.0
+                    }
+                },
+                "model": {
+                    "class": "erasure.model.graphs.GCN.GCN",
+                    "parameters": {
+                        "in_channels": 3703,
+                        "hidden_channels": [
+                            100
+                        ],
+                        "out_channels": 6,
+                        "n_classes": 6
+                    }
+                },
+                "cached": false,
+                "fold_id": -1,
+                "training_set": "retain",
+                "batch_size": 4,
+                "early_stopping_threshold": null,
+                "alias": "erasure.model.graphs.GCN.GCN"
+            }
+        }
+    },
+    "RunTime": 30.256635904312134,
+    "PeakRSS_MB": 4345.69921875,
+    "CudaPeak_MB": 2492.89599609375,
+    "AIN": 1.0,
+    "AUS": 0.977415542965687,
+    "UMIA": 0.5046904315196998,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.0945945945945946,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.0733890214797136,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.0709812108559499,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.0945945945945946,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.0945945945945946,
+    "f1_macro.test.unlearned.on_graph:True": 0.028806584362139922,
+    "f1_macro.test.original.on_graph:True": 0.028806584362139922,
+    "f1_macro.forget.unlearned.on_graph:True": 0.022790439132851583,
+    "f1_macro.forget.original.on_graph:True": 0.022790439132851583,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7621202086603873,
+        "ap": 0.9159010038182654
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7627784046310833,
+        "ap": 0.9159362342214836
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.5,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.5
+},{
+    "unlearner": "Scrub",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "T": 2.0,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 30.266830682754517,
+    "PeakRSS_MB": 4407.453125,
+    "CudaPeak_MB": 2491.2880859375,
+    "AIN": 1.0,
+    "AUS": 0.9763911566126826,
+    "UMIA": 0.4951219512195122,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7417417417417418,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7643198090692124,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7745302713987474,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7567567567567568,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7567567567567568,
+    "f1_macro.test.unlearned.on_graph:True": 0.6520452252084932,
+    "f1_macro.test.original.on_graph:True": 0.6520452252084932,
+    "f1_macro.forget.unlearned.on_graph:True": 0.671752307693872,
+    "f1_macro.forget.original.on_graph:True": 0.671752307693872,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7591763147566719,
+        "ap": 0.9135546879129708
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7594767955259026,
+        "ap": 0.9135644752656522
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9090882743629997,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8948895060982973
+},{
+    "unlearner": "Scrub",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "T": 2.0,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 30.25822401046753,
+    "PeakRSS_MB": 4407.453125,
+    "CudaPeak_MB": 2496.76708984375,
+    "AIN": 1.0,
+    "AUS": 0.9493579459992897,
+    "UMIA": 0.5609756097560975,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.21621621621621623,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.1730310262529833,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.19791231732776618,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.2147147147147147,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.2147147147147147,
+    "f1_macro.test.unlearned.on_graph:True": 0.10453790943140635,
+    "f1_macro.test.original.on_graph:True": 0.10453790943140635,
+    "f1_macro.forget.unlearned.on_graph:True": 0.06129022158040712,
+    "f1_macro.forget.original.on_graph:True": 0.06129022158040712,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7585798502093145,
+        "ap": 0.9149239680421793
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7595552884615385,
+        "ap": 0.9150299824748063
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.5508845550054342,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.5645187779253714
+},{
+    "unlearner": "Scrub",
+    "dataset": "Citeseer",
+    "parameters": {
+        "epochs": 1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "T": 2.0,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 30.394527196884155,
+    "PeakRSS_MB": 4407.453125,
+    "CudaPeak_MB": 2493.93017578125,
+    "AIN": 1.0,
+    "AUS": 0.9262595805100069,
+    "UMIA": 0.5181988742964354,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.24174174174174173,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.15572792362768498,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.1757828810020877,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.24474474474474475,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.24474474474474475,
+    "f1_macro.test.unlearned.on_graph:True": 0.12747571624671913,
+    "f1_macro.test.original.on_graph:True": 0.12747571624671913,
+    "f1_macro.forget.unlearned.on_graph:True": 0.08460579923219101,
+    "f1_macro.forget.original.on_graph:True": 0.08460579923219101,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7602780775771847,
+        "ap": 0.9154918988047188
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7603561616954474,
+        "ap": 0.9154877522856979
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7118814152880087,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7045915348387877
+},{
+    "unlearner": "FisherForgetting",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data": "retain",
+        "alpha": 1e-06,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.904324054718018,
+    "PeakRSS_MB": 4411.05078125,
+    "CudaPeak_MB": 2499.59912109375,
+    "AIN": 1.0,
+    "AUS": 0.9257632988923886,
+    "UMIA": 0.4960600375234521,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.5690690690690691,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.6324582338902148,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.6505219206680585,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.6096096096096096,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.6096096096096096,
+    "f1_macro.test.unlearned.on_graph:True": 0.49897337850336493,
+    "f1_macro.test.original.on_graph:True": 0.49897337850336493,
+    "f1_macro.forget.unlearned.on_graph:True": 0.5423852126312576,
+    "f1_macro.forget.original.on_graph:True": 0.5423852126312576,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7564609497645212,
+        "ap": 0.9123971245480818
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7560378237833594,
+        "ap": 0.9124136265497993
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8946854244656443,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.88023608259872
+},{
+    "unlearner": "FisherForgetting",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data": "retain",
+        "alpha": 1e-07,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.37998604774475,
+    "PeakRSS_MB": 4494.0078125,
+    "CudaPeak_MB": 2502.62109375,
+    "AIN": 1.0,
+    "AUS": 0.9176142876397816,
+    "UMIA": 0.5358348968105066,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.524024024024024,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.5799522673031027,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.5791231732776618,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.5285285285285285,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.5285285285285285,
+    "f1_macro.test.unlearned.on_graph:True": 0.48035498249653535,
+    "f1_macro.test.original.on_graph:True": 0.48035498249653535,
+    "f1_macro.forget.unlearned.on_graph:True": 0.5250947092032995,
+    "f1_macro.forget.original.on_graph:True": 0.5250947092032995,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7562168857927787,
+        "ap": 0.9121403704546881
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7562630821559393,
+        "ap": 0.9121425728903629
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9041154449945659,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8972775027170632
+},{
+    "unlearner": "FisherForgetting",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data": "retain",
+        "alpha": 1e-08,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train"
+    },
+    "RunTime": 31.342287063598633,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2509.7060546875,
+    "AIN": 1.0,
+    "AUS": 0.9079889153984083,
+    "UMIA": 0.5414634146341463,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.5075075075075075,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.5912887828162291,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.5954070981210856,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.5345345345345346,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.5345345345345346,
+    "f1_macro.test.unlearned.on_graph:True": 0.46261119294547215,
+    "f1_macro.test.original.on_graph:True": 0.46261119294547215,
+    "f1_macro.forget.unlearned.on_graph:True": 0.5139658270684648,
+    "f1_macro.forget.original.on_graph:True": 0.5139658270684648,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7577663036368394,
+        "ap": 0.9129127822381926
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.756702560832025,
+        "ap": 0.9128303496354715
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9038642676005313,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8843720565149137
+},{
+    "unlearner": "SelectiveSynapticDampening",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data_train": "train",
+        "ref_data_forget": "forget",
+        "dampening_constant": 0.1,
+        "selection_weighting": 50,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.001
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "lr": 0.1
+    },
+    "RunTime": 30.551016569137573,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2508.31884765625,
+    "AIN": 1.0,
+    "RelearnTime": 0,
+    "AUS": 0.9572288845332505,
+    "UMIA": 0.5212007504690431,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7612612612612613,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.8090692124105012,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7807933194154488,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7642642642642643,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7642642642642643,
+    "f1_macro.test.unlearned.on_graph:True": 0.6816514127390169,
+    "f1_macro.test.original.on_graph:True": 0.6816514127390169,
+    "f1_macro.forget.unlearned.on_graph:True": 0.7440846484332994,
+    "f1_macro.forget.original.on_graph:True": 0.7440846484332994,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7603160975928833,
+        "ap": 0.913861571655499
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7600315607012036,
+        "ap": 0.9137921465630664
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9561767902427243,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9559739161936964
+},{
+    "unlearner": "SelectiveSynapticDampening",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data_train": "train",
+        "ref_data_forget": "forget",
+        "dampening_constant": 0.1,
+        "selection_weighting": 50,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 0.1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "lr": 0.1
+    },
+    "RunTime": 30.319003343582153,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2505.47705078125,
+    "AIN": 1.0,
+    "RelearnTime": 5,
+    "AUS": 0.9077860935507364,
+    "UMIA": 0.5446529080675422,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.6411411411411412,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7362768496420048,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.6613778705636744,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.6396396396396397,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.6396396396396397,
+    "f1_macro.test.unlearned.on_graph:True": 0.5821635755359945,
+    "f1_macro.test.original.on_graph:True": 0.5821635755359945,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6766789334678913,
+    "f1_macro.forget.original.on_graph:True": 0.6766789334678913,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7559429781527996,
+        "ap": 0.9096480567815751
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7563779598377812,
+        "ap": 0.909736125848654
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.9066489554401642,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.9109627460451636
+},{
+    "unlearner": "SelectiveSynapticDampening",
+    "dataset": "Citeseer",
+    "parameters": {
+        "ref_data_train": "train",
+        "ref_data_forget": "forget",
+        "dampening_constant": 0.1,
+        "selection_weighting": 50,
+        "optimizer": {
+            "class": "torch.optim.Adam",
+            "parameters": {
+                "lr": 1
+            }
+        },
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "forget_part": "forget",
+        "retain_part": "retain",
+        "train_part": "train",
+        "lr": 0.1
+    },
+    "RunTime": 31.27697205543518,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2511.5234375,
+    "AIN": 1.0,
+    "RelearnTime": 100,
+    "AUS": 0.8881722876009392,
+    "UMIA": 0.54953095684803,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.4174174174174174,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.5298329355608592,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.47640918580375785,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.42342342342342343,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.42342342342342343,
+    "f1_macro.test.unlearned.on_graph:True": 0.3710109109679056,
+    "f1_macro.test.original.on_graph:True": 0.3710109109679056,
+    "f1_macro.forget.unlearned.on_graph:True": 0.4470440249934687,
+    "f1_macro.forget.original.on_graph:True": 0.4470440249934687,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.5883164082940868,
+        "ap": 0.7807473959065033
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.5891041993720565,
+        "ap": 0.7810476373265687
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.6867002777442337,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.6883727810650887
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.SaliencyMapGeneration.SaliencyMapGeneration",
+                "parameters": {
+                    "ref_data": "forget",
+                    "treshold": 0.5,
+                    "save_dir": "saliency_maps",
+                    "file_name": "saliency_map",
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {}
+                    }
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
+                "parameters": {
+                    "model_mask_path": "saliency_maps/saliency_map",
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.001
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": "saliency_maps/saliency_map",
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 38.16267991065979,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2508.69140625,
+    "AIN": 1.0,
+    "AUS": 0.9566839338410595,
+    "UMIA": 0.5114446529080675,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7222222222222222,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7619331742243437,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7757828810020877,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7327327327327328,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7327327327327328,
+    "f1_macro.test.unlearned.on_graph:True": 0.6426479000212908,
+    "f1_macro.test.original.on_graph:True": 0.6426479000212908,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6769157038581887,
+    "f1_macro.forget.original.on_graph:True": 0.6769157038581887,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7577519950287808,
+        "ap": 0.913254830581118
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7579936060962846,
+        "ap": 0.9132743596055829
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.904203598599203,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8871597633136095
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.SaliencyMapGeneration.SaliencyMapGeneration",
+                "parameters": {
+                    "ref_data": "forget",
+                    "treshold": 0.5,
+                    "save_dir": "saliency_maps",
+                    "file_name": "saliency_map",
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {}
+                    }
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
+                "parameters": {
+                    "model_mask_path": "saliency_maps/saliency_map",
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 0.1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": "saliency_maps/saliency_map",
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 37.87765836715698,
+    "PeakRSS_MB": 4611.71484375,
+    "CudaPeak_MB": 2515.4013671875,
+    "AIN": 1.0,
+    "AUS": 0.9560707448372714,
+    "UMIA": 0.5455909943714822,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.19369369369369369,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.1473747016706444,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.15281837160751566,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.19519519519519518,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.19519519519519518,
+    "f1_macro.test.unlearned.on_graph:True": 0.09377219339230598,
+    "f1_macro.test.original.on_graph:True": 0.09377219339230598,
+    "f1_macro.forget.unlearned.on_graph:True": 0.0813503300993305,
+    "f1_macro.forget.original.on_graph:True": 0.0813503300993305,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.6840888278388279,
+        "ap": 0.8758327572884514
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.6854730834641549,
+        "ap": 0.8758281558877002
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.7367878275570583,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.7151159280280159
+},{
+    "unlearner": "Cascade",
+    "dataset": "Citeseer",
+    "parameters": {
+        "sub_unlearner": [
+            {
+                "class": "erasure.unlearners.graph_unlearners.SaliencyMapGeneration.SaliencyMapGeneration",
+                "parameters": {
+                    "ref_data": "forget",
+                    "treshold": 0.5,
+                    "save_dir": "saliency_maps",
+                    "file_name": "saliency_map",
+                    "last_trainable_layers": -1,
+                    "mask_path": null,
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {}
+                    }
+                }
+            },
+            {
+                "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
+                "parameters": {
+                    "model_mask_path": "saliency_maps/saliency_map",
+                    "epochs": 1,
+                    "ref_data_retain": "retain",
+                    "ref_data_forget": "forget",
+                    "optimizer": {
+                        "class": "torch.optim.Adam",
+                        "parameters": {
+                            "lr": 1
+                        }
+                    },
+                    "last_trainable_layers": -1,
+                    "mask_path": "saliency_maps/saliency_map",
+                    "forget_part": "forget",
+                    "retain_part": "retain",
+                    "train_part": "train"
+                }
+            }
+        ]
+    },
+    "RunTime": 38.01300024986267,
+    "PeakRSS_MB": 4661.46875,
+    "CudaPeak_MB": 2514.3623046875,
+    "AIN": 1.0,
+    "AUS": 0.9477877622510756,
+    "UMIA": 0.5075046904315197,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.38288288288288286,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.3233890214797136,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.34321503131524006,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.3978978978978979,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.3978978978978979,
+    "f1_macro.test.unlearned.on_graph:True": 0.24953250114537773,
+    "f1_macro.test.original.on_graph:True": 0.24953250114537773,
+    "f1_macro.forget.unlearned.on_graph:True": 0.22064129153465803,
+    "f1_macro.forget.original.on_graph:True": 0.22064129153465803,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.6972695087650445,
+        "ap": 0.8756422818147038
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.6977416928309785,
+        "ap": 0.8756562909252481
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8575787948315421,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8529658253834078
+},{
+    "unlearner": "IDEA",
+    "dataset": "Citeseer",
+    "parameters": {
+        "scale": 50000.0,
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "iteration": 100,
+        "gaussian_std": 0.6,
+        "gaussian_mean": 0,
+        "l": 0.25,
+        "lambda": 1,
+        "c": 0.5,
+        "lambda_edge_unlearn": 1,
+        "gamma_2": 1,
+        "M": 0.25,
+        "c1": 1,
+        "damp": 0.01,
+        "training_set": "train"
+    },
+    "RunTime": 1.277827262878418,
+    "PeakRSS_MB": 4672.8125,
+    "CudaPeak_MB": 2588.57958984375,
+    "AIN": 1.0,
+    "AUS": 0.9507869151850459,
+    "UMIA": 0.5634146341463414,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7132132132132132,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7649164677804295,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7594989561586639,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7132132132132132,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7132132132132132,
+    "f1_macro.test.unlearned.on_graph:True": 0.6220154452373454,
+    "f1_macro.test.original.on_graph:True": 0.6220154452373454,
+    "f1_macro.forget.unlearned.on_graph:True": 0.6696109624093648,
+    "f1_macro.forget.original.on_graph:True": 0.6696109624093648,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7558884260900389,
+        "ap": 0.9182609537459182
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.755656238922368,
+        "ap": 0.9181765495239051
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8956840961236565,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8774568288854003
+},{
+    "unlearner": "CGU_edge",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "std": 0.1,
+        "ref_data_retain": "retain",
+        "ref_data_forget": "forget",
+        "prop_step": 2,
+        "compare_retrain": false,
+        "delta": 0.0001,
+        "eps": 1.0,
+        "train_mode": "ovr",
+        "y_binary": 1,
+        "lam": 0.0001,
+        "num_steps_optimizer": 100
+    },
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7252252252252253,
+    "f1_macro.test.original.on_graph:True": 0.6243669408227542,
+    "f1_macro.forget.original.on_graph:True": 0.6670186925453218,
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7588194171899529,
+        "ap": 0.9135456943598282
+    }
+},{
+    "unlearner": "CEU",
+    "dataset": "Citeseer",
+    "parameters": {
+        "last_trainable_layers": -1,
+        "mask_path": null,
+        "cg_approx": true,
+        "transductive_edge": true,
+        "lam": 0.0001,
+        "damping": 0.01
+    },
+    "RunTime": 3.9788894653320312,
+    "PeakRSS_MB": 4720.5078125,
+    "CudaPeak_MB": 2614.8037109375,
+    "AIN": 1.0,
+    "AUS": 0.955397602558167,
+    "UMIA": 0.5667917448405253,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:True": 0.7192192192192193,
+    "sklearn.metrics.accuracy_score.forget.unlearned.on_graph:True": 0.7655131264916468,
+    "sklearn.metrics.accuracy_score.train.unlearned.on_graph:True": 0.7636743215031315,
+    "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False": 0.7192192192192193,
+    "sklearn.metrics.accuracy_score.test.original.on_graph:False": 0.7192192192192193,
+    "f1_macro.test.unlearned.on_graph:True": 0.6279699753786961,
+    "f1_macro.test.original.on_graph:True": 0.6279699753786961,
+    "f1_macro.forget.unlearned.on_graph:True": 0.671006011642338,
+    "f1_macro.forget.original.on_graph:True": 0.671006011642338,
+    "LinkTeller unlearn with sampler bfs+:": {
+        "auc": 0.7568003367600141,
+        "ap": 0.9184181900336632
+    },
+    "LinkTeller original with sampler bfs+:": {
+        "auc": 0.7559225451967387,
+        "ap": 0.9183513684727569
+    },
+    "Link Stealing Attack unlearned 0 exist/non_exist": 0.8962673590146117,
+    "Link Stealing Attack 0 unlearned forget/non_exist": 0.8788817775630963
+},
