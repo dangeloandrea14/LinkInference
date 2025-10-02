@@ -113,7 +113,6 @@ class RunTime(UnlearnRunner):
 
             super().process(e)
 
-                        
             if ('cuda' in str(device)) and torch.cuda.is_available():
                 torch.cuda.synchronize()
 

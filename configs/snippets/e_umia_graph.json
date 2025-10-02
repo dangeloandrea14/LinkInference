@@ -13,7 +13,7 @@
           },
           "partitions": [
             { "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
-              "parameters": {"parts_names": ["train", "test"], "percentage": 0.7, "ref_data": "all"}
+              "parameters": {"parts_names": ["train", "test"], "percentage": 0.5, "ref_data": "all"}
             }
           ],
           "batch_size": 128

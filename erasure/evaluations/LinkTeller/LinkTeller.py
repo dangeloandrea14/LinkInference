@@ -125,16 +125,9 @@ class LinkTeller(GraphMeasure):
         auc = metrics.auc(fpr, tpr)
         print('auc =', auc)
 
-        ap = metrics.average_precision_score(y,pred)
-        print('ap =', ap)
 
-        lt = {
-                "auc": auc,
-                "ap":ap
-            }
-
-        self.info(f'LinkTeller {self.target} with sampler {self.edge_sampler}: {lt}')
-        e.add_value(f'LinkTeller {self.target} with sampler {self.edge_sampler}:', lt)
+        self.info(f'LinkTeller {self.target} with sampler {self.edge_sampler}: {auc}')
+        e.add_value(f'LinkTeller {self.target} with sampler {self.edge_sampler}:', auc)
 
 
         return e

@@ -18,7 +18,7 @@
     "predictor": {
         "class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "parameters": {
-          "epochs": 10,
+          "epochs": 100,
           "optimizer": {
             "class": "torch.optim.Adam",
             "parameters": {
@@ -35,7 +35,6 @@
           }
         }
       },
-
 
     "unlearners":[
         // Original Model 
@@ -255,7 +254,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/arxiv_SGC_edge.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/arxiv_SGC_20.json"}}
             ]
           }
         },

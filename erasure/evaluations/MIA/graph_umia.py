@@ -5,7 +5,7 @@ import sklearn
 import sklearn.linear_model
 import sklearn.metrics
 import torch
-
+import numpy as np
 from erasure.core.factory_base import get_instance_config
 from erasure.core.measure import GraphMeasure
 from erasure.evaluations.evaluation import Evaluation
@@ -26,15 +26,18 @@ class Attack(GraphMeasure):
         self.local_config["parameters"]["attack_in_data"]["parameters"]['DataSource']["parameters"]['path'] += '_'+str(self.global_ctx.config.globals['seed'])
         self.data_out_path = self.local_config["parameters"]["attack_in_data"]["parameters"]['DataSource']["parameters"]['path']
 
-        self.forget_part = 'forget'
-        self.test_part = 'test'
-
+        self.forget_part = self.local_config['parameters']['forget_part']
+        self.test_part = self.local_config['parameters']['test_part']
+        
         self.params["loss_fn"]["parameters"]["reduction"] = "none"
         self.loss_fn = get_instance_config(self.params['loss_fn'])
         self.removal_type = self.global_ctx.removal_type
 
     def check_configuration(self):
         super().check_configuration()
+
+        self.local_config['parameters']['forget_part'] = self.local_config['parameters'].get('forget_part','forget')
+        self.local_config['parameters']['test_part'] = self.local_config['parameters'].get('test_part','test')
 
         if "attack_model" not in self.params:
             self.params["attack_model"] = None
@@ -59,8 +62,7 @@ class Attack(GraphMeasure):
         if self.attack_model_cfg:
             current = Local(self.attack_model_cfg)
             current.dataset = attack_dataset
-            attack_model = self.global_ctx.factory.get_object(current)  # ToDo: attenzione alla cache!
-
+            attack_model = self.global_ctx.factory.get_object(current)  
             # Compute accuracy
             test_loader, _ = attack_dataset.get_loader_for("test")
             umia_accuracy = compute_accuracy(test_loader, attack_model.model)
@@ -70,7 +72,7 @@ class Attack(GraphMeasure):
             attack_loader, _ = attack_dataset.get_loader_for("all")
             X, y = attack_loader.dataset[:]
             attack_model = sklearn.linear_model.LogisticRegression()
-            cv = sklearn.model_selection.StratifiedShuffleSplit(n_splits=5, test_size=0.8)
+            cv = sklearn.model_selection.StratifiedShuffleSplit(n_splits=3, test_size=0.3)
             try:
                 accuracies = sklearn.model_selection.cross_val_score(
                     attack_model, X, y, cv=cv, scoring="accuracy")
@@ -79,7 +81,6 @@ class Attack(GraphMeasure):
                 self.global_ctx.logger.warning(repr(err))
                 self.global_ctx.logger.warning("U-MIA not calculated")
                 umia_accuracy = -1.0
-
 
         self.info(f"UMIA accuracy: {umia_accuracy}")
         e.add_value("UMIA", umia_accuracy)
@@ -91,7 +92,6 @@ class Attack(GraphMeasure):
         attack_samples = []
         attack_labels = []
 
-        # Attack Dataset creation
         samples, labels = self.get_attack_samples(target_model)
         attack_samples.append(samples)
         attack_labels.append(labels)
@@ -105,7 +105,7 @@ class Attack(GraphMeasure):
         attack_samples = attack_samples[perm_idxs]
         attack_labels = attack_labels[perm_idxs]
 
-        # create Datasets
+        # create Dataset
         n_classes = 2
         attack_dataset = torch.utils.data.TensorDataset(attack_samples, attack_labels)
         attack_dataset.n_classes = n_classes
@@ -114,6 +114,7 @@ class Attack(GraphMeasure):
         os.makedirs(os.path.dirname(self.data_out_path), exist_ok=True)
         torch.save(attack_dataset, self.data_out_path)
         attack_datamanager = self.global_ctx.factory.get_object(Local(self.attack_in_data_cfg))
+
 
         return attack_datamanager
 
@@ -124,12 +125,11 @@ class Attack(GraphMeasure):
         forget_ids = model.dataset.partitions[self.forget_part]
         test_ids = model.dataset.partitions[self.test_part]
 
-
-
         if self.removal_type == 'edge':
             forget_ids = self.infected_nodes(model, forget_ids, self.hops)
 
         forget_ids = [f for f in forget_ids if f not in test_ids]
+
 
         if len(forget_ids) < 20:
             self.global_ctx.logger.warning(f"Warning U_MIA for graphs: the length of the forget set after removing the test set is only {len(forget_ids)} nodes.")
@@ -176,6 +176,7 @@ class Attack(GraphMeasure):
             attack_labels.append(torch.full([len(ids)], label_value, dtype=torch.float32)   # 1: forgetting samples, 0: testing samples
                     # torch.full([len(X)], label_value, dtype=torch.long)
                     )
+
 
         return torch.cat(attack_samples), torch.cat(attack_labels)
     

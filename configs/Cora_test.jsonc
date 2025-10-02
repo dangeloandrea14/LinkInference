@@ -504,7 +504,7 @@
             "measures":[
               {"class":"erasure.evaluations.running.RunTime"},
                {"class": "erasure.evaluations.measures.AINGraph", "parameters":{"forget_part": "forget","alpha": 0.001,
-              "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModelGraph","parameters": {"cached": true}}}},
+              "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModelGraph","parameters": {"cached": false}}}},
               {"class": "erasure.evaluations.measures.RelearnTimeGraph", "parameters":{"forget_part": "forget"}},
               {"class": "erasure.evaluations.measures.AUSGraph", "parameters":{"forget_part": "forget","test_part": "test"}},
               {
@@ -552,7 +552,7 @@
 
               //AIN
               {"class": "erasure.evaluations.measures.AINGraph", "parameters":{"forget_part": "forget","alpha": 0.001,
-              "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModelGraph","parameters": {"cached": true}}}},
+              "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModelGraph","parameters": {"cached": false}}}},
 
               //RelearnTime
               {"class": "erasure.evaluations.measures.RelearnTimeGraph", "parameters":{"forget_part": "forget"}},

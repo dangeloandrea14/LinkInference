@@ -2,6 +2,7 @@ import copy
 from erasure.core.unlearner import Unlearner
 from erasure.utils.config.local_ctx import Local
 from copy import deepcopy
+import time
 
 class GoldModel(Unlearner):
     def init(self):
@@ -86,14 +87,14 @@ class GoldModelGraph(Unlearner):
     
 
     def __unlearn__(self):
-
-        #Create Predictor
         self.current = Local(self.local.config['parameters']['predictor'])
         self.current.dataset = self.data_manager
         
-
+        print("Hello, i am unlearning gm at time ", time.localtime())
         predictor = self.global_ctx.factory.get_object(self.current)
         self.hops = len(predictor.model.hidden_channels) + 1
+
+        print("Done at ", time.localtime())
             
         return predictor
     
