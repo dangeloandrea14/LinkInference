@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import torch
-
+import copy
 from erasure.core.trainable_base import Trainable
 from erasure.utils.cfg_utils import init_dflts_to_of
 from erasure.core.factory_base import get_instance_kvargs, get_instance
@@ -40,9 +40,11 @@ class TorchGraphModel(Trainable):
         
         self.lr_scheduler =  lr_scheduler.LinearLR(self.optimizer, start_factor=1.0, end_factor=0.5, total_iters=self.epochs)
 
-        self.training_set = self.local.config['parameters'].get('training_set','train')
+        self.training_set = self.local_config['parameters'].get('training_set','train')
 
-
+        es_cfg = self.local_config['parameters'].get('early_stopping', {})
+        self.es_patience = int(es_cfg.get('patience', 10))
+        self.es_min_delta = float(es_cfg.get('min_delta', 1e-2))
 
         self.device = (
             "cuda"
@@ -69,52 +71,80 @@ class TorchGraphModel(Trainable):
          
         num_nodes = self.dataset.partitions['all'].num_nodes
 
-        train_mask = torch.zeros(num_nodes, dtype=torch.bool)
-        train_mask[self.dataset.partitions[self.training_set]] = True
-
-        test_mask = torch.zeros(num_nodes, dtype=torch.bool)
-        test_mask[self.dataset.partitions['test']] = True
-
 
         g = self.dataset.partitions['all'][0][0]
         train_idx = self.dataset.partitions[self.training_set]
+        val_idx = list(self.dataset.partitions.get('validation', []))
         test_idx  = self.dataset.partitions.get('test', [])
+
+        train_mask = torch.zeros(num_nodes, dtype=torch.bool)
+        val_mask   = torch.zeros(num_nodes, dtype=torch.bool)
+        val_mask[val_idx] = True
+        train_mask[train_idx] = True
+        
 
         self.global_ctx.logger.info(
             f"[DBG] graph: nodes={g.num_nodes}, edges={g.edge_index.size(1)} | "
             f"train_len={len(train_idx)} | test_len={len(test_idx)} | training_set='{self.training_set}'"
         )
                                 
-        for epoch in range(self.epochs):
-            losses, preds, labels_list = [], [], []
-            self.model.train()
+        best_val_loss = float('inf')
+        best_state = None
+        no_improve_epochs = 0
 
+        for epoch in range(self.epochs):
+            self.model.train()
             self.optimizer.zero_grad()
 
-            X,edge_index= graph.x,graph.edge_index
+            X, edge_index = graph.x.to(self.device), graph.edge_index.to(self.device)
+            y = labels.to(self.device)
 
-            X,edge_index,labels = X.to(self.device),edge_index.to(self.device), labels.to(self.device)
-                
-            pred = self.model(X,edge_index)
+            pred = self.model(X, edge_index)
 
             self.global_ctx.logger.info(
-            f"[DBG] devices: model={next(self.model.parameters()).device} "
-            f"| x={graph.x.device} | ei={graph.edge_index.device} | y={labels.device}"
+                f"[DBG] devices: model={next(self.model.parameters()).device} "
+                f"| x={graph.x.device} | ei={graph.edge_index.device} | y={labels.device}"
             )
 
-            loss = self.loss_fn(pred[train_mask], labels[train_mask])
-                
-            losses.append(loss.to('cpu').detach().numpy())
-            loss.backward()
+            train_loss = self.loss_fn(pred[train_mask], y[train_mask])
+            train_loss_val = float(train_loss.detach().cpu().item())
+
+            train_loss.backward()
             self.optimizer.step()
             self.lr_scheduler.step()
-                
-            preds = pred[train_mask].detach().cpu().numpy()
-            labels_list = labels[train_mask].cpu().numpy()
-            accuracy = self.accuracy(labels_list, preds)
-               
-            self.global_ctx.logger.info(f'epoch = {epoch} ---> loss = {np.mean(losses):.4f}\t accuracy = {accuracy:.4f}')
-            
+
+
+            with torch.no_grad():
+                train_preds_np = pred[train_mask].detach().cpu().numpy()
+                train_labels_np = y[train_mask].detach().cpu().numpy()
+                train_acc = self.accuracy(train_labels_np, train_preds_np)
+
+
+            self.model.eval()
+            with torch.no_grad():
+                val_logits = self.model(X, edge_index)  
+                val_loss = self.loss_fn(val_logits[val_mask], y[val_mask])
+                val_loss_val = float(val_loss.detach().cpu().item())
+
+            self.global_ctx.logger.info(
+                f'epoch = {epoch} ---> train_loss = {train_loss_val:.4f}\t val_loss = {val_loss_val:.4f}\t train_acc = {train_acc:.4f}'
+            )
+
+            if val_loss_val < (best_val_loss - self.es_min_delta):
+                best_val_loss = val_loss_val
+                best_state = copy.deepcopy(self.model.state_dict())
+                no_improve_epochs = 0
+            else:
+                no_improve_epochs += 1
+
+            if no_improve_epochs >= self.es_patience:
+                self.global_ctx.logger.info(
+                    f"[EARLY-STOP] Patience reached at epoch {epoch}. "
+                    f"Restoring best weights (best val_loss={best_val_loss:.6f})."
+                )
+                if best_state is not None:
+                    self.model.load_state_dict(best_state)
+                break
             
                 
     def check_configuration(self):
@@ -125,7 +155,7 @@ class TorchGraphModel(Trainable):
         ###LOCAL_CONFIG MUST REFERENCE CONTEXT LOCAL
         local_config['parameters']['epochs'] = local_config['parameters'].get('epochs', 50)
         local_config['parameters']['batch_size'] = local_config['parameters'].get('batch_size', 4)
-        local_config['parameters']['early_stopping_threshold'] = local_config['parameters'].get('early_stopping_threshold', None)
+        local_config['parameters']['early_stopping_threshold'] = local_config['parameters'].get('early_stopping_threshold', 0.01)
         # populate the optimizer
         init_dflts_to_of(local_config, 'optimizer', 'torch.optim.Adam',lr=0.001)
         init_dflts_to_of(local_config, 'loss_fn', 'torch.nn.BCELoss')
