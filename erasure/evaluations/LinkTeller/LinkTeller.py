@@ -106,19 +106,6 @@ class LinkTeller(GraphMeasure):
         print(f"[Norm Stats] Non-Exist Edges: mean={np.mean(norm_nonexist):.4f}, std={np.std(norm_nonexist):.4f}, min={np.min(norm_nonexist):.4f}, max={np.max(norm_nonexist):.4f}")
 
 
-        import matplotlib.pyplot as plt
-
-        plt.figure(figsize=(8, 4))
-        plt.hist(norm_exist, bins=50, alpha=0.5, label='Exist Edges')
-        plt.hist(norm_nonexist, bins=50, alpha=0.5, label='Non-Exist Edges')
-        plt.xlabel("Gradient Norm")
-        plt.ylabel("Frequency")
-        plt.legend()
-        plt.title("Distribution of Gradient Norms")
-        plt.savefig('test.png'
-                    )
-        #y - pred evaluation
-
         fpr, tpr, thresholds = metrics.roc_curve(y, pred)
         print(f"[ROC Thresholds] Sample thresholds: {thresholds[:5]}")
         print(f"[ROC] FPR: {fpr[:5]}, TPR: {tpr[:5]}")
@@ -126,8 +113,8 @@ class LinkTeller(GraphMeasure):
         print('auc =', auc)
 
 
-        self.info(f'LinkTeller {self.target} with sampler {self.edge_sampler}: {auc}')
-        e.add_value(f'LinkTeller {self.target} with sampler {self.edge_sampler}:', auc)
+        self.info(f'LinkTeller {self.target} auc with sampler {self.edge_sampler}: {auc}')
+        e.add_value(f'LinkTeller {self.target} auc with sampler {self.edge_sampler}:', auc)
 
 
         return e

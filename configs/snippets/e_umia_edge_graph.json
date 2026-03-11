@@ -1,0 +1,29 @@
+{
+    "class": "erasure.evaluations.MIA.graph_edge_umia.Attack",
+    "parameters": {
+      "attack_in_data": {
+        "class": "erasure.data.datasets.DatasetManager.DatasetManager",
+        "parameters": {
+          "DataSource": {
+            "class": "erasure.data.data_sources.TorchFileDataSource.TorchFileDataSource",
+            "parameters": {
+              "path": "resources/data/umia/umia_edge.pt"
+            }
+          },
+          "partitions": [
+            { "class": "erasure.data.datasets.DataSplitter.DataSplitterPercentage",
+              "parameters": {"parts_names": ["train", "test"], "percentage": 0.5, "ref_data": "all"}
+            }
+          ],
+          "batch_size": 128
+        }
+      },
+      "metric_name": "UMIA_edge",
+      "forget_part": "forget",
+      "match_by_label": true,
+      "treat_as_undirected": true,
+      "n_splits": 3,
+      "test_size": 0.3,
+      "max_edges": 200
+    }
+  }
