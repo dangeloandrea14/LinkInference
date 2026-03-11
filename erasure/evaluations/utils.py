@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 import torch
+import torch.optim.lr_scheduler as lr_scheduler
 from sklearn.metrics import accuracy_score
 
 
@@ -51,7 +52,14 @@ def compute_accuracy_graph(graph,model,subset):
 
 def compute_relearn_time(model, data_loader, max_accuracy=0.8, max_epochs=100):
 
-    # model = deepcopy(model)
+    # Make evaluation-time scheduler fresh and bound to current optimizer.step.
+    if hasattr(model, "optimizer") and hasattr(model, "lr_scheduler"):
+        model.lr_scheduler = lr_scheduler.LinearLR(
+            model.optimizer,
+            start_factor=1.0,
+            end_factor=0.5,
+            total_iters=getattr(model, "epochs", max_epochs),
+        )
 
     epochs = 0
 
@@ -91,6 +99,15 @@ def compute_relearn_time(model, data_loader, max_accuracy=0.8, max_epochs=100):
 def compute_relearn_time_graph(graph, model, subset, device, max_accuracy=0.8, max_epochs=100):
 
     model = deepcopy(model)
+    # Deepcopy can carry scheduler internals tied to a stale optimizer.step wrapper.
+    # Rebuild scheduler on the copied optimizer to avoid step-order warnings.
+    if hasattr(model, "optimizer") and hasattr(model, "lr_scheduler"):
+        model.lr_scheduler = lr_scheduler.LinearLR(
+            model.optimizer,
+            start_factor=1.0,
+            end_factor=0.5,
+            total_iters=getattr(model, "epochs", max_epochs),
+        )
 
     epochs = 0
 
