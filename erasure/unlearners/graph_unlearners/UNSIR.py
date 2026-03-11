@@ -46,15 +46,16 @@ class UNSIR(GraphUnlearner):
         """
         self.info(f'Starting UNSIR with {self.epochs} epochs for the impair phase')
 
-        self.forget_set = torch.tensor(self.dataset.partitions[self.ref_data_forget]).to(self.device)
-        self.retain_set = torch.tensor(self.dataset.partitions[self.ref_data_retain]).to(self.device)
-
         num_nodes = self.x.size(0)
         all_nodes = torch.arange(num_nodes)
 
         if self.removal_type == 'edge':
-            self.forget_set = self.infected_nodes(self.forget_set, self.hops)
-            self.retain_set = [node for node in all_nodes if node not in self.forget_set]
+            forget_edges = self.dataset.partitions[self.ref_data_forget]
+            self.forget_set = self.infected_nodes(forget_edges, self.hops)
+            self.retain_set = [node for node in all_nodes.tolist() if node not in self.forget_set]
+        else:
+            self.forget_set = torch.tensor(self.dataset.partitions[self.ref_data_forget]).to(self.device).tolist()
+            self.retain_set = torch.tensor(self.dataset.partitions[self.ref_data_retain]).to(self.device).tolist()
 
         x = self.x.to(self.device)
         edge_index = self.edge_index.to(self.device)

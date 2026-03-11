@@ -61,9 +61,10 @@ class FisherForgetting(GraphUnlearner):
                         p.grad_acc += (orig_target == target).float() * p.grad.data
                         p.grad2_acc += prob[:, y] * p.grad.data.pow(2)
 
+        num_retain = len(retain_set)
         for p in self.predictor.model.parameters():
-            p.grad_acc /= num_nodes
-            p.grad2_acc /= num_nodes           
+            p.grad_acc /= num_retain
+            p.grad2_acc /= num_retain           
         
 
     def get_mean_var(self, p, is_base_dist=False, alpha=3e-6):

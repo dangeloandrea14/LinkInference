@@ -461,16 +461,21 @@ class AINGraph(GraphMeasure):
 
         if self.removal_type == 'edge':
             forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            # Use modified graph (forget edges removed) for unlearned/gold model evaluation
+            forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
+            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+        else:
+            eval_graph = graph
 
-        original_forget_accuracy = compute_accuracy_graph(graph, erasure_model.model, forget_part)
+        original_forget_accuracy = compute_accuracy_graph(eval_graph, erasure_model.model, forget_part)
 
         max_accuracy = (1-self.alpha) * original_forget_accuracy
 
         # relearn time of Unlearned model on forget
-        rt_unlearned = compute_relearn_time_graph(graph, e.unlearned_model, forget_part, self.device, max_accuracy=max_accuracy)
+        rt_unlearned = compute_relearn_time_graph(eval_graph, e.unlearned_model, forget_part, self.device, max_accuracy=max_accuracy)
 
         # relearn time of Gold model on forget
-        rt_gold = compute_relearn_time_graph(graph, self.gold_model, forget_part, self.device, max_accuracy=max_accuracy)
+        rt_gold = compute_relearn_time_graph(eval_graph, self.gold_model, forget_part, self.device, max_accuracy=max_accuracy)
 
         epsilon = 0.01
         ain = (rt_unlearned + epsilon) / (rt_gold + epsilon)
@@ -504,11 +509,17 @@ class RelearnTimeGraph(GraphMeasure):
 
         if self.removal_type == 'edge':
             forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            # Use modified graph (forget edges removed) for evaluation
+            forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
+            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+        else:
+            eval_graph = graph
 
+        # Original model accuracy uses original graph (it was trained on it)
         original_accuracy = compute_accuracy_graph(graph, e.predictor.model, forget_part)
 
-        # relearn over the Forget set
-        relearn_time = compute_relearn_time_graph(graph, e.unlearned_model, forget_part, self.device, max_accuracy=original_accuracy)
+        # Relearn over the Forget set using modified graph
+        relearn_time = compute_relearn_time_graph(eval_graph, e.unlearned_model, forget_part, self.device, max_accuracy=original_accuracy)
 
         self.info(f'Relearning Time: {relearn_time} epochs')
         e.add_value('RelearnTime', relearn_time)
@@ -533,7 +544,7 @@ class AUSGraph(GraphMeasure):
 
     def process(self, e: Evaluation):
         or_model = e.predictor
-        ul_model = e.unlearned_model 
+        ul_model = e.unlearned_model
 
         or_model.model.eval()
         ul_model.model.eval()
@@ -547,11 +558,17 @@ class AUSGraph(GraphMeasure):
 
         if self.removal_type == 'edge':
             forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            # Use modified graph (forget edges removed) for unlearned model evaluation
+            forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
+            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+        else:
+            eval_graph = graph
 
-
+        # Original model uses original graph
         or_test_accuracy = compute_accuracy_graph(graph, or_model.model, test_part)
-        ul_test_accuracy = compute_accuracy_graph(graph, ul_model.model, test_part)
-        ul_forget_accuracy = compute_accuracy_graph(graph, ul_model.model, forget_part)
+        # Unlearned model uses modified graph (forget edges removed)
+        ul_test_accuracy = compute_accuracy_graph(eval_graph, ul_model.model, test_part)
+        ul_forget_accuracy = compute_accuracy_graph(eval_graph, ul_model.model, forget_part)
 
         aus = (1 - (or_test_accuracy - ul_test_accuracy)) / (1 + abs(ul_test_accuracy - ul_forget_accuracy))
 

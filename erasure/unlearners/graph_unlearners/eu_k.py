@@ -29,7 +29,8 @@ class eu_k(GraphUnlearner):
         self.retain = self.dataset.partitions[self.ref_data]
 
         if self.removal_type == 'edge':
-            self.retain = self.infected_nodes(self.retain, self.hops)
+            forget_edges = self.dataset.partitions[self.forget_part]
+            self.retain = self.infected_nodes(forget_edges, self.hops)
 
 
         for i, layer in enumerate(list(self.predictor.model.children())):
