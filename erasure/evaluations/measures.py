@@ -95,8 +95,13 @@ class TorchSKLearnGraph(GraphMeasure):
         graph,labels = erasure_model.dataset.partitions['all'][0][0], erasure_model.dataset.partitions['all'][0][1]
         num_nodes = erasure_model.dataset.partitions['all'].num_nodes
 
+        partition_data = erasure_model.dataset.partitions[self.partition_name]
+        if partition_data and isinstance(partition_data[0], tuple):
+            hops = len(erasure_model.model.hidden_channels) + 1
+            partition_data = self.infected_nodes(e.unlearner, partition_data, hops)
+
         partition_mask = torch.zeros(num_nodes, dtype=torch.bool)
-        partition_mask[erasure_model.dataset.partitions[self.partition_name]] = True
+        partition_mask[partition_data] = True
 
 
         if self.unlearned_graph and 'forget' in erasure_model.dataset.partitions.keys():
@@ -442,10 +447,10 @@ class AINGraph(GraphMeasure):
 
     def process(self, e: Evaluation):
 
-        e.predictor = self.get_model(e)
+        erasure_model = self.get_model(e)
 
-        self.device = e.predictor.device
-        self.hops = len(e.predictor.model.hidden_channels)
+        self.device = erasure_model.device
+        self.hops = len(erasure_model.model.hidden_channels)
 
         self.gold_model.model = self.gold_model.model.to(self.device)
         self.gold_model.device = self.device
@@ -457,7 +462,7 @@ class AINGraph(GraphMeasure):
         if self.removal_type == 'edge':
             forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
 
-        original_forget_accuracy = compute_accuracy_graph(graph, e.predictor.model, forget_part)
+        original_forget_accuracy = compute_accuracy_graph(graph, erasure_model.model, forget_part)
 
         max_accuracy = (1-self.alpha) * original_forget_accuracy
 
@@ -503,7 +508,7 @@ class RelearnTimeGraph(GraphMeasure):
         original_accuracy = compute_accuracy_graph(graph, e.predictor.model, forget_part)
 
         # relearn over the Forget set
-        relearn_time = compute_relearn_time_graph(graph, e.unlearned_model, forget_part, original_accuracy)
+        relearn_time = compute_relearn_time_graph(graph, e.unlearned_model, forget_part, self.device, max_accuracy=original_accuracy)
 
         self.info(f'Relearning Time: {relearn_time} epochs')
         e.add_value('RelearnTime', relearn_time)

@@ -31,10 +31,17 @@ class DataSplitterPercentage(DataSplitter):
 
     def split_data(self,partitions):
 
-
         if self.edge_removal:
             edge_index = partitions['all'].data.edge_index
-            indices =  list(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+            all_edges = list(zip(edge_index[0].tolist(), edge_index[1].tolist()))
+            if self.ref_data != 'all':
+                ref_nodes = set(partitions[self.ref_data])
+                directed_edges = [(u, v) for u, v in all_edges if u in ref_nodes and v in ref_nodes]
+            else:
+                directed_edges = all_edges
+
+            # Canonicalize to undirected edges so both directions are kept together
+            indices = sorted(set((min(u, v), max(u, v)) for u, v in directed_edges))
 
         else:
             indices = partitions[self.ref_data] if self.ref_data != 'all' else list(range(len(partitions[self.ref_data].data.x)))
@@ -48,43 +55,41 @@ class DataSplitterPercentage(DataSplitter):
         split_indices_1 = indices[:split_point]
         split_indices_2 = indices[split_point:]
 
+        if self.edge_removal:
+            split_indices_1 = self._expand_to_directed(split_indices_1)
+            split_indices_2 = self._expand_to_directed(split_indices_2)
+
         partitions[self.parts_names[0]] = split_indices_1
         partitions[self.parts_names[1]] = split_indices_2
 
         return partitions
     
+    def _expand_to_directed(self, undirected_edges):
+        """Expand undirected (min,max) edges back to both directions."""
+        directed = []
+        for u, v in undirected_edges:
+            directed.append((u, v))
+            if u != v:
+                directed.append((v, u))
+        return directed
+
     def get_indices(self, indices):
-        seedlist = self.create_seed_list()
+        seed = self.get_seed_from_name(self.parts_names[0])
+        return self.shuffle_with_seed(indices, seed)
 
-        seed = self.get_seed_from_name(self.parts_names[0], seedlist)
-
-        indices = self.shuffle_with_seed(indices, seed)
-
-        return indices
-    
     def shuffle_with_seed(self, indices, seed):
         generator = torch.Generator()
         generator.manual_seed(seed)
-        
+
         permuted_order = torch.randperm(len(indices), generator=generator).tolist()
-        
+
         shuffled_indices = [indices[i] for i in permuted_order]
 
         return shuffled_indices
-    
-    def create_seed_list(self):
-        generator = torch.Generator()
-        
-        # Generate a list of seeds
-        seeds = [torch.randint(0, 2**32 - 1, (1,), generator=generator).item() for _ in range(10000)]
-        return seeds
-    
-    def get_seed_from_name(self,name, seed_list):
+
+    def get_seed_from_name(self, name):
         hashed_value = int(hashlib.sha256(name.encode()).hexdigest(), 16)
-        
-        position = hashed_value % len(seed_list)
-        
-        return seed_list[position]
+        return hashed_value % (2**32)
     
 
 

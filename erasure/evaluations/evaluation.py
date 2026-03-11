@@ -23,8 +23,4 @@ class Evaluation():
 
     @unlearned_model.setter
     def unlearned_model(self, value):
-        self._unlearned_model = deepcopy(value)  
-
-    @unlearned_model.setter
-    def unlearned_model(self, value):
-        self._unlearned_model = value
+        self._unlearned_model = deepcopy(value)

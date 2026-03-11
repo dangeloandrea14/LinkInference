@@ -5,6 +5,7 @@ from erasure.core.base import Configurable
 from erasure.core.unlearner import Unlearner
 from erasure.utils.config.global_ctx import Global
 import torch
+import torch.optim.lr_scheduler as lr_scheduler
 
 class TorchUnlearner(Unlearner, metaclass=ABCMeta):
 
@@ -38,6 +39,17 @@ class TorchUnlearner(Unlearner, metaclass=ABCMeta):
                     
                     # Register the hook
                     param.register_hook(apply_mask_to_grad)
+
+    def __post_init__(self):
+        super().__post_init__()
+        if (hasattr(self, 'predictor') and
+                hasattr(self.predictor, 'optimizer') and
+                hasattr(self.predictor, 'epochs')):
+            self.predictor.lr_scheduler = lr_scheduler.LinearLR(
+                self.predictor.optimizer,
+                start_factor=1.0, end_factor=0.5,
+                total_iters=self.predictor.epochs
+            )
 
     def __postprocess__(self):
         pass

@@ -90,7 +90,7 @@ def compute_relearn_time(model, data_loader, max_accuracy=0.8, max_epochs=100):
 
 def compute_relearn_time_graph(graph, model, subset, device, max_accuracy=0.8, max_epochs=100):
 
-    # model = deepcopy(model)
+    model = deepcopy(model)
 
     epochs = 0
 

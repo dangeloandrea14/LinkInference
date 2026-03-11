@@ -71,7 +71,8 @@ class GoldModelGraph(Unlearner):
         if self.removal_type == 'node':
             new_graph, remapped_partitions = og_graph.revise_graph_nodes(gold_training_set, data_manager.partitions)
         if self.removal_type == 'edge':
-            new_graph = og_graph.revise_graph_edges(gold_training_set)
+            forget_edges = data_manager.partitions['forget']
+            new_graph = og_graph.revise_graph_edges(forget_edges, remove=True)
             remapped_partitions = copy.deepcopy(data_manager.partitions)
         
         data_manager.partitions = remapped_partitions
