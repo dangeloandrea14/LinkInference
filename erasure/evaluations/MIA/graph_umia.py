@@ -120,7 +120,7 @@ class Attack(GraphMeasure):
 
     def get_attack_samples(self, model):
         """ From the unlearned model, generate the attack samples """
-        self.hops = len(model.model.hidden_channels)
+        self.hops = len(model.model.hidden_channels) + 1
 
         forget_ids = model.dataset.partitions[self.forget_part]
         test_ids = model.dataset.partitions[self.test_part]

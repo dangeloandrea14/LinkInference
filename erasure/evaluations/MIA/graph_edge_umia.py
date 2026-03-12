@@ -136,11 +136,6 @@ class Attack(GraphMeasure):
             return [], []
 
         edge_index = graph.edge_index.to(model.device)
-        original_edge_set = self._edge_set_from_edge_index(edge_index)
-        forget_edges = [e for e in forget_edges if e in original_edge_set]
-        if len(forget_edges) == 0:
-            return [], []
-
         baseline_edge_index = self._remove_edges(edge_index, set(forget_edges))
         baseline_edge_set = self._edge_set_from_edge_index(baseline_edge_index)
 
@@ -293,7 +288,7 @@ class Attack(GraphMeasure):
     def _edge_set_from_edge_index(self, edge_index):
         src = edge_index[0].detach().cpu().tolist()
         dst = edge_index[1].detach().cpu().tolist()
-        return list({self._canonical_edge(u, v) for u, v in zip(src, dst)})
+        return {self._canonical_edge(u, v) for u, v in zip(src, dst)}
 
     def _canonicalize_edges(self, edges):
         result = []

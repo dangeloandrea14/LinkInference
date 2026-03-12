@@ -508,7 +508,7 @@
               {"class": "erasure.evaluations.measures.RelearnTimeGraph", "parameters":{"forget_part": "forget"}},
               {"class": "erasure.evaluations.measures.AUSGraph", "parameters":{"forget_part": "forget","test_part": "test"}},
               {
-                "class": "erasure.evaluations.MIA.graph_umia.Attack",
+                "class": "erasure.evaluations.MIA.graph_edge_umia.Attack",
 
                 "parameters": {
                   "attack_in_data": {

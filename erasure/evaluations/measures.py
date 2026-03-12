@@ -450,7 +450,7 @@ class AINGraph(GraphMeasure):
         erasure_model = self.get_model(e)
 
         self.device = erasure_model.device
-        self.hops = len(erasure_model.model.hidden_channels)
+        self.hops = len(erasure_model.model.hidden_channels) + 1
 
         self.gold_model.model = self.gold_model.model.to(self.device)
         self.gold_model.device = self.device
@@ -499,7 +499,7 @@ class RelearnTimeGraph(GraphMeasure):
     def process(self, e: Evaluation):
         # evaluate the original model accuracy on Forget set
 
-        self.hops = len(e.predictor.model.hidden_channels)
+        self.hops = len(e.predictor.model.hidden_channels) + 1
 
         graph = e.unlearner.dataset.partitions['all']
 
@@ -549,7 +549,7 @@ class AUSGraph(GraphMeasure):
         or_model.model.eval()
         ul_model.model.eval()
 
-        self.hops = len(e.predictor.model.hidden_channels)
+        self.hops = len(e.predictor.model.hidden_channels) + 1
 
         graph = e.unlearner.dataset.partitions['all']
 

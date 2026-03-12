@@ -166,8 +166,13 @@ class LinkTeller(GraphMeasure):
     
     def get_edges(self, graph, forget_set, max_hops=0):
 
-
-        forget_edges = list(forget_set)
+        seen = set()
+        forget_edges = []
+        for e in forget_set:
+            canonical = tuple(sorted(e))
+            if canonical not in seen:
+                seen.add(canonical)
+                forget_edges.append(canonical)
 
         existing_edges = set(map(tuple, map(sorted, graph.edge_index.t().tolist())))
 
@@ -205,9 +210,15 @@ class LinkTeller(GraphMeasure):
         G = to_networkx(graph, to_undirected=True)
         
 
-        # collect actual existing edges in the subset
-        forget_edges = [tuple(sorted(e)) for e in forget_set]
-        forget_edge_set = set(forget_edges)
+        # collect actual existing edges in the subset, deduplicated
+        seen = set()
+        forget_edges = []
+        for e in forget_set:
+            canonical = tuple(sorted(e))
+            if canonical not in seen:
+                seen.add(canonical)
+                forget_edges.append(canonical)
+        forget_edge_set = seen
 
         subset_nodes = {n for e in forget_edges for n in e}
 
@@ -228,8 +239,8 @@ class LinkTeller(GraphMeasure):
                     negative_candidates.add(edge)
 
         negative_candidates = list(negative_candidates)
-        random.seed(42)
-        non_existent_edges = random.sample(
+        rng = random.Random(42)
+        non_existent_edges = rng.sample(
             negative_candidates, min(len(forget_edges), len(negative_candidates))
         )
 
