@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from copy import copy
+from copy import deepcopy
 
 from erasure.core.factory_base import get_instance_kvargs
 
@@ -53,7 +53,7 @@ class Scrub(GraphUnlearner):
         self.retain_set = self.dataset.partitions[self.ref_data_retain]
         self.forget_set = self.dataset.partitions[self.ref_data_forget]
 
-        self.teacher = copy(self.predictor.model)
+        self.teacher = deepcopy(self.predictor.model)
 
         num_nodes = self.x.size(0)
         all_nodes = torch.arange(num_nodes)

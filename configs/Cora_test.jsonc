@@ -550,13 +550,6 @@
               //UMIA
               {"compose_umia" : "configs/snippets/e_umia_graph.json"},
 
-              //AIN
-              {"class": "erasure.evaluations.measures.AINGraph", "parameters":{"forget_part": "forget","alpha": 0.001,
-              "gold_model": {"class": "erasure.unlearners.GoldModel.GoldModelGraph","parameters": {"cached": false}}}},
-
-              //RelearnTime
-              {"class": "erasure.evaluations.measures.RelearnTimeGraph", "parameters":{"forget_part": "forget"}},
-              
               //LinkTeller
               {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"unlearn"}},
               {"class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller", "parameters":{"target":"original"}}, 

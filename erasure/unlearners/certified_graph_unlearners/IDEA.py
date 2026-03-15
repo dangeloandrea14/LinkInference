@@ -329,6 +329,6 @@ class IDEA(TorchUnlearner):
             optimizer.zero_grad()
             out = self.predictor.model(self.x_unlearned, self.edge_index_unlearned)
 
-            loss = F.nll_loss(out[training_mask], self.labels[training_mask])
+            loss = F.cross_entropy(out[training_mask], self.labels[training_mask])
             loss.backward()
             optimizer.step()

@@ -81,6 +81,8 @@ class TorchGraphModel(Trainable):
         val_mask   = torch.zeros(num_nodes, dtype=torch.bool)
         val_mask[val_idx] = True
         train_mask[train_idx] = True
+        train_mask = train_mask.to(self.device)
+        val_mask = val_mask.to(self.device)
         
 
         self.global_ctx.logger.info(

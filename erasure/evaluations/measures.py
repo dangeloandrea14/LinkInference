@@ -467,7 +467,8 @@ class AINGraph(GraphMeasure):
         else:
             eval_graph = graph
 
-        original_forget_accuracy = compute_accuracy_graph(eval_graph, erasure_model.model, forget_part)
+        # Baseline: original model's accuracy on the original graph (before unlearning)
+        original_forget_accuracy = compute_accuracy_graph(graph, e.predictor.model, forget_part)
 
         max_accuracy = (1-self.alpha) * original_forget_accuracy
 

@@ -128,7 +128,8 @@ class Attack(GraphMeasure):
         if self.removal_type == 'edge':
             forget_ids = self.infected_nodes(model, forget_ids, self.hops)
 
-        forget_ids = [f for f in forget_ids if f not in test_ids]
+        test_ids_set = set(test_ids)
+        forget_ids = [f for f in forget_ids if f not in test_ids_set]
 
 
         if len(forget_ids) < 20:

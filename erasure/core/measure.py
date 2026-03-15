@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from copy import copy
 import networkx as nx
 from erasure.core.base import Configurable
 from erasure.evaluations.manager import Evaluation
@@ -51,7 +52,7 @@ class GraphMeasure(Measure):
             new_graph, remapped_partitions = graph.revise_graph_nodes(toremove, predictor.dataset.partitions, remove=True)
         if removal_type == 'edge':
             new_graph = predictor.dataset.partitions['all'].revise_graph_edges(toremove, remove=True)
-            remapped_partitions = predictor.dataset.partitions
+            remapped_partitions = copy(predictor.dataset.partitions)
 
         graph, labels = new_graph[0][0], new_graph[0][1]
         remapped_partitions['forget'] = toremove

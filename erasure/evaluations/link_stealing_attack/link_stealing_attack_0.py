@@ -46,7 +46,8 @@ class LinkStealing0(GraphMeasure):
         self.edge_index = graph.edge_index
         self.n_features = len(graph.x[0])
 
-        self.forget = e.unlearner.dataset.partitions[self.forget_part]
+        forget_raw = e.unlearner.dataset.partitions[self.forget_part]
+        self.forget = [[min(u, v), max(u, v)] for u, v in {(min(u, v), max(u, v)) for u, v in forget_raw}]
         self.train = e.unlearner.dataset.partitions[self.train_part]
         self.test = e.unlearner.dataset.partitions[self.test_part]
 
