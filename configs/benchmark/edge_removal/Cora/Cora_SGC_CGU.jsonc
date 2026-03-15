@@ -31,7 +31,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.SGC_CGU.SGC_CGU","parameters": { "in_channels":1433, "hidden_channels":[100], "out_channels":7 }
+            "class": "erasure.model.graphs.SGC_CGU.SGC_CGU","parameters": { "in_channels":1433, "hidden_channels":[64], "out_channels":7 }
           }
         }
       },
