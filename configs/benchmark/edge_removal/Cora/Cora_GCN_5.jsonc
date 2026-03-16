@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Citeseer"},
+                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Cora"},
                         "preprocess":[
                           ]}
                     }}, 
@@ -10,7 +10,7 @@
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["validation","train"], "percentage":0.1, "ref_data":"train_0", "shuffle":false}},
-          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":1, "ref_data":"train", "shuffle":false, "edge_removal":true}}
+          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.05, "ref_data":"train", "shuffle":false, "edge_removal":true}}
                     ],
         "batch_size":4,
         "split_seed":16}
@@ -31,11 +31,10 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":3703, "hidden_channels":[64], "out_channels":6 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":1433, "hidden_channels":[64], "out_channels":7 }
           }
         }
       },
-
 
     "unlearners":[
         // Original Model 
@@ -255,7 +254,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Citeseer_GCN_100.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Cora_GCN_5.json"}}
             ]
           }
         },

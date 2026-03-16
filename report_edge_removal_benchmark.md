@@ -31,7 +31,7 @@ Eight datasets are tested, all benchmarked across the full set of architectures.
 
 `tg` = `torch_geometric.datasets`, `ogb` = `ogb.nodeproppred`
 
-**Synthetic dataset parameters:** `num_graphs=1`, `avg_num_nodes=1000`, `avg_degree=50`, `num_classes=2`, `task="node"`, preprocessed with `MakeCentroidFeatures`. Model uses `hidden_channels=[64]` (vs `[100]` for all other datasets).
+**Synthetic dataset parameters:** `num_graphs=1`, `avg_num_nodes=1000`, `avg_degree=50`, `num_classes=2`, `task="node"`, preprocessed with `MakeCentroidFeatures`.
 
 ---
 
@@ -52,22 +52,22 @@ Stage 4 sets `edge_removal=True`, meaning sampled indices represent **edges to b
 
 | Dataset | Forget % variants |
 |---|---|
-| AmazonComputers | 20%, 50%, 99%, 100% (GCN only); 20% (all other archs) |
-| AmazonPhotos | 20%, 50%, 99%, 100% (GCN only); 20% (all other archs) |
-| Citeseer | 20%, 50%, 99%, 100% (GCN only); 20% (all other archs) |
-| Cora | 20%, 50%, 99%, 100% (GCN only); 20% (all other archs) |
-| Pubmed | 20% only |
-| ogbn-arxiv | 20%, 50%, 99%, 100% (GCN only); 20% (all other archs) |
-| ogbn-products | 20% only |
-| Synthetic | 20% only |
+| AmazonComputers | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| AmazonPhotos | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| Citeseer | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| Cora | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| Pubmed | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| ogbn-arxiv | 5%, 20%, 50%, 99%, 100% (GCN); 5%, 20% (all other archs) |
+| ogbn-products | 5%, 20% (all archs) |
+| Synthetic | 5%, 20% (all archs) |
 
-The four GCN variants differ **only** in forget percentage; all other parameters are identical.
+The five GCN variants differ **only** in forget percentage; all other parameters are identical. All non-GCN architectures now also have a 5% variant alongside the existing 20% variant.
 
 ---
 
 ## 3. Model Architectures
 
-All models use hidden size 100 (one hidden layer), Adam optimizer (lr=0.001), CrossEntropyLoss, and a linear LR decay scheduler.
+All models use hidden size 64 (one hidden layer), Adam optimizer (lr=0.001), CrossEntropyLoss, and a linear LR decay scheduler.
 
 **Standard datasets** (all 6 main datasets) use `TorchGraphModel`:
 
@@ -137,15 +137,15 @@ All configurations share: `seed=0`, `removal_type="edge"`, `cached=false`.
 
 All datasets now share a uniform setup. The only remaining differences are:
 
-| Property | Main 6 datasets + Synthetic | ogbn-products |
+| Property | Main 6 datasets + Pubmed + Synthetic | ogbn-products |
 |---|---|---|
-| Architectures tested | 10 (GAT, GCN×4, GIN, SAGE, MLP, SGC, SGC\_CGU) | 10 (same) |
+| Architectures tested | 10 (GAT, GCN×5, GIN, SAGE, MLP, SGC, SGC\_CGU) | 10 (same) |
 | Training class | `TorchGraphModel` | `TorchGraphModelBatched` |
 | Epochs | 100 | 100 |
 | Early stopping | Patience-based (p=10, min\_delta=0.01) | Threshold-based |
 | Unlearners | 17 (standard) | 17 (standard) |
 | Evaluation suite | Standard | Standard |
-| Forget % variants | 20/50/99/100 (GCN); 20% (others) | 20/50/99/100 (GCN); 20% (others) |
+| Forget % variants | 5/20/50/99/100 (GCN); 5/20% (others) | 5/20/50/99/100 (GCN); 5/20% (others) |
 | Hidden channels | 64 | 64 |
 
 `TorchGraphModelBatched` is required for ogbn-products due to its graph size (mini-batch training via `NeighborLoader`, fanouts=[15,10], batch\_size=1024).

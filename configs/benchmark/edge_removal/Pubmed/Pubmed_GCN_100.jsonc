@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Citeseer"},
+                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Planetoid", "parameters":{"root":"resources/data","name":"Pubmed"},
                         "preprocess":[
                           ]}
                     }}, 
@@ -31,7 +31,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":3703, "hidden_channels":[64], "out_channels":6 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":500, "hidden_channels":[64], "out_channels":3 }
           }
         }
       },
@@ -255,7 +255,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Citeseer_GCN_100.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Pubmed_GCN_100.json"}}
             ]
           }
         },
