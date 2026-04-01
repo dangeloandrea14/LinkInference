@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TwitchGamersDataSource.TwitchGamersDataSource",
-                        "parameters": {"root":"resources/data/twitch_gamers"}},
+                        "parameters": {"root":"resources/data/twitch_gamers", "target":"language"}},
         "partitions":  [
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
@@ -29,7 +29,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":7, "hidden_channels":[64], "out_channels":2 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":6, "hidden_channels":[64], "out_channels":21 }
           }
         }
       },
@@ -51,7 +51,7 @@
               {"class":"erasure.evaluations.running.RunTime"},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":false}},
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/TwitchGamers_GCN_20_test.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/TwitchGamers_GCN_lang_test.json"}}
             ]
           }
         },

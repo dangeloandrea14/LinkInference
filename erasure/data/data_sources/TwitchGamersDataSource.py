@@ -54,22 +54,19 @@ class TwitchGamersDataSource(DataSource):
       - large_twitch_features.csv
       - large_twitch_edges.csv
 
-    Label: `mature` (binary, 0/1, ~balanced 53/47).
+    target="mature" (default): binary label (0/1, ~balanced 53/47).
+      Features (7-dim): views, life_time, created_at, updated_at,
+                        dead_account, language (encoded), affiliate.
 
-    Features (7-dim float32):
-      views      — log1p-transformed view count
-      life_time  — log1p-transformed account age (days)
-      created_at — days since 2009-01-01 (float, divided by 3650)
-      updated_at — days since 2009-01-01 (float, divided by 3650)
-      dead_account — binary (0/1)
-      language   — integer label-encoded (0–20)
-      affiliate  — binary (0/1)
+    target="language": 21-class label (language code → integer).
+      Features (6-dim): same as above but language dropped from features.
     """
 
     def __init__(self, global_ctx: Global, local_ctx: Local):
         super().__init__(global_ctx, local_ctx)
-        self.root = self.local_config["parameters"]["root"]
-        self.name = self.local_config["parameters"].get("name", "TwitchGamers")
+        self.root   = self.local_config["parameters"]["root"]
+        self.name   = self.local_config["parameters"].get("name", "TwitchGamers")
+        self.target = self.local_config["parameters"].get("target", "mature")
 
     def get_name(self):
         return self.name
@@ -81,26 +78,30 @@ class TwitchGamersDataSource(DataSource):
         # ── node features & labels ────────────────────────────────────────────
         df = pd.read_csv(feat_path)
 
-        y = torch.tensor(df["mature"].values, dtype=torch.long)
+        lang_codes = pd.Categorical(df["language"]).codes.astype(np.float32)
+
+        if self.target == "language":
+            y = torch.tensor(lang_codes.astype(np.int64), dtype=torch.long)
+        else:
+            y = torch.tensor(df["mature"].values, dtype=torch.long)
 
         # continuous
         views     = np.log1p(df["views"].values).astype(np.float32)
         life_time = np.log1p(df["life_time"].values).astype(np.float32)
-
-        created = (pd.to_datetime(df["created_at"]) - _REFERENCE_DATE).dt.days.values.astype(np.float32) / 3650.0
-        updated = (pd.to_datetime(df["updated_at"]) - _REFERENCE_DATE).dt.days.values.astype(np.float32) / 3650.0
+        created   = (pd.to_datetime(df["created_at"]) - _REFERENCE_DATE).dt.days.values.astype(np.float32) / 3650.0
+        updated   = (pd.to_datetime(df["updated_at"]) - _REFERENCE_DATE).dt.days.values.astype(np.float32) / 3650.0
 
         # binary
         dead      = df["dead_account"].values.astype(np.float32)
         affiliate = df["affiliate"].values.astype(np.float32)
 
-        # categorical: label-encode language (21 unique values)
-        lang_codes = pd.Categorical(df["language"]).codes.astype(np.float32)
+        if self.target == "language":
+            # drop language from features — model must infer it from graph structure
+            feature_cols = [views, life_time, created, updated, dead, affiliate]
+        else:
+            feature_cols = [views, life_time, created, updated, dead, lang_codes, affiliate]
 
-        x = torch.tensor(
-            np.stack([views, life_time, created, updated, dead, lang_codes, affiliate], axis=1),
-            dtype=torch.float32,
-        )
+        x = torch.tensor(np.stack(feature_cols, axis=1), dtype=torch.float32)
 
         # ── edges ─────────────────────────────────────────────────────────────
         edges_df   = pd.read_csv(edges_path)
