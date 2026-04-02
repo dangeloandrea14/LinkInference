@@ -33,8 +33,10 @@ class TorchGraphModel(Trainable):
         self.optimizer = get_instance_kvargs(self.local_config['parameters']['optimizer']['class'],
                                       {'params':self.model.parameters(), **self.local_config['parameters']['optimizer']['parameters']})
         
-        self.loss_fn = get_instance_kvargs(self.local_config['parameters']['loss_fn']['class'],
-                                           self.local_config['parameters']['loss_fn']['parameters'])
+        loss_params = self.local_config['parameters']['loss_fn']['parameters']
+        if 'weight' in loss_params and isinstance(loss_params['weight'], list):
+            loss_params = {**loss_params, 'weight': torch.tensor(loss_params['weight'], dtype=torch.float)}
+        self.loss_fn = get_instance_kvargs(self.local_config['parameters']['loss_fn']['class'], loss_params)
         
         self.early_stopping_threshold = self.local_config['parameters']['early_stopping_threshold']
         
@@ -53,8 +55,9 @@ class TorchGraphModel(Trainable):
                 if torch.backends.mps.is_available()
             else "cpu"
         )
-        self.model.to(self.device) 
+        self.model.to(self.device)
         self.model.device = self.device
+        self.loss_fn.to(self.device)
         
         self.patience = 0     
         self.fit() 
