@@ -2,9 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource", 
-                        "parameters": {"datasource": {"class": "ogb.nodeproppred.PygNodePropPredDataset", "parameters":{"root":"resources/data","name":"ogbn-arxiv"},
-                        "preprocess":[
-                          ]}
+                        "parameters": {"datasource": {"class":"torch_geometric.datasets.Coauthor", "parameters":{"root":"resources/data/coauthor","name":"CS"}}
                     }}, 
         "partitions":  [  
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
@@ -31,7 +29,7 @@
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GIN.GIN","parameters": { "in_channels":128, "hidden_channels":[64], "out_channels":40 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":6805, "hidden_channels":[64], "out_channels":15 }
           }
         }
       },
@@ -254,7 +252,7 @@
               //LinkStealing
               {"class":"erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0", "parameters":{"target":"unlearned"}},
 
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/arxiv_GIN_20.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Coauthor_GCN_20.json"}}
             ]
           }
         },
