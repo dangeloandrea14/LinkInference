@@ -1,13 +1,14 @@
 {
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
-        "DataSource": { "class":"erasure.data.data_sources.TwitchGamersDataSource.TwitchGamersDataSource",
-                        "parameters": {"root":"resources/data/twitch_gamers", "target":"language"}},
+        "DataSource": { "class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource",
+                        "parameters": {"datasource": {"class":"torch_geometric.datasets.Coauthor",
+                                                      "parameters": {"root":"resources/data/coauthor", "name":"CS"}}}},
         "partitions":  [
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["all_shuffled","-"], "percentage":1, "shuffle":true}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["train_0","test"], "percentage":0.8, "ref_data":"all_shuffled", "shuffle":false}},
           {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["validation","train"], "percentage":0.1, "ref_data":"train_0", "shuffle":false}},
-          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":0.2, "ref_data":"train", "shuffle":false, "edge_removal":true}}
+          {"class":"erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage", "parameters":{"parts_names":["forget","retain"], "percentage":1, "ref_data":"all", "shuffle":false, "edge_removal":true}}
                     ],
         "batch_size":4,
         "split_seed":16}
@@ -25,12 +26,11 @@
           "loss_fn": {
             "class": "torch.nn.CrossEntropyLoss",
             "parameters": {
-              "reduction":"mean",
-              "weight": [13.8983, 15.9154, 0.8491, 0.0643, 1.4047, 12.2783, 1.1774, 18.7481, 6.5085, 6.0327, 6.5888, 11.4200, 24.2589, 5.6021, 8.4803, 3.1567, 1.6605, 9.3740, 12.6668, 10.3697, 2.8308]
+              "reduction":"mean"
             }
           },
           "model": {
-            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":6, "hidden_channels":[64], "out_channels":21 }
+            "class": "erasure.model.graphs.GCN.GCN","parameters": { "in_channels":6805, "hidden_channels":[64], "out_channels":15 }
           }
         }
       },
@@ -52,7 +52,7 @@
               {"class":"erasure.evaluations.running.RunTime"},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned"}},
               {"class": "erasure.evaluations.measures.TorchSKLearnGraph", "parameters":{"partition":"test","target":"unlearned", "unlearned_graph":false}},
-              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/TwitchGamers_GCN_lang_test.json"}}
+              {"class": "erasure.evaluations.measures.SaveValues", "parameters":{"path":"output/runs/LinkAttack/edge/Coauthor_GCN_test.json"}}
             ]
           }
         },

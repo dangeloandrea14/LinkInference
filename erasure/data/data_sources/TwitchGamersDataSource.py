@@ -67,6 +67,7 @@ class TwitchGamersDataSource(DataSource):
         self.root   = self.local_config["parameters"]["root"]
         self.name   = self.local_config["parameters"].get("name", "TwitchGamers")
         self.target = self.local_config["parameters"].get("target", "mature")
+        self.top_k  = self.local_config["parameters"].get("top_k", None)
 
     def get_name(self):
         return self.name
@@ -105,8 +106,34 @@ class TwitchGamersDataSource(DataSource):
 
         # ── edges ─────────────────────────────────────────────────────────────
         edges_df   = pd.read_csv(edges_path)
-        src        = torch.tensor(edges_df["numeric_id_1"].values, dtype=torch.long)
-        dst        = torch.tensor(edges_df["numeric_id_2"].values, dtype=torch.long)
+        src_raw    = edges_df["numeric_id_1"].values
+        dst_raw    = edges_df["numeric_id_2"].values
+
+        # ── top-k language filtering (language target only) ───────────────────
+        if self.target == "language" and self.top_k is not None:
+            counts      = np.bincount(lang_codes.astype(np.int64))
+            top_codes   = np.argsort(counts)[::-1][:self.top_k]
+            keep_mask   = np.isin(lang_codes.astype(np.int64), top_codes)
+
+            # remap old node indices → new consecutive indices (-1 = removed)
+            old2new = np.full(len(df), -1, dtype=np.int64)
+            old2new[keep_mask] = np.arange(keep_mask.sum())
+
+            # remap labels to 0..top_k-1 in descending-frequency order
+            code_remap = np.full(int(lang_codes.max()) + 1, -1, dtype=np.int64)
+            for new_code, old_code in enumerate(top_codes):
+                code_remap[old_code] = new_code
+            y = torch.tensor(code_remap[lang_codes.astype(np.int64)[keep_mask]], dtype=torch.long)
+
+            x = x[keep_mask]
+
+            # filter edges: keep only those where both endpoints survive
+            edge_keep = (old2new[src_raw] >= 0) & (old2new[dst_raw] >= 0)
+            src_raw   = old2new[src_raw[edge_keep]]
+            dst_raw   = old2new[dst_raw[edge_keep]]
+
+        src = torch.tensor(src_raw, dtype=torch.long)
+        dst = torch.tensor(dst_raw, dtype=torch.long)
         # store both directions (undirected graph)
         edge_index = torch.stack(
             [torch.cat([src, dst]), torch.cat([dst, src])], dim=0

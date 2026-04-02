@@ -27,13 +27,13 @@ from matplotlib.ticker import LogLocator, NullFormatter
 from matplotlib.transforms import blended_transform_factory
 
 # ── paths ─────────────────────────────────────────────────────────────────────
-INPUT_DIR  = "output/runs/LinkAttack/edge"
-OUTPUT_DIR = "output/viz/LinkAttack/edge"
+INPUT_DIR  = "output/runs/LinkAttack/edge_all"
+OUTPUT_DIR = "output/viz/LinkAttack/edge_all"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── shared constants ──────────────────────────────────────────────────────────
 DATASETS = ["Cora", "Citeseer"]
-PCTS     = [5, 20, 50, 99, 100]
+PCTS     = [5, 20, 50]
 
 # Methods sorted alphabetically; baselines appended at end of sweep panel only
 FOCUS          = sorted(["SCRUB", "SSD", "SalUn", "IDEA", "CEU"])   # CEU IDEA SCRUB SSD SalUn
@@ -107,12 +107,23 @@ def load_json(path):
     return json.loads("[" + content.rstrip(",") + "]")
 
 
+def find_run_file(dataset, pct):
+    candidates = [
+        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json"),
+        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}_all.json"),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+
 def load_runtime_ratios():
     """ratios[dataset][unlearner] = RunTime / GoldModel RunTime  (20% forget)"""
     ratios = {}
     for dataset in DATASETS:
-        path = os.path.join(INPUT_DIR, f"{dataset}_GCN_20.json")
-        if not os.path.exists(path):
+        path = find_run_file(dataset, 20)
+        if path is None:
             continue
         records  = load_json(path)
         labelled = {label_unlearner(r): r.get("RunTime") for r in records}
@@ -134,8 +145,8 @@ def load_sweep_df():
     rows    = []
     for dataset in DATASETS:
         for pct in PCTS:
-            path = os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json")
-            if not os.path.exists(path):
+            path = find_run_file(dataset, pct)
+            if path is None:
                 continue
             for r in load_json(path):
                 unl = label_unlearner(r)
@@ -287,7 +298,7 @@ def make_figure(ratios, sweep_df):
         ax_sw.set_ylabel("Test Accuracy (original graph)")
         ax_sw.set_title("(b) Test accuracy vs. forget size", pad=6)
         ax_sw.grid(True, linestyle="--", alpha=0.25)
-        ax_sw.set_ylim(0.6, 1.0)
+        ax_sw.set_ylim(0.5, 1.0)
 
         ds_line_handles = [
             mlines.Line2D([0], [0], color="black", marker="o", linestyle="-",
