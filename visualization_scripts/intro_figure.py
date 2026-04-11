@@ -22,18 +22,18 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import matplotlib.lines as mlines
 from matplotlib.ticker import LogLocator, NullFormatter
 from matplotlib.transforms import blended_transform_factory
 
 # ── paths ─────────────────────────────────────────────────────────────────────
-INPUT_DIR  = "output/runs/LinkAttack/edge_all"
-OUTPUT_DIR = "output/viz/LinkAttack/edge_all"
+INPUT_DIR  = "output/runs/LinkAttack/edge"
+OUTPUT_DIR = "output/viz/LinkAttack/edge"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── shared constants ──────────────────────────────────────────────────────────
-DATASETS = ["Cora", "Citeseer"]
-PCTS     = [5, 20, 50]
+DATASETS       = ["Cora", "Citeseer", "Coauthor"]           # bar chart
+SWEEP_DATASETS = ["Cora", "Citeseer", "Coauthor", "Pubmed"]  # line plot
+PCTS     = [1, 5, 10, 20, 50]
 
 # Methods sorted alphabetically; baselines appended at end of sweep panel only
 FOCUS          = sorted(["SCRUB", "SSD", "SalUn", "IDEA", "CEU"])   # CEU IDEA SCRUB SSD SalUn
@@ -67,8 +67,21 @@ UNL_MARKER = {
 }
 
 # Dataset encoding — no legend entries; annotated inside panels instead
-DS_HATCH     = {"Cora": "",   "Citeseer": "//"}
-DS_FILLED    = {"Cora": True, "Citeseer": False}   # filled vs open markers
+DS_HATCH = {"Cora": "",  "Citeseer": "//", "Coauthor": "xx"}
+
+# Evenly spaced grayscale — four distinguishable shades from black to light gray
+DS_COLOR = {
+    "Coauthor": "#000000",
+    "Cora"    : "#404040",
+    "Pubmed"  : "#808080",
+    "Citeseer": "#949494",
+}
+DS_MARKER = {
+    "Cora"    : "o",
+    "Citeseer": "s",
+    "Coauthor": "^",
+    "Pubmed"  : "D",
+}
 
 
 # ── label helpers ─────────────────────────────────────────────────────────────
@@ -110,7 +123,7 @@ def load_json(path):
 def find_run_file(dataset, pct):
     candidates = [
         os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json"),
-        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}_all.json"),
+        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json"),
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -143,7 +156,7 @@ def load_sweep_df():
     ACC_KEY = "sklearn.metrics.accuracy_score.test.unlearned.on_graph:False"
     want    = set(FOCUS) | set(SWEEP_EXTRAS)
     rows    = []
-    for dataset in DATASETS:
+    for dataset in SWEEP_DATASETS:
         for pct in PCTS:
             path = find_run_file(dataset, pct)
             if path is None:
@@ -183,7 +196,7 @@ def make_figure(ratios, sweep_df):
     n_unl   = len(FOCUS)
     width   = 0.30
     x_bar   = np.arange(n_unl)
-    offsets = np.array([-0.5, 0.5]) * width
+    offsets = np.array([-1.0, 0.0, 1.0]) * width
 
     x_pos    = list(range(len(PCTS)))
     pct_to_x = {p: i for i, p in enumerate(PCTS)}
@@ -194,7 +207,7 @@ def make_figure(ratios, sweep_df):
 
     with plt.rc_context(rc):
         fig, (ax_rt, ax_sw) = plt.subplots(
-            1, 2, figsize=(13, 4.8),
+            1, 2, figsize=(12, 4.8),
             gridspec_kw={"width_ratios": [1.05, 1]},
         )
 
@@ -245,13 +258,13 @@ def make_figure(ratios, sweep_df):
             if unl in VENUE_LABEL:
                 ax_rt.text(xi, -0.08, VENUE_LABEL[unl],
                            transform=trans_rt,
-                           fontsize=FS_VENUE, color="#777", style="italic",
+                           fontsize=FS_VENUE, color="#444", style="italic",
                            ha="center", va="top")
 
         ax_rt.grid(axis="y", which="major", linestyle=":", alpha=0.4, zorder=0)
         ax_rt.grid(axis="y", which="minor", linestyle=":", alpha=0.15, zorder=0)
         ax_rt.set_title("(a) Runtime overhead", pad=6)
-        ax_rt.text(0.02, 0.73, "more expensive\nthan retraining",
+        ax_rt.text(0.02, 0.6, "more expensive\nthan retraining",
                    transform=ax_rt.transAxes, fontsize=FS,
                    color=UNL_COLOR["Gold Model"], va="center")
 
@@ -260,55 +273,50 @@ def make_figure(ratios, sweep_df):
                            linewidth=0.5, label="Cora"),
             mpatches.Patch(facecolor="#999", hatch="//", edgecolor="black",
                            linewidth=0.5, label="Citeseer"),
+            mpatches.Patch(facecolor="#999", hatch="xx", edgecolor="black",
+                           linewidth=0.5, label="Coauthor"),
         ]
-        ax_rt.legend(handles=ds_bar_handles, loc="upper right",
+        ax_rt.legend(handles=ds_bar_handles, loc="upper left",
                      fontsize=FS, frameon=True, framealpha=0.9,
                      edgecolor="#ccc", handlelength=1.2)
 
-        # ── RIGHT: accuracy sweep line chart ──────────────────────────────────
-        for unl in sweep_order:
-            for dataset in DATASETS:
-                usub = (sweep_df[(sweep_df["unlearner"] == unl) &
-                                  (sweep_df["dataset"]   == dataset)]
-                        .sort_values("forget_pct"))
-                if usub.empty or usub["Acc (test, orig)"].isna().all():
-                    continue
-                xs      = [pct_to_x[p] for p in usub["forget_pct"]]
-                is_bold = unl in BOLD_BASELINES
-                filled  = DS_FILLED[dataset]
-                mfc     = UNL_COLOR[unl] if filled else "white"
-                mec     = UNL_COLOR[unl]
-                ax_sw.plot(
-                    xs, usub["Acc (test, orig)"],
-                    color=UNL_COLOR[unl],
-                    linestyle="-",
-                    marker=UNL_MARKER[unl],
-                    linewidth=2.4 if is_bold else 1.3,
-                    markersize=6  if is_bold else 4.5,
-                    markerfacecolor=mfc,
-                    markeredgewidth=1.0 if not filled else 0.4,
-                    markeredgecolor=mec,
-                    alpha=1.0 if is_bold else 0.70,
-                    zorder=10 if is_bold else 2,
-                )
+        # ── RIGHT: accuracy sweep line chart (Gold Model only) ───────────────
+        for dataset in SWEEP_DATASETS:
+            usub = (sweep_df[(sweep_df["unlearner"] == "Gold Model") &
+                              (sweep_df["dataset"]   == dataset)]
+                    .sort_values("forget_pct"))
+            if usub.empty or usub["Acc (test, orig)"].isna().all():
+                continue
+            vals  = usub["Acc (test, orig)"].values
+            xs    = [pct_to_x[p] for p in usub["forget_pct"]]
+            color = DS_COLOR[dataset]
+            delta = vals[0] - vals[-1]
+
+            ax_sw.plot(xs, vals,
+                       color=color, linewidth=1.8,
+                       marker=DS_MARKER[dataset], markersize=5.5,
+                       markerfacecolor=color, markeredgewidth=0.4,
+                       markeredgecolor=color)
+
+            mid = len(xs) // 2
+            ax_sw.text(xs[mid], vals[mid] - 0.012, dataset,
+                       va="top", ha="center",
+                       color=color, fontsize=FS - 2, clip_on=False)
+
+            ax_sw.text(xs[-1] + 0.15, vals[-1],
+                       f"$\\Delta={delta*100:.1f}\\%$",
+                       va="center", ha="left",
+                       color=color, fontsize=FS - 2, clip_on=False)
 
         ax_sw.set_xticks(x_pos)
         ax_sw.set_xticklabels(x_labels)
+        ax_sw.set_xlim(-0.3, len(x_pos) - 0.2)
         ax_sw.set_xlabel("Forget set size")
-        ax_sw.set_ylabel("Test Accuracy (original graph)")
-        ax_sw.set_title("(b) Test accuracy vs. forget size", pad=6)
+        ax_sw.set_ylabel("Test Accuracy")
+        ax_sw.set_title("(b) GCN Test accuracy vs. forget size", pad=6)
         ax_sw.grid(True, linestyle="--", alpha=0.25)
         ax_sw.set_ylim(0.5, 1.0)
 
-        ds_line_handles = [
-            mlines.Line2D([0], [0], color="black", marker="o", linestyle="-",
-                          markerfacecolor="black", markersize=5, label="Cora"),
-            mlines.Line2D([0], [0], color="black", marker="o", linestyle="-",
-                          markerfacecolor="white", markeredgecolor="black",
-                          markersize=5, label="Citeseer"),
-        ]
-        ax_sw.legend(handles=ds_line_handles, loc="lower left",
-                     fontsize=FS, frameon=True, framealpha=0.9, edgecolor="#ccc")
 
         plt.tight_layout()
         plt.subplots_adjust(wspace=0.35)

@@ -46,7 +46,7 @@ class CEU(TorchUnlearner):
         self.local.config['parameters']['cg_approx'] = self.local.config['parameters'].get("cg_approx", True)
         self.local.config['parameters']['transductive_edge'] = self.local.config['parameters'].get("transductive_edge", True)
         self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam", 1e-4) #same as CGU
-        self.local.config['parameters']['damping'] = self.local.config['parameters'].get("damping", 1e-2)
+        self.local.config['parameters']['damping'] = self.local.config['parameters'].get("damping", 0.0)
 
 
 
@@ -286,10 +286,10 @@ class CEU(TorchUnlearner):
                 f=fmin_loss_fn,
                 x0=self.to_vector(vs),
                 fprime=fmin_grad_fn,
-                gtol=1e-3,        
+                gtol=1e-4,
                 disp=False,
                 full_output=True,
-                maxiter=50,       
+                maxiter=100,
             )
             # inverse_hvp.append(to_list(res[0], sizes, device)[0])
             inverse_hvp = self.to_list(torch.from_numpy(res[0]), sizes, device)
@@ -403,10 +403,10 @@ class CEU(TorchUnlearner):
                 f=fmin_loss_fn,
                 x0=self.to_vector(v),
                 fprime=fmin_grad_fn,
-                gtol=1e-3,        
+                gtol=1e-4,
                 disp=False,
                 full_output=True,
-                maxiter=50,       
+                maxiter=100,
             )
                 inverse_hvp.append(self.to_list(torch.from_numpy(res[0]), sizes, device)[0])
                 # inverse_hvp = to_list(torch.from_numpy(res[0]), sizes, device)
@@ -470,7 +470,7 @@ class CEU(TorchUnlearner):
     def _get_fmin_hvp_fn(self, v, **kwargs):
         device = kwargs['device']
 
-        def get_fmin_hvp(self, x, p):
+        def get_fmin_hvp(x, p):
             p = torch.tensor(p, dtype=torch.float, device=device)
             hvp = self._mini_batch_hvp(p, **kwargs)
             return self.to_vector(hvp)

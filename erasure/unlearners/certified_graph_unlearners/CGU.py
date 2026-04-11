@@ -138,7 +138,7 @@ class CGU_edge(TorchUnlearner):
 
             # train K binary LR models jointly
             w = self.ovr_lr_optimize(X_train, y_train, self.lam, weight, b=b, num_steps=self.num_steps_optimizer, verbose=False,
-                                 lr=self.lr, wd=5e-4)
+                                 lr=1.0, wd=5e-4)
             
             # record the opt_grad_norm
             for k in range(y_train.size(1)):
@@ -160,7 +160,8 @@ class CGU_edge(TorchUnlearner):
         c_val = self.get_c(self.delta)
 
         # b_std in the original code always defaults to std, implementation-wise
-        budget = self.get_budget(self.std, self.eps, c_val) 
+        # In OVR mode the accumulator sums over all K classes, so the budget must be scaled by K
+        budget = self.get_budget(self.std, self.eps, c_val) * y_train.size(1)
 
 
         gamma = 1/4  # pre-computed for -logsigmoid loss
@@ -252,8 +253,8 @@ class CGU_edge(TorchUnlearner):
                     # retrain the model
                     grad_norm_approx_sum = 0
                     b = self.std * torch.randn(X_train.size(1), y_train.size(1)).float().to(self.device)
-                    w_approx = self.ovr_lr_optimize(X_rem, y_train, self.lam, weight, b=b, num_steps=100, verbose=False,
-                                                lr=self.lr, wd=5e-4)
+                    w_approx = self.ovr_lr_optimize(X_rem, y_train, self.lam, weight, b=b, num_steps=self.num_steps_optimizer, verbose=False,
+                                                lr=1.0, wd=5e-4)
                     num_retrain += 1
                 else:
                     grad_norm_approx_sum += grad_norm_approx[i, 0]
@@ -294,7 +295,7 @@ class CGU_edge(TorchUnlearner):
     def check_configuration(self):
         super().check_configuration()
 
-        self.local.config['parameters']['std'] = self.local.config['parameters'].get("std", 0.1)  
+        self.local.config['parameters']['std'] = self.local.config['parameters'].get("std", 1e-2)
         self.local.config['parameters']['ref_data_retain'] = self.local.config['parameters'].get("ref_data_retain", 'retain') 
         self.local.config['parameters']['ref_data_forget'] = self.local.config['parameters'].get("ref_data_forget", 'forget')  
         self.local.config['parameters']['prop_step'] = self.local.config['parameters'].get("prop_step", 2)
@@ -303,7 +304,7 @@ class CGU_edge(TorchUnlearner):
         self.local.config['parameters']['eps'] = self.local.config['parameters'].get("eps", 1.0) 
         self.local.config['parameters']['train_mode'] = self.local.config['parameters'].get("train_mode","ovr")
         self.local.config['parameters']['y_binary'] = self.local.config['parameters'].get("y_binary",1)
-        self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam",1e-4)
+        self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam",1e-2)
         self.local.config['parameters']['num_steps_optimizer'] = self.local.config['parameters'].get('num_steps_optimizer',100)
 
 
@@ -468,9 +469,8 @@ class CGU_edge(TorchUnlearner):
             raise("Error: Not supported optimizer.")
         '''
 
-        opt_class = type(self.optimizer)
-        opt_kwargs = self.optimizer.defaults 
-        optimizer = opt_class([w], **opt_kwargs)
+        # CGU trains a convex logistic regression — LBFGS converges in far fewer steps than Adam
+        optimizer = torch.optim.LBFGS([w], lr=lr, tolerance_grad=1e-32, tolerance_change=1e-32)
         
         best_val_acc = 0
         w_best = None
