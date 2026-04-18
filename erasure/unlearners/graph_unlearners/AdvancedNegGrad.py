@@ -37,11 +37,11 @@ class AdvancedNegGrad(GraphUnlearner):
         forget_set = self.dataset.partitions[self.ref_data_forget]
 
         num_nodes = self.x.size(0)
-        all_nodes = torch.arange(num_nodes)
 
         if self.removal_type == 'edge':
             forget_set = self.infected_nodes(forget_set, self.hops)
-            retain_set = [node for node in all_nodes if node not in forget_set]
+            forget_set_s = set(forget_set)
+            retain_set = [n for n in range(num_nodes) if n not in forget_set_s]
             
 
         for epoch in range(self.epochs):

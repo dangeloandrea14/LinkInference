@@ -1,6 +1,7 @@
 from erasure.unlearners.graph_unlearners.GraphUnlearner import GraphUnlearner
 from fractions import Fraction
 import torch
+import torch.nn.functional as F
 
 from erasure.core.factory_base import get_instance_kvargs
 
@@ -44,17 +45,16 @@ class SaliencyMapGeneration(GraphUnlearner):
 
 
         for name, param in self.predictor.model.named_parameters():
-            gradients[name] = 0
+            gradients[name] = torch.zeros_like(param.data)
 
-        for i, node in enumerate(forget_set):
-            
-            target = self.labels[node]
-            output = self.predictor.model(self.x,self.edge_index)[node]
-            loss = - self.predictor.loss_fn(output, target)
-
+        if len(forget_set) > 0:
+            node_idx = torch.tensor(forget_set, dtype=torch.long, device=self.device)
+            targets = self.labels[node_idx].to(self.device)
+            outputs = self.predictor.model(self.x, self.edge_index)[node_idx]
+            # sum reduction matches summing per-node losses from the original loop
+            loss = -F.cross_entropy(outputs, targets, reduction='sum')
             self.predictor.optimizer.zero_grad()
             loss.backward()
-
             with torch.no_grad():
                 for name, param in self.predictor.model.named_parameters():
                     if param.grad is not None:

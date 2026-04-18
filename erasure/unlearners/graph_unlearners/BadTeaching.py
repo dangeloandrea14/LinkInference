@@ -92,11 +92,11 @@ class BadTeaching(GraphUnlearner):
         self.forget_set = self.dataset.partitions[self.ref_data_forget]
 
         num_nodes = self.x.size(0)
-        all_nodes = torch.arange(num_nodes)
 
         if self.removal_type == 'edge':
             self.forget_set = self.infected_nodes(self.forget_set, self.hops)
-            self.retain_set = [node for node in all_nodes if node not in self.forget_set]
+            forget_set_s = set(self.forget_set)
+            self.retain_set = [n for n in range(num_nodes) if n not in forget_set_s]
 
         self.mask = torch.tensor(self.forget_set + self.retain_set, dtype=torch.long)
 

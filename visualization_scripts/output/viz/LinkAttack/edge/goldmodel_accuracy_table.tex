@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Gold Model test accuracy (\%) across architectures and datasets
+         at 5\% and 20\% forget-set size.
+         Identity shows the original model accuracy (upper bound).
+         $\Delta$ is the accuracy change relative to Identity (negative = drop).}
+\label{tab:goldmodel_accuracy}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}ll r rr rr@{}}
+\toprule
+\multirow{2}{*}{Dataset} & \multirow{2}{*}{Architecture} & \multirow{2}{*}{Original} & \multicolumn{2}{c}{Gold Model (5\%)} & \multicolumn{2}{c}{Gold Model (20\%)} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+ & & & Acc & $\Delta$ & Acc & $\Delta$ \\
+\midrule
+\bottomrule
+\end{tabular}
+\end{table}

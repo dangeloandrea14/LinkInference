@@ -22,7 +22,7 @@ DATASET_PATHS = {
 }
 
 FORGET_PCTS = [1, 5, 10, 20, 50]
-HOPS        = [2, 3]          # 1-hidden-layer GCN → hops=2; 2-hidden-layer → hops=3
+HOPS        = [2]             # 1-hidden-layer GCN → hops=2
 N_SEEDS     = 5               # average over this many random forget-set samples
 SEED_BASE   = 42
 
@@ -98,11 +98,17 @@ for ds_name, path in DATASET_PATHS.items():
 # Layout: one block per dataset.
 # Columns: |V|  |E|  || for each pct: infected% (hops=2) / infected% (hops=3)
 
-def fmt_pct(mean, n):
+def fmt_pct(mean, std, n):
     p = mean / n * 100
+    s_std = std / n * 100
     if p >= 99.9:
-        return r"$\approx$100"
-    return f"{p:.1f}"
+        s = r"$\approx$100"
+    else:
+        s = f"{p:.1f}"
+    s += r"{\scriptsize$\pm$" + f"{s_std:.1f}" + r"}"
+    if p >= 80:
+        s = r"\textbf{" + s + r"}"
+    return s
 
 lines = []
 n_pct_cols = len(FORGET_PCTS)
@@ -110,21 +116,15 @@ n_pct_cols = len(FORGET_PCTS)
 # Column spec: l r r | (r r) * n_pcts
 col_spec = "l rr " + "".join(["r" * len(HOPS) for _ in FORGET_PCTS])
 # Build header
-pct_headers = " & ".join(
-    r"\multicolumn{" + str(len(HOPS)) + r"}{c}{" + f"{p}\\%" + "}"
-    for p in FORGET_PCTS
-)
-hop_sub = " & ".join(
-    " & ".join(f"$k={h}$" for h in HOPS)
-    for _ in FORGET_PCTS
-)
+pct_headers = " & ".join(f"{p}\\%" for p in FORGET_PCTS)
 
 lines += [
     r"\begin{table}[t]",
     r"\centering",
-    r"\caption{Fraction of nodes (\%) infected by $k$-hop neighbourhood expansion",
+    r"\caption{Fraction of nodes (\%) infected by 2-hop neighbourhood expansion",
     r"         when removing a random subset of edges. Values averaged over",
     f"         {N_SEEDS} random forget-set samples.",
+    r"         \textbf{Bold} entries exceed 80\%.",
     r"         Almost all nodes are infected even at small forget-set sizes,",
     r"         confirming that edge unlearning is structurally degenerate on",
     r"         feature-rich datasets.}",
@@ -133,10 +133,7 @@ lines += [
     r"\setlength{\tabcolsep}{4pt}",
     r"\begin{tabular}{@{}" + col_spec + r"@{}}",
     r"\toprule",
-    r"\multirow{2}{*}{Dataset} & \multirow{2}{*}{$|V|$} & \multirow{2}{*}{$|E|$} & "
-    + pct_headers + r" \\",
-    r"\cmidrule(lr){4-" + str(3 + n_pct_cols * len(HOPS)) + r"}",
-    r" & & & " + hop_sub + r" \\",
+    r"Dataset & $|V|$ & $|E|$ & " + pct_headers + r" \\",
     r"\midrule",
 ]
 
@@ -160,7 +157,7 @@ for ds_name in DATASET_PATHS:
         for hops in HOPS:
             key = (pct, hops)
             if key in ds_rows:
-                cells.append(fmt_pct(ds_rows[key]["mean_inf"], n_nodes))
+                cells.append(fmt_pct(ds_rows[key]["mean_inf"], ds_rows[key]["std_inf"], n_nodes))
             else:
                 cells.append("--")
 
