@@ -216,7 +216,32 @@
       {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
        {"class":"erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", 
         "parameters": {}}, 
-      {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}}
+      {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}},
+        {
+          "class": "erasure.unlearners.certified_graph_unlearners.ScaleGUN.ScaleGUN",
+          "parameters": {
+            "std": 1e-2,
+            "lam": 1e-2,
+            "eps": 1.0,
+            "delta": 1e-4,
+            "prop_step": 3,
+            "num_steps_optimizer": 100,
+            "lr": 0.01,
+            "ref_data_retain": "retain",
+            "ref_data_forget": "forget",
+            "train_mode": "ovr"
+          }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.GNNDelete.GNNDelete",
+            "parameters": {
+                "epochs": 10,
+                "lr": 1e-3,
+                "alpha": 0.5,
+                "loss_fct": "mse_mean",
+                "ref_data_forget": "forget"
+            }
+        }
     ],
     
       "evaluator":{
