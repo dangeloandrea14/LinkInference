@@ -37,9 +37,9 @@ CONFIGS=(
 TOTAL=${#CONFIGS[@]}
 for i in "${!CONFIGS[@]}"; do
     cfg="${CONFIGS[$i]}"
-    echo "[$((i+1))/$TOTAL] Running $cfg ..."
-    python main.py "$cfg"
-    echo "  done."
+    echo "[$((i+1))/$TOTAL] Submitting $cfg ..."
+    sbatch launchers/new_launcher_fast.sh main.py "$cfg"
+    echo "  submitted."
 done
 
 echo "All dataset selection experiments complete."
