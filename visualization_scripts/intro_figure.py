@@ -31,12 +31,12 @@ OUTPUT_DIR = "output/viz/LinkAttack/edge"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── shared constants ──────────────────────────────────────────────────────────
-DATASETS       = ["Cora", "Citeseer", "Coauthor"]           # bar chart
+DATASETS       = ["Cora", "Citeseer", "Pubmed"]           # bar chart
 SWEEP_DATASETS = ["Cora", "Citeseer", "Coauthor", "Pubmed"]  # line plot
 PCTS     = [1, 5, 10, 20, 50]
 
 # Methods sorted alphabetically; baselines appended at end of sweep panel only
-FOCUS          = sorted(["SCRUB", "SSD", "SalUn", "IDEA", "CEU"])   # CEU IDEA SCRUB SSD SalUn
+FOCUS          = ["CEU", "SalUn", "FF", "IDEA", "SSD"]
 SWEEP_EXTRAS   = ["Gold Model"]
 BOLD_BASELINES = {"Gold Model"}
 
@@ -52,22 +52,22 @@ VENUE_LABEL = {
 UNL_COLOR = {
     "Gold Model": "#c0392b",
     "CEU"       : "#76b7b2",
+    "FF"        : "#4e79a7",
     "IDEA"      : "#b07aa1",
-    "SCRUB"     : "#4e79a7",
     "SSD"       : "#f28e2b",
     "SalUn"     : "#59a14f",
 }
 UNL_MARKER = {
     "Gold Model": "D",
     "CEU"       : "X",
+    "FF"        : "o",
     "IDEA"      : "P",
-    "SCRUB"     : "o",
     "SSD"       : "^",
     "SalUn"     : "v",
 }
 
 # Dataset encoding — no legend entries; annotated inside panels instead
-DS_HATCH = {"Cora": "",  "Citeseer": "//", "Coauthor": "xx"}
+DS_HATCH = {"Cora": "",  "Citeseer": "//", "Coauthor": "xx", "Pubmed": "xx"}
 
 # Evenly spaced grayscale — four distinguishable shades from black to light gray
 DS_COLOR = {
@@ -108,6 +108,7 @@ def label_unlearner(r):
         "IDEA"                       : "IDEA",
         "CGU_edge"                   : "CGU",
         "CEU"                        : "CEU",
+        "FisherForgetting"           : "FF",
     }.get(u, u)
 
 
@@ -132,8 +133,9 @@ def find_run_file(dataset, pct):
 
 
 def load_runtime_ratios():
-    """ratios[dataset][unlearner] = RunTime / GoldModel RunTime  (20% forget)"""
-    ratios = {}
+    """ratios[dataset][unlearner] = RunTime / GoldModel RunTime  (20% forget)
+    also returns mean Gold Model RunTime in seconds across datasets"""
+    ratios, gold_rts = {}, []
     for dataset in DATASETS:
         path = find_run_file(dataset, 20)
         if path is None:
@@ -143,12 +145,13 @@ def load_runtime_ratios():
         gold_rt  = labelled.get("Gold Model")
         if not gold_rt:
             continue
+        gold_rts.append(gold_rt)
         ratios[dataset] = {
             unl: (labelled[unl] / gold_rt
                   if labelled.get(unl) and labelled[unl] > 0 else np.nan)
             for unl in FOCUS
         }
-    return ratios
+    return ratios, float(np.mean(gold_rts)) if gold_rts else 1.0
 
 
 def load_sweep_df():
@@ -175,7 +178,7 @@ def load_sweep_df():
 
 
 # ── plotting ──────────────────────────────────────────────────────────────────
-def make_figure(ratios, sweep_df):
+def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
     FS       = 14   # single font size used everywhere
     FS_VENUE = 11   # smaller for venue labels (secondary info)
 
@@ -245,10 +248,16 @@ def make_figure(ratios, sweep_df):
         ax_rt.yaxis.set_minor_locator(
             LogLocator(base=10, subs=np.arange(2, 10) * 0.1, numticks=50))
         ax_rt.yaxis.set_minor_formatter(NullFormatter())
-        ax_rt.set_yticks([0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200])
-        ax_rt.set_yticklabels(["0.1×", "0.5×", "1×", "2×", "5×",
-                                "10×", "20×", "50×", "100×", "200×"])
-        ax_rt.set_ylabel("RunTime / Gold Model (log scale)")
+        all_vals = [v for ds in ratios.values() for v in ds.values() if not np.isnan(v)]
+        max_ratio = max(all_vals) if all_vals else 10
+        all_ticks = [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200]
+        tick_ratios = [t for t in all_ticks if t <= max_ratio * 1.5]
+        tick_secs   = [r * gold_rt_avg for r in tick_ratios]
+        tick_labels = [f"{s:.2f}s" if s < 1 else f"{s:.1f}s" if s < 10 else f"{s:.0f}s"
+                       for s in tick_secs]
+        ax_rt.set_yticks(tick_ratios)
+        ax_rt.set_yticklabels(tick_labels)
+        ax_rt.set_ylabel("RunTime (log scale)")
 
         # Method names as tick labels; venue labels as smaller gray italic below
         ax_rt.set_xticks(x_bar)
@@ -263,10 +272,11 @@ def make_figure(ratios, sweep_df):
 
         ax_rt.grid(axis="y", which="major", linestyle=":", alpha=0.4, zorder=0)
         ax_rt.grid(axis="y", which="minor", linestyle=":", alpha=0.15, zorder=0)
-        ax_rt.set_title("(a) Runtime overhead", pad=6)
-        ax_rt.text(0.02, 0.6, "more expensive\nthan retraining",
-                   transform=ax_rt.transAxes, fontsize=FS,
-                   color=UNL_COLOR["Gold Model"], va="center")
+        ax_rt.set_title("(a) Runtime", pad=6)
+        trans_mixed = blended_transform_factory(ax_rt.transAxes, ax_rt.transData)
+        ax_rt.text(0.98, 1.08, "more expensive\nthan retraining",
+                   transform=trans_mixed, fontsize=FS,
+                   color=UNL_COLOR["Gold Model"], va="bottom", ha="right")
 
         ds_bar_handles = [
             mpatches.Patch(facecolor="#999", edgecolor="black",
@@ -274,11 +284,11 @@ def make_figure(ratios, sweep_df):
             mpatches.Patch(facecolor="#999", hatch="//", edgecolor="black",
                            linewidth=0.5, label="Citeseer"),
             mpatches.Patch(facecolor="#999", hatch="xx", edgecolor="black",
-                           linewidth=0.5, label="Coauthor"),
+                           linewidth=0.5, label="Pubmed"),
         ]
-        ax_rt.legend(handles=ds_bar_handles, loc="upper left",
-                     fontsize=FS, frameon=True, framealpha=0.9,
-                     edgecolor="#ccc", handlelength=1.2)
+        ax_rt.legend(handles=ds_bar_handles, loc="upper right", ncol=3,
+                     fontsize=FS - 3, frameon=True, framealpha=0.9,
+                     edgecolor="#ccc", handlelength=1.0)
 
         # ── RIGHT: accuracy sweep line chart (Gold Model only) ───────────────
         for dataset in SWEEP_DATASETS:
@@ -333,7 +343,7 @@ def make_figure(ratios, sweep_df):
 
 # ════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    ratios   = load_runtime_ratios()
+    ratios, gold_rt_avg = load_runtime_ratios()
     sweep_df = load_sweep_df()
-    make_figure(ratios, sweep_df)
+    make_figure(ratios, sweep_df, gold_rt_avg)
     print("Done.")

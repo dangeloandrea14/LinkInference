@@ -104,6 +104,12 @@ class ScaleGUN(TorchUnlearner):
         accum_grad_norm = 0.0
         num_retrain = 0
 
+        # Precompute H_inv and spec_norm once; recompute only after a retrain.
+        # Recomputing per-edge would be O(|forget| × C × d³) — infeasibly slow for large forget sets.
+        H_inv = [self._lr_hessian_inv(w_approx[:, k], X_train, y_train[:, k], self.lam)
+                 for k in range(num_classes)]
+        spec_norm = self._sqrt_spectral_norm(X_train.t().mm(X_train))
+
         for i, (u, v) in enumerate(unique_forget):
             # Remove both directions of the edge
             fwd = torch.logical_and(edge_index[0] == u, edge_index[1] == v)
@@ -122,16 +128,12 @@ class ScaleGUN(TorchUnlearner):
             X_val_new = X_new[val_mask].to(self.device)
             X_test_new = X_new[test_mask].to(self.device)
 
-            K = X_train_new.t().mm(X_train_new)
-            spec_norm = self._sqrt_spectral_norm(K)
-
             step_grad_norm = 0.0
             for k in range(num_classes):
                 y_k = y_train[:, k]
-                H_inv = self._lr_hessian_inv(w_approx[:, k], X_train_new, y_k, self.lam)
                 grad_old = self._lr_grad(w_approx[:, k], X_old, y_k, self.lam)
                 grad_new = self._lr_grad(w_approx[:, k], X_train_new, y_k, self.lam)
-                Delta = H_inv.mv(grad_old - grad_new)
+                Delta = H_inv[k].mv(grad_old - grad_new)
                 Delta_p = X_train_new.mv(Delta)
                 w_approx[:, k] = w_approx[:, k] + Delta
                 step_grad_norm += (Delta.norm() * Delta_p.norm() * spec_norm * gamma).cpu().item()
@@ -142,6 +144,9 @@ class ScaleGUN(TorchUnlearner):
                 accum_grad_norm = 0.0
                 b = self.std * torch.randn(feat_dim, num_classes).float().to(self.device)
                 w_approx = self._ovr_lr_optimize(X_train_new, y_train, self.lam, b=b, lr=self.lr)
+                H_inv = [self._lr_hessian_inv(w_approx[:, k], X_train_new, y_train[:, k], self.lam)
+                         for k in range(num_classes)]
+                spec_norm = self._sqrt_spectral_norm(X_train_new.t().mm(X_train_new))
                 num_retrain += 1
                 self.info(f'Retrain at removal {i} (total: {num_retrain})')
 
