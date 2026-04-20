@@ -32,6 +32,34 @@ CONFIGS=(
     configs/dataset_selection/ogbn-arxiv/ogbn_arxiv_GCN_1.jsonc
     configs/dataset_selection/ogbn-arxiv/ogbn_arxiv_GCN_5.jsonc
     configs/dataset_selection/ogbn-arxiv/ogbn_arxiv_GCN_20.jsonc
+
+    configs/dataset_selection/arxiv-year/arxiv_year_GCN_1.jsonc
+    configs/dataset_selection/arxiv-year/arxiv_year_GCN_5.jsonc
+    configs/dataset_selection/arxiv-year/arxiv_year_GCN_20.jsonc
+
+    configs/dataset_selection/twitch-gamers/twitch_gamers_GCN_1.jsonc
+    configs/dataset_selection/twitch-gamers/twitch_gamers_GCN_5.jsonc
+    configs/dataset_selection/twitch-gamers/twitch_gamers_GCN_20.jsonc
+
+    configs/dataset_selection/tolokers/tolokers_GCN_1.jsonc
+    configs/dataset_selection/tolokers/tolokers_GCN_5.jsonc
+    configs/dataset_selection/tolokers/tolokers_GCN_20.jsonc
+
+    configs/dataset_selection/DBLP/DBLP_GCN_1.jsonc
+    configs/dataset_selection/DBLP/DBLP_GCN_5.jsonc
+    configs/dataset_selection/DBLP/DBLP_GCN_20.jsonc
+
+    configs/dataset_selection/AmazonComputers/AmazonComputers_GCN_1.jsonc
+    configs/dataset_selection/AmazonComputers/AmazonComputers_GCN_5.jsonc
+    configs/dataset_selection/AmazonComputers/AmazonComputers_GCN_20.jsonc
+
+    configs/dataset_selection/AmazonPhotos/AmazonPhotos_GCN_1.jsonc
+    configs/dataset_selection/AmazonPhotos/AmazonPhotos_GCN_5.jsonc
+    configs/dataset_selection/AmazonPhotos/AmazonPhotos_GCN_20.jsonc
+
+    configs/dataset_selection/ogbn-products/ogbn_products_GCN_1.jsonc
+    configs/dataset_selection/ogbn-products/ogbn_products_GCN_5.jsonc
+    configs/dataset_selection/ogbn-products/ogbn_products_GCN_20.jsonc
 )
 
 TOTAL=${#CONFIGS[@]}

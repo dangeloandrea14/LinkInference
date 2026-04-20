@@ -45,6 +45,51 @@ DATASETS = {
         "in_channels": 128,
         "out_channels": 40,
     },
+    # --- New candidates ---
+    "arxiv-year": {
+        "datasource_class": "torch_geometric.datasets.LINKXDataset",
+        "datasource_params": {"root": "resources/data", "name": "arxiv-year"},
+        "in_channels": 128,
+        "out_channels": 5,
+    },
+    "twitch-gamers": {
+        "datasource_class": "torch_geometric.datasets.LINKXDataset",
+        "datasource_params": {"root": "resources/data", "name": "twitch-gamers"},
+        "in_channels": 7,
+        "out_channels": 2,
+    },
+    "tolokers": {
+        "datasource_class": "torch_geometric.datasets.HeterophilousGraphDataset",
+        "datasource_params": {"root": "resources/data", "name": "tolokers"},
+        "in_channels": 10,
+        "out_channels": 2,
+    },
+    "DBLP": {
+        "datasource_class": "torch_geometric.datasets.CitationFull",
+        "datasource_params": {"root": "resources/data", "name": "DBLP"},
+        "in_channels": 1639,
+        "out_channels": 4,
+    },
+    # --- Existing benchmark datasets (not yet screened) ---
+    "AmazonComputers": {
+        "datasource_class": "torch_geometric.datasets.Amazon",
+        "datasource_params": {"root": "resources/data", "name": "Computers"},
+        "in_channels": 767,
+        "out_channels": 10,
+    },
+    "AmazonPhotos": {
+        "datasource_class": "torch_geometric.datasets.Amazon",
+        "datasource_params": {"root": "resources/data", "name": "Photo"},
+        "in_channels": 745,
+        "out_channels": 8,
+    },
+    "ogbn-products": {
+        "datasource_class": "ogb.nodeproppred.PygNodePropPredDataset",
+        "datasource_params": {"root": "resources/data", "name": "ogbn-products"},
+        "in_channels": 100,
+        "out_channels": 47,
+        "batched": True,
+    },
 }
 
 FORGET_PCTS = {1: 0.01, 5: 0.05, 20: 0.20}
@@ -58,6 +103,11 @@ def make_config(ds_name, ds_cfg, pct_label, pct_frac):
     out_file = f"{OUTPUT_DIR}/{safe_name}_GCN_{pct_label}.json"
 
     datasource_params = dict(ds_cfg["datasource_params"])
+    predictor_class = (
+        "erasure.model.TorchGraphModelBatched.TorchGraphModelBatched"
+        if ds_cfg.get("batched")
+        else "erasure.model.TorchGraphModel.TorchGraphModel"
+    )
 
     return f"""\
 {{
@@ -78,7 +128,7 @@ def make_config(ds_name, ds_cfg, pct_label, pct_frac):
         "split_seed":16}}
     }},
     "predictor": {{
-        "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "class": "{predictor_class}",
         "parameters": {{
           "epochs": 100,
           "optimizer": {{
