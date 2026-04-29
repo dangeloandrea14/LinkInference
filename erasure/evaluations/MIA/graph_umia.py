@@ -138,8 +138,14 @@ class Attack(GraphMeasure):
         #This could mean that there are nodes both in the test and forget set, and they get one sample each
         #constructed from here. Needs clarification. For now i remove the test from the forget.
 
-        forget_samples, forget_labels = self.generate_samples(model, forget_ids, 1)
-        test_samples, test_labels = self.generate_samples(model, test_ids, 0)
+        if self.removal_type == 'edge':
+            unlearned_graph, _, _ = self.get_unlearned_graph(model, self.removal_type)
+            eval_edge_index = unlearned_graph.edge_index
+        else:
+            eval_edge_index = None
+
+        forget_samples, forget_labels = self.generate_samples(model, forget_ids, 1, eval_edge_index)
+        test_samples, test_labels = self.generate_samples(model, test_ids, 0, eval_edge_index)
 
         # we need the same number of samples from each partition
         samples_size = min(len(forget_samples), len(test_samples))
@@ -151,14 +157,15 @@ class Attack(GraphMeasure):
 
         return torch.cat([forget_samples, test_samples]), torch.cat([forget_labels, test_labels])
 
-    def generate_samples(self, model, ids, label_value):
+    def generate_samples(self, model, ids, label_value, eval_edge_index=None):
         attack_samples = []
         attack_labels = []
 
-        graph,labels = model.dataset.partitions['all'][0][0], model.dataset.partitions['all'][0][1]
-        X,edge_index= graph.x,graph.edge_index
-        X,edge_index,labels = X.to(model.device),edge_index.to(model.device), labels.to(model.device)
-
+        graph, labels = model.dataset.partitions['all'][0][0], model.dataset.partitions['all'][0][1]
+        X, edge_index = graph.x, graph.edge_index
+        if eval_edge_index is not None:
+            edge_index = eval_edge_index
+        X, edge_index, labels = X.to(model.device), edge_index.to(model.device), labels.to(model.device)
 
         with torch.no_grad():
             model.model.eval()

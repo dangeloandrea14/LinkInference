@@ -30,7 +30,7 @@ class LinkTeller(GraphMeasure):
     def check_configuration(self):
         self.params["influence"] = self.params.get("influence", 0.0001)
         self.params["approx"] = self.params.get("approx", True)
-        self.params["edge_sampler"] = self.params.get("edge_sampler", "bfs+")
+        self.params["edge_sampler"] = self.params.get("edge_sampler", "balanced")
         self.params["target"] = self.params.get("target","unlearned")
         self.params["forget_part"] = self.params.get("forget_part","forget")
         self.params["retain_part"] = self.params.get("retain_part","retain")

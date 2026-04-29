@@ -88,9 +88,9 @@ class TorchGraphModelBatched(Trainable):
 
         # index lists from your partitions; used as seed pools
         train_idx = torch.as_tensor(self.dataset.partitions[self.training_set], dtype=torch.long)
-        val_idx = torch.as_tensor(self.dataset.partitions.get('val', []), dtype=torch.long) \
-                  if 'val' in self.dataset.partitions else None
-        test_idx = torch.as_tensor(self.dataset.partitions.get('test', []), dtype=torch.long) \
+        val_key = 'val' if 'val' in self.dataset.partitions else ('validation' if 'validation' in self.dataset.partitions else None)
+        val_idx = torch.as_tensor(self.dataset.partitions[val_key], dtype=torch.long) if val_key else None
+        test_idx = torch.as_tensor(self.dataset.partitions['test'], dtype=torch.long) \
                    if 'test' in self.dataset.partitions else None
 
         # Build loaders
@@ -104,11 +104,11 @@ class TorchGraphModelBatched(Trainable):
             drop_last=self.drop_last
         )
 
-        # Inference loaders (layer-wise, covers all nodes in manageable chunks)
-        # num_neighbors=[-1] means gather full neighborhood per layer, but processed in batches
+        # Inference loader: uses the same bounded fanout as training to avoid
+        # exponential neighborhood expansion on large graphs.
         infer_loader = NeighborLoader(
             graph,
-            num_neighbors=[-1] * max(1, len(self.num_neighbors)),
+            num_neighbors=self.num_neighbors,
             input_nodes=None,
             batch_size=max(self.batch_size, 4096),
             shuffle=False,
@@ -176,21 +176,21 @@ class TorchGraphModelBatched(Trainable):
     @torch.no_grad()
     def _predict_all_nodes(self, infer_loader):
         """
-        Layer-wise batched inference over all nodes. Returns a tensor of shape [num_nodes, n_classes].
+        Batched inference over all nodes. Returns a tensor of shape [num_nodes, n_classes].
+        Only stores predictions for the seed nodes in each batch (first batch.batch_size entries),
+        not for the sampled neighbors that exist solely for message passing.
         """
         self.model.eval()
-        # total number of nodes from the data object inside the loader
         total_nodes = infer_loader.data.num_nodes
         out = None
 
         for batch in infer_loader:
             batch = batch.to(self.device)
-            pred = self.model(batch.x, batch.edge_index)  # logits for nodes in this subgraph
-            # Map back to global indices
-            global_nid = batch.n_id
+            pred = self.model(batch.x, batch.edge_index)
+            seed_nid = batch.n_id[:batch.batch_size]
             if out is None:
                 out = pred.new_zeros((total_nodes, pred.size(-1)))
-            out[global_nid] = pred
+            out[seed_nid] = pred[:batch.batch_size]
 
         return out
 

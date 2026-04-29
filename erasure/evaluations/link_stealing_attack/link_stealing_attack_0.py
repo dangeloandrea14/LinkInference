@@ -39,11 +39,14 @@ class LinkStealing0(GraphMeasure):
 
 
     def process(self, e: Evaluation):
-        
+
         graph = e.unlearner.dataset.partitions['all'][0][0]
 
-        self.features = graph.x
-        self.edge_index = graph.edge_index
+        # Use the unlearned graph (forget edges removed) so inference does not
+        # trivially propagate messages through the forgotten edge (u,v).
+        unlearned_graph, _, _ = self.get_unlearned_graph(e.unlearner, self.global_ctx.removal_type)
+        self.features = unlearned_graph.x
+        self.edge_index = unlearned_graph.edge_index
         self.n_features = len(graph.x[0])
 
         forget_raw = e.unlearner.dataset.partitions[self.forget_part]
