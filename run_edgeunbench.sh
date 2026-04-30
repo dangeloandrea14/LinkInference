@@ -7,58 +7,58 @@
 set -e
 cd "$(dirname "$0")"
 
-mkdir -p output/runs/LinkAttack/edge/EdgeUnbench
+mkdir -p output/runs
 
 CONFIGS=(
     # AmazonPhotos
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos/AmazonPhotos_SGC_CGU_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_GCN_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_GIN_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_GIN_easy.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_GAT_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_GraphSAGE_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_SGC_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_MLP_hard.jsonc
+    configs/benchmark/EdgeUnbench/AmazonPhotos_SGC_CGU_hard.jsonc
 
     # Flickr
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr/Flickr_SGC_CGU_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_GCN_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_GIN_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_GIN_easy.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_GAT_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_GraphSAGE_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_SGC_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_MLP_hard.jsonc
+    configs/benchmark/EdgeUnbench/Flickr_SGC_CGU_hard.jsonc
 
     # Reddit
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit/Reddit_SGC_CGU_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_GCN_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_GIN_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_GIN_easy.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_GAT_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_GraphSAGE_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_SGC_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_MLP_hard.jsonc
+    configs/benchmark/EdgeUnbench/Reddit_SGC_CGU_hard.jsonc
 
     # RomanEmpire
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire/RomanEmpire_SGC_CGU_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_GCN_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_GIN_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_GIN_easy.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_GAT_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_GraphSAGE_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_SGC_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_MLP_hard.jsonc
+    configs/benchmark/EdgeUnbench/RomanEmpire_SGC_CGU_hard.jsonc
 
     # ogbn-arxiv
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv/ogbn-arxiv_SGC_CGU_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_GCN_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_GIN_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_GIN_easy.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_GAT_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_GraphSAGE_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_SGC_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_MLP_hard.jsonc
+    configs/benchmark/EdgeUnbench/ogbn-arxiv_SGC_CGU_hard.jsonc
 )
 
 TOTAL=${#CONFIGS[@]}
