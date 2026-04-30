@@ -151,18 +151,35 @@ class TorchGeometricDataSource(DataSource):
 
         #Remove empty graphs
         filtered_data_list = []
-        for data in self.dataset:
+        print(f"[create_data] dataset type={type(self.dataset).__name__}, len={len(self.dataset)}", flush=True)
+        for i, data in enumerate(self.dataset):
+            print(f"[create_data] item[{i}] type={type(data).__name__}", flush=True)
             if isinstance(data, HeteroData):
+                print(f"[create_data]   node_types={data.node_types}", flush=True)
+                for nt in data.node_types:
+                    try:
+                        print(f"[create_data]   [{nt}] keys={list(data[nt].keys())}", flush=True)
+                    except Exception as e:
+                        print(f"[create_data]   [{nt}] keys error: {e}", flush=True)
                 data = data.to_homogeneous()
-            # DGL-sourced datasets store features as 'feat' rather than 'x'
+            try:
+                keys = list(data.keys())
+            except Exception:
+                keys = []
+            print(f"[create_data]   after convert: keys={keys}, x={data.x.shape if data.x is not None else None}", flush=True)
+            # DGL-sourced datasets may store features under a different attribute name
             if data.x is None:
                 for attr in ['feat', 'node_feat']:
                     val = getattr(data, attr, None)
                     if val is not None:
+                        print(f"[create_data]   using attr='{attr}' as x, shape={val.shape}", flush=True)
                         data.x = val
                         break
             if data.x is not None and data.x.shape[0] > 0:
                 filtered_data_list.append(data)
+            else:
+                print(f"[create_data]   item filtered out (x is None or empty)", flush=True)
+        print(f"[create_data] final filtered_data_list len={len(filtered_data_list)}", flush=True)
         filtered_dataset = self.dataset.__class__(**self.kwargs)  
         filtered_dataset.data, filtered_dataset.slices = self.dataset.collate(filtered_data_list)  
 
