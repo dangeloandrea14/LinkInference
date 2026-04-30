@@ -10,7 +10,7 @@ from torch_geometric.transforms import Pad
 from torch_geometric.data import Data
 
 from torch.serialization import add_safe_globals
-from torch_geometric.data import Data, EdgeAttr, TensorAttr
+from torch_geometric.data import Data, EdgeAttr, TensorAttr, HeteroData
 from torch_geometric.data.data import DataEdgeAttr, DataTensorAttr
 from torch_geometric.data.storage import GlobalStorage
 
@@ -150,7 +150,12 @@ class TorchGeometricDataSource(DataSource):
     def create_data(self):
 
         #Remove empty graphs
-        filtered_data_list = [data for data in self.dataset if data.x is not None and data.x.shape[0] > 0]
+        filtered_data_list = []
+        for data in self.dataset:
+            if isinstance(data, HeteroData):
+                data = data.to_homogeneous()
+            if data.x is not None and data.x.shape[0] > 0:
+                filtered_data_list.append(data)
         filtered_dataset = self.dataset.__class__(**self.kwargs)  
         filtered_dataset.data, filtered_dataset.slices = self.dataset.collate(filtered_data_list)  
 
