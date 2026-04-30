@@ -233,9 +233,10 @@ class DataSplitterEdgeDifficulty(DataSplitter):
         if self.mode == 'simple':
             seed = self.get_seed_from_name(self.parts_names[0])
             undirected_edges = self.shuffle_with_seed(undirected_edges, seed)
-        else:  # hard: highest centrality first
+        else:  # 'hard' or 'easy': sort by walk centrality
             centralities = self._compute_walk_centrality(partitions['all'].data, undirected_edges)
-            undirected_edges = [e for _, e in sorted(zip(centralities, undirected_edges), reverse=True)]
+            descending = (self.mode != 'easy')  # hard → descending (highest first); easy → ascending (lowest first)
+            undirected_edges = [e for _, e in sorted(zip(centralities, undirected_edges), reverse=descending)]
 
         split_point = int(len(undirected_edges) * self.percentage)
         partitions[self.parts_names[0]] = self._expand_to_directed(undirected_edges[:split_point])
