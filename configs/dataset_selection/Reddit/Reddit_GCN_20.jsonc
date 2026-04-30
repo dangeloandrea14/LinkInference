@@ -2,7 +2,7 @@
     "data": {"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {
         "DataSource": {"class":"erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource",
-                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Reddit", "parameters":{"root": "resources/data"},
+                        "parameters": {"datasource": {"class": "torch_geometric.datasets.Reddit", "parameters":{"root": "resources/data/Reddit"},
                         "preprocess":[]
                     }
                     }},
