@@ -29,7 +29,7 @@
           },
           "model": {
             "class": "erasure.model.graphs.GCN.GCN",
-            "parameters": {"in_channels":5, "hidden_channels":[64], "out_channels":2}
+            "parameters": {"in_channels":4814, "hidden_channels":[64], "out_channels":2}
           }
         }
       },
