@@ -157,7 +157,7 @@ class DataSplitterCyclicEdges(DataSplitter):
         """
         from collections import defaultdict
 
-        N = data.num_nodes
+        N = data.x.size(0)
         edge_index = data.edge_index
 
         vals = torch.ones(edge_index.size(1), dtype=torch.float32, device=edge_index.device)
@@ -245,7 +245,7 @@ class DataSplitterEdgeDifficulty(DataSplitter):
         return partitions
 
     def _compute_walk_centrality(self, data, undirected_edges):
-        N = data.num_nodes
+        N = data.x.size(0)
         edge_index = data.edge_index
 
         # A_tilde = A + I
