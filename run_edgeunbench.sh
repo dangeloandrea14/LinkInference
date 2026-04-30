@@ -7,7 +7,7 @@
 set -e
 cd "$(dirname "$0")"
 
-mkdir -p output/runs
+mkdir -p output/runs/EdgeUnbench
 
 CONFIGS=(
     # AmazonPhotos

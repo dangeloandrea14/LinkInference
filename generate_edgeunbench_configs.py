@@ -321,7 +321,7 @@ def make_predictor(ds_cfg, arch_class, in_channels, out_channels):
 
 def make_config(dataset_name, ds_cfg, arch_name, arch_class, difficulty):
     """Generate a full config string for dataset × architecture × difficulty."""
-    output_path = f"output/runs/{dataset_name}_{arch_name}_{difficulty}.json"
+    output_path = f"output/runs/EdgeUnbench/{dataset_name}_{arch_name}_{difficulty}.json"
 
     data_section = f"""    "data": {{"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {{
