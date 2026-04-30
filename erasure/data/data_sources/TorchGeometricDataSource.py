@@ -154,6 +154,13 @@ class TorchGeometricDataSource(DataSource):
         for data in self.dataset:
             if isinstance(data, HeteroData):
                 data = data.to_homogeneous()
+            # DGL-sourced datasets store features as 'feat' rather than 'x'
+            if data.x is None:
+                for attr in ['feat', 'node_feat']:
+                    val = getattr(data, attr, None)
+                    if val is not None:
+                        data.x = val
+                        break
             if data.x is not None and data.x.shape[0] > 0:
                 filtered_data_list.append(data)
         filtered_dataset = self.dataset.__class__(**self.kwargs)  
