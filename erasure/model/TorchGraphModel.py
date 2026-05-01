@@ -167,7 +167,7 @@ class TorchGraphModel(Trainable):
 
         local_config['parameters']['model']['parameters']['n_classes'] = self.dataset.n_classes
 
-        local_config['parameters']['alias'] = local_config['parameters']['model']['class']
+        local_config['parameters']['alias'] = local_config['parameters'].get('alias', local_config['parameters']['model']['class'])
         local_config['parameters']['training_set'] = local_config['parameters'].get("training_set", "train")
 
     '''
