@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # run_edgeunbench.sh
 # Runs all EdgeUnbench benchmark configs: 5 datasets × 7 architectures × hard split,
-# plus GIN easy split for each dataset.
+# plus GCN and GIN easy splits for each dataset.
+# Hard configs are submitted first; easy configs depend on the corresponding hard job
+# so the model cache is always populated before the easy variant starts.
 # Usage: bash run_edgeunbench.sh
 
 set -e
@@ -9,64 +11,47 @@ cd "$(dirname "$0")"
 
 mkdir -p output/runs/EdgeUnbench
 
-CONFIGS=(
-    # AmazonPhotos
-    configs/benchmark/EdgeUnbench/AmazonPhotos_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/AmazonPhotos_SGC_CGU_hard.jsonc
+submit() {
+    # Submits a config and prints the job id.
+    local cfg="$1"
+    local dep="$2"
+    local dep_flag=""
+    [ -n "$dep" ] && dep_flag="--dependency=afterok:${dep}"
+    local out
+    out=$(sbatch $dep_flag launchers/new_launcher_fast.sh main.py "$cfg")
+    echo "$out"
+    echo "$out" | awk '{print $NF}'   # return job id
+}
 
-    # Flickr
-    configs/benchmark/EdgeUnbench/Flickr_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/Flickr_SGC_CGU_hard.jsonc
+DATASETS=(AmazonPhotos Flickr Reddit RomanEmpire ogbn-arxiv)
+ARCHS_HARD_ONLY=(GAT GraphSAGE SGC MLP SGC_CGU)
+ARCHS_WITH_EASY=(GCN GIN)
 
-    # Reddit
-    configs/benchmark/EdgeUnbench/Reddit_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/Reddit_SGC_CGU_hard.jsonc
+total=0
 
-    # RomanEmpire
-    configs/benchmark/EdgeUnbench/RomanEmpire_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/RomanEmpire_SGC_CGU_hard.jsonc
+for ds in "${DATASETS[@]}"; do
+    # Archs that only have a hard split — submit immediately
+    for arch in "${ARCHS_HARD_ONLY[@]}"; do
+        cfg="configs/benchmark/EdgeUnbench/${ds}_${arch}_hard.jsonc"
+        echo "Submitting $cfg ..."
+        submit "$cfg" > /dev/null
+        (( total++ ))
+    done
 
-    # ogbn-arxiv
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_GCN_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_GIN_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_GIN_easy.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_GAT_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_GraphSAGE_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_SGC_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_MLP_hard.jsonc
-    configs/benchmark/EdgeUnbench/ogbn-arxiv_SGC_CGU_hard.jsonc
-)
+    # Archs with easy split — hard first, easy depends on hard job
+    for arch in "${ARCHS_WITH_EASY[@]}"; do
+        hard_cfg="configs/benchmark/EdgeUnbench/${ds}_${arch}_hard.jsonc"
+        easy_cfg="configs/benchmark/EdgeUnbench/${ds}_${arch}_easy.jsonc"
 
-TOTAL=${#CONFIGS[@]}
-for i in "${!CONFIGS[@]}"; do
-    cfg="${CONFIGS[$i]}"
-    echo "[$((i+1))/$TOTAL] Submitting $cfg ..."
-    sbatch launchers/new_launcher_fast.sh main.py "$cfg"
-    echo "  submitted."
+        echo "Submitting $hard_cfg ..."
+        job_id=$(submit "$hard_cfg")
+        (( total++ ))
+
+        echo "Submitting $easy_cfg (depends on job $job_id) ..."
+        submit "$easy_cfg" "$job_id" > /dev/null
+        (( total++ ))
+    done
 done
 
-echo "All EdgeUnbench experiments submitted ($TOTAL jobs)."
+echo ""
+echo "All EdgeUnbench experiments submitted ($total jobs)."
