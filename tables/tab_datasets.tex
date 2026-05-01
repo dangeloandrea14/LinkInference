@@ -1,0 +1,44 @@
+\begin{table}[t]
+\centering
+\small
+\caption{%
+  Datasets included in \bench{} and their key properties.
+  \textit{Type}: graph homophily regime.
+  \textit{Avg.\ deg}: average node degree ($2|E|/|V|$).
+  \textit{Baseline}: GCN test accuracy on the retain graph with no unlearning (Identity).
+  $\Delta_{20\%}$: accuracy change Gold$-$Identity (pp) at $k{=}20\%$ forget set; positive values
+  indicate that the Gold model \emph{improves} upon forgetting (heterophilic regime).
+  $^{\dagger}$Evaluation requires batched inference; $\Delta$ reported from training logs.
+  $^{\ddagger}$Low baseline due to 40-class task on a shallow GCN; structural signal emerges at $k{=}20\%$ only.%
+}
+\label{tab:datasets}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{l l l r r r r r r r}
+\toprule
+Dataset & Domain & Type
+  & $|V|$ & $|E|$ & Avg.\ deg & Feat. & Classes
+  & Baseline & $\Delta_{20\%}$ (pp) \\
+\midrule
+AmazonPhotos
+  & Co-purchase & Homo.
+  & 7.6K & 238K & 31.1 & 745 & 8
+  & 91.1\% & $-2.2$ \\
+Flickr
+  & Social      & Homo.
+  & 89K  & 900K & 10.1 & 500 & 7
+  & 49.4\% & $-2.3$ \\
+Reddit\,$^{\dagger}$
+  & Social      & Homo.
+  & 233K & 114M & 489  & 602 & 41
+  & 92.2\% & $-3.5$ \\
+RomanEmpire
+  & Linguistic  & Hetero.
+  & 22.7K & 65K & 2.9  & 300 & 18
+  & 26.9\% & $+3.5$ \\
+ogbn-arxiv\,$^{\ddagger}$
+  & Citation    & Mixed
+  & 169K & 1.2M & 7.1  & 128 & 40
+  & 38.4\% & $-0.6$ \\
+\bottomrule
+\end{tabular}
+\end{table}

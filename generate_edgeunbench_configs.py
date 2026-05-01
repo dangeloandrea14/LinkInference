@@ -194,7 +194,7 @@ UNLEARNERS = """    "unlearners":[
                 ]
             }
         },
-        {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":5e4}},
+        {"class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA", "parameters":{"scale":500}},
         {"class": "erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge", "parameters": {}},
         {"class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU", "parameters":{}},
         {
@@ -257,11 +257,12 @@ EVALUATOR_TEMPLATE = """    "evaluator":{
     },"""
 
 
-def make_predictor(ds_cfg, arch_class, in_channels, out_channels):
+def make_predictor(ds_cfg, arch_class, in_channels, out_channels, alias=None):
+    alias_line = f'\n            "alias": "{alias}",' if alias else ""
     if ds_cfg["batched"]:
         return f"""    "predictor": {{
         "class": "{ds_cfg['predictor_class']}",
-        "parameters": {{
+        "parameters": {{{alias_line}
             "epochs": 100,
             "optimizer": {{"class": "torch.optim.Adam","parameters": {{"lr": 0.001}}}},
             "loss_fn": {{"class": "torch.nn.CrossEntropyLoss","parameters": {{"reduction":"mean"}}}},
@@ -277,7 +278,7 @@ def make_predictor(ds_cfg, arch_class, in_channels, out_channels):
     else:
         return f"""    "predictor": {{
         "class": "{ds_cfg['predictor_class']}",
-        "parameters": {{
+        "parameters": {{{alias_line}
             "epochs": 100,
             "optimizer": {{"class": "torch.optim.Adam","parameters": {{"lr": 0.001}}}},
             "loss_fn": {{"class": "torch.nn.CrossEntropyLoss","parameters": {{"reduction":"mean"}}}},
@@ -292,6 +293,11 @@ def make_predictor(ds_cfg, arch_class, in_channels, out_channels):
 def make_config(dataset_name, ds_cfg, arch_name, arch_class, difficulty):
     """Generate a full config string for dataset × architecture × difficulty."""
     output_path = f"output/runs/EdgeUnbench/{dataset_name}_{arch_name}_{difficulty}.json"
+
+    # All configs share a base model keyed by dataset+arch, so any variant
+    # (easy/hard, different forget %) always loads the same trained model.
+    alias = f"{dataset_name}_{arch_name}"
+    cached = "true"
 
     data_section = f"""    "data": {{"class":"erasure.data.datasets.DatasetManager.DatasetManager",
     "parameters": {{
@@ -311,7 +317,7 @@ def make_config(dataset_name, ds_cfg, arch_name, arch_class, difficulty):
     }},"""
 
     predictor_section = make_predictor(
-        ds_cfg, arch_class, ds_cfg["in_channels"], ds_cfg["out_channels"]
+        ds_cfg, arch_class, ds_cfg["in_channels"], ds_cfg["out_channels"], alias=alias
     )
 
     evaluator_section = EVALUATOR_TEMPLATE.replace("OUTPUT_PATH", output_path)
@@ -321,7 +327,7 @@ def make_config(dataset_name, ds_cfg, arch_name, arch_class, difficulty):
     config += predictor_section + "\n\n"
     config += UNLEARNERS + "\n\n"
     config += evaluator_section + "\n"
-    config += '    "globals":{"cached": "false","seed": 0, "removal_type":"edge"}\n'
+    config += f'    "globals":{{"cached": "{cached}","seed": 0, "removal_type":"edge"}}\n'
     config += "}\n"
     return config
 

@@ -55,12 +55,20 @@ class Saveable(Configurable):
         super().check_configuration()
         self.local.config['parameters']['cached'] = self.local.config['parameters'].get('cached',self.global_ctx.cached)
 
+    def _cache_filename(self):
+        if 'alias' in self.local_config['parameters']:
+            # Alias is used as a stable, human-readable key — no hashing so that
+            # configs sharing the same alias (e.g. easy vs hard) always hit the
+            # same cache file regardless of their data-partition differences.
+            return Saveable.CACHE_DIR + '/' + self.local_config['parameters']['alias']
+        return Saveable.CACHE_DIR + '/' + self.__cfg_hashing()
+
     def __pre_init__(self):
         if not self.local.config['parameters']['cached']:
             return False
 
-        file_name = Saveable.CACHE_DIR + '/'+self.__cfg_hashing(self.local_config['parameters']['alias']) if 'alias' in self.local_config['parameters'] else self.__cfg_hashing()
-        
+        file_name = self._cache_filename()
+
         if Path(file_name).exists(): #TODO: Disable Cache for unlearners
             try :
                 with open (file_name, "rb") as file_handle :
@@ -77,7 +85,7 @@ class Saveable(Configurable):
         if not self.local.config['parameters']['cached']:
             return False
 
-        file_name = Saveable.CACHE_DIR + '/'+self.__cfg_hashing(self.local_config['parameters']['alias']) if 'alias' in self.local_config['parameters'] else self.__cfg_hashing()
+        file_name = self._cache_filename()
         self.info(f'''{bcolors.FAIL}Dumped Instance to: {bcolors.UNDERLINE}{file_name}{bcolors.ENDC}''')
 
         with open (file_name, "wb") as file_handle :

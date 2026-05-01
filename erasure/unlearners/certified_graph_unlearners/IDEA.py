@@ -168,16 +168,18 @@ class IDEA(TorchUnlearner):
         result_tuple = (grad_all, grad1, grad2)
         params_change = self.approxi(result_tuple)
 
-        my_bound, certified_edge_bound, certified_edge_worst_bound, actual_diff = self.alpha_computation(params_change)
-
-        """Use influence to update the model"""
-
+        """Apply influence correction first, then fine-tune from the corrected state."""
         parameters = [p for p in self.predictor.model.parameters() if p.requires_grad]
+        has_nan = any(torch.isnan(pc).any() or torch.isinf(pc).any() for pc in params_change)
+        if not has_nan:
+            with torch.no_grad():
+                delta = [p + infl for p, infl in zip(parameters, params_change)]
+                for i, p in enumerate(parameters):
+                    p.copy_(delta[i])
+        else:
+            self.info("Warning: params_change contains NaN/Inf — skipping influence update")
 
-        with torch.no_grad():
-            delta = [p + infl for p, infl in zip(parameters, params_change)]
-            for i, p in enumerate(parameters):
-                p.copy_(delta[i])
+        my_bound, certified_edge_bound, certified_edge_worst_bound, actual_diff = self.alpha_computation(params_change)
     
         ## Remove edges from the graph associated with the predictor
         og_graph =  self.dataset.partitions['all'] 
@@ -286,13 +288,7 @@ class IDEA(TorchUnlearner):
         certified_edge_worst_bound = self.M * (self.gamma_2 ** 2) * (self.c1 ** 2) * (t ** 2) / ((self.lambda_edge_unlearn ** 4) * len(self.dataset.partitions['train']))
         self.info("worst bound given by certified edge: %s" % certified_edge_worst_bound)
 
-        # recover the originally trained model
-        idx = 0
-        for p in self.predictor.model.parameters():
-            p.data = self.originally_trained_model_params[idx].clone()
-            idx = idx + 1
-
-        # continue optimizing the model with data already updated
+        # fine-tune from the influence-corrected state (do not restore original params)
         self.train_model_continue((self.deleted_nodes, self.feature_nodes, self.influence_nodes))
 
 
@@ -313,8 +309,7 @@ class IDEA(TorchUnlearner):
 
         optimizer = self.predictor.optimizer
         lr = optimizer.param_groups[0]['lr']
- 
-        optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr'] / 1e2
+        optimizer.param_groups[0]['lr'] = lr / 1e2
 
 
         #optimizer = torch.optim.Adam(self.predictor.model.parameters(), lr=(self.predictor.lr / 1e2), weight_decay=self.decay) 
@@ -332,3 +327,5 @@ class IDEA(TorchUnlearner):
             loss = F.cross_entropy(out[training_mask], self.labels[training_mask])
             loss.backward()
             optimizer.step()
+
+        optimizer.param_groups[0]['lr'] = lr
