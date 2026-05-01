@@ -25,6 +25,7 @@ class LinkTeller(GraphMeasure):
         self.retain_part = self.params["retain_part"]
         self.removal_type = self.global_ctx.removal_type
         self.k_hat = self.params["k_hat"]
+        self.max_edges = self.params["max_edges"]
         
 
     def check_configuration(self):
@@ -35,6 +36,7 @@ class LinkTeller(GraphMeasure):
         self.params["forget_part"] = self.params.get("forget_part","forget")
         self.params["retain_part"] = self.params.get("retain_part","retain")
         self.params["k_hat"] = self.params.get("k_hat", None)
+        self.params["max_edges"] = self.params.get("max_edges", 500)
 
 
 
@@ -66,6 +68,11 @@ class LinkTeller(GraphMeasure):
         sampler = self.get_edge_sampler(self.edge_sampler)
 
         self.forget_edges, self.nonexist_edges = sampler(og_graph, self.forget, max_hops = self.max_hops)
+
+        if self.max_edges is not None and len(self.forget_edges) > self.max_edges:
+            self.forget_edges = random.sample(self.forget_edges, self.max_edges)
+            self.nonexist_edges = self.nonexist_edges[:self.max_edges]
+            self.info(f'LinkTeller: capped to {self.max_edges} edges for evaluation')
 
         norm_exist = []
         norm_nonexist = []
@@ -176,12 +183,17 @@ class LinkTeller(GraphMeasure):
 
         existing_edges = set(map(tuple, map(sorted, graph.edge_index.t().tolist())))
 
-        nodes = list(range(graph.num_nodes))
-        all_pairs = {(u, v) for u in nodes for v in nodes if u < v}
-
-        non_edges = list(all_pairs - existing_edges)
-
-        non_edges = random.sample(non_edges, len(forget_edges))
+        n = graph.num_nodes
+        non_edges = []
+        while len(non_edges) < len(forget_edges):
+            u = random.randint(0, n - 1)
+            v = random.randint(0, n - 1)
+            if u == v:
+                continue
+            edge = (min(u, v), max(u, v))
+            if edge not in existing_edges:
+                non_edges.append(edge)
+                existing_edges.add(edge)  # avoid duplicates
 
 
         print(f"[Edge Sampling] #Exist: {len(forget_edges)} | #Non-Exist: {len(non_edges)}")
