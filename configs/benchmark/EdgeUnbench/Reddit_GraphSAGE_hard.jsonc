@@ -48,36 +48,6 @@
                 "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
             }
         },
-        // Successive Random Labelling
-        {
-            "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
-            "parameters": {
-                "epochs": 1,
-                "ref_data_retain": "retain",
-                "ref_data_forget": "forget",
-                "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
-            }
-        },
-        // cfk
-        {
-            "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
-            "parameters": {
-                "last_trainable_layers": 2,
-                "epochs": 1,
-                "ref_data":"retain",
-                "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
-            }
-        },
-        // euk
-        {
-            "class": "erasure.unlearners.graph_unlearners.eu_k.eu_k",
-            "parameters": {
-                "last_trainable_layers": 2,
-                "epochs": 10,
-                "ref_data":"retain",
-                "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}}
-            }
-        },
         // neggrad
         {
             "class": "erasure.unlearners.graph_unlearners.NegGrad.NegGrad",

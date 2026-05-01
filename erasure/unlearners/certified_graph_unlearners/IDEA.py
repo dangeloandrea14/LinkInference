@@ -128,7 +128,7 @@ class IDEA(TorchUnlearner):
 
         self.find_k_hops(self.dataset.partitions['train'], self.edge_index)
 
-        self.originally_trained_model_params = [p for p in self.predictor.model.parameters()]
+        self.originally_trained_model_params = [p.clone() for p in self.predictor.model.parameters()]
 
 
         out1 = self.predictor.model(self.x, self.edge_index)
@@ -320,7 +320,7 @@ class IDEA(TorchUnlearner):
         #optimizer = torch.optim.Adam(self.predictor.model.parameters(), lr=(self.predictor.lr / 1e2), weight_decay=self.decay) 
         
         training_mask = self.train_mask
-        if unlearn_info[0] is not np.array([]):
+        if len(unlearn_info[0]) > 0:
             training_mask[unlearn_info[0]] = False
 
 

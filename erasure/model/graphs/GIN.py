@@ -30,13 +30,14 @@ class GIN(torch.nn.Module):
             )
             self.convs.append(GINConv(nn_layers))
 
-        # Final output layer
+        # Final conv layer stays at hidden dim; classification is handled by self.lin
         nn_layers = nn.Sequential(
-            nn.Linear(hidden_channels[-1], out_channels),
+            nn.Linear(hidden_channels[-1], hidden_channels[-1]),
             nn.ReLU(),
-            nn.Linear(out_channels, out_channels)
+            nn.Linear(hidden_channels[-1], hidden_channels[-1])
         )
         self.convs.append(GINConv(nn_layers))
+        self.lin = nn.Linear(hidden_channels[-1], out_channels)
 
     def forward(self, x, edge_index):
         for conv in self.convs[:-1]:
@@ -45,4 +46,5 @@ class GIN(torch.nn.Module):
             x = F.dropout(x, p=self.dropout, training=self.training)
 
         x = self.convs[-1](x, edge_index)
+        x = self.lin(x)
         return x
