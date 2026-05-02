@@ -144,7 +144,10 @@ class TorchGeometricDataSource(DataSource):
 
 
     def get_name(self):
-        return self.name
+        if self.name is not None:
+            return self.name
+        # Fallback: derive from datasource class (e.g. "torch_geometric.datasets.Flickr" -> "Flickr")
+        return self.local_config['parameters']['datasource']['class'].split('.')[-1]
 
 
     def create_data(self):

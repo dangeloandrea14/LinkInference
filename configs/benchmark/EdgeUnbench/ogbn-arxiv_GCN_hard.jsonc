@@ -24,7 +24,7 @@
             "loss_fn": {"class": "torch.nn.CrossEntropyLoss","parameters": {"reduction":"mean"}},
             "model": {
                 "class": "erasure.model.graphs.GCN.GCN",
-                "parameters": {"in_channels":128, "hidden_channels":[64], "out_channels":40}
+                "parameters": {"in_channels":128, "hidden_channels":[256, 256], "out_channels":40}
             }
         }
     },

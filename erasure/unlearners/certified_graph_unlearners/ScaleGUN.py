@@ -61,6 +61,11 @@ class ScaleGUN(TorchUnlearner):
         y_test = labels[test_mask].to(self.device)
         num_classes = y_train.size(1)
 
+        if not hasattr(self.predictor.model, 'feat_prop'):
+            raise NotImplementedError(
+                f"ScaleGUN requires a model with a 'feat_prop' propagation layer (e.g. SGC_CGU). "
+                f"Got: {type(self.predictor.model).__name__}"
+            )
         Propagation = self.predictor.model.feat_prop.to(self.device)
         X_raw = data.x.float()
         X_scaled_copy = X_raw.clone().detach()

@@ -58,7 +58,12 @@ class CGU_edge(TorchUnlearner):
 
         data = self.dataset.partitions['all'].data[0]
 
-        Propagation = self.predictor.model.feat_prop.to(self.device) ## takes the feat_prop module from the model   
+        if not hasattr(self.predictor.model, 'feat_prop'):
+            raise NotImplementedError(
+                f"CGU_edge requires a model with a 'feat_prop' propagation layer (e.g. SGC_CGU). "
+                f"Got: {type(self.predictor.model).__name__}"
+            )
+        Propagation = self.predictor.model.feat_prop.to(self.device) ## takes the feat_prop module from the model
         #Propagation = MyGraphConv(K=self.prop_step, add_self_loops=True, device=self.device,
                              #alpha=0, XdegNorm=False, GPR=False).to(self.device)
 

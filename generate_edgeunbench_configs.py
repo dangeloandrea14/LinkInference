@@ -51,6 +51,7 @@ DATASETS = {
         "predictor_class": "erasure.model.TorchGraphModel.TorchGraphModel",
         "batch_size": 4,
         "batched": False,
+        "gcn_hidden_channels": [256, 256],  # deeper GCN; shallow 1-layer gets ~15% on 40 classes
     },
 }
 
@@ -257,8 +258,10 @@ EVALUATOR_TEMPLATE = """    "evaluator":{
     },"""
 
 
-def make_predictor(ds_cfg, arch_class, in_channels, out_channels, alias=None):
+def make_predictor(ds_cfg, arch_class, arch_name, in_channels, out_channels, alias=None):
     alias_line = f'\n            "alias": "{alias}",' if alias else ""
+    hidden = ds_cfg.get("gcn_hidden_channels", [64]) if arch_name == "GCN" else [64]
+    hidden_str = str(hidden).replace(" ", "")
     if ds_cfg["batched"]:
         return f"""    "predictor": {{
         "class": "{ds_cfg['predictor_class']}",
@@ -268,7 +271,7 @@ def make_predictor(ds_cfg, arch_class, in_channels, out_channels, alias=None):
             "loss_fn": {{"class": "torch.nn.CrossEntropyLoss","parameters": {{"reduction":"mean"}}}},
             "model": {{
                 "class": "{arch_class}",
-                "parameters": {{"in_channels":{in_channels}, "hidden_channels":[64], "out_channels":{out_channels}}}
+                "parameters": {{"in_channels":{in_channels}, "hidden_channels":{hidden_str}, "out_channels":{out_channels}}}
             }},
             "batch_size": {ds_cfg['batch_size']},
             "num_neighbors": [15, 10],
@@ -284,7 +287,7 @@ def make_predictor(ds_cfg, arch_class, in_channels, out_channels, alias=None):
             "loss_fn": {{"class": "torch.nn.CrossEntropyLoss","parameters": {{"reduction":"mean"}}}},
             "model": {{
                 "class": "{arch_class}",
-                "parameters": {{"in_channels":{in_channels}, "hidden_channels":[64], "out_channels":{out_channels}}}
+                "parameters": {{"in_channels":{in_channels}, "hidden_channels":{hidden_str}, "out_channels":{out_channels}}}
             }}
         }}
     }},"""
@@ -317,7 +320,7 @@ def make_config(dataset_name, ds_cfg, arch_name, arch_class, difficulty):
     }},"""
 
     predictor_section = make_predictor(
-        ds_cfg, arch_class, ds_cfg["in_channels"], ds_cfg["out_channels"], alias=alias
+        ds_cfg, arch_class, arch_name, ds_cfg["in_channels"], ds_cfg["out_channels"], alias=alias
     )
 
     evaluator_section = EVALUATOR_TEMPLATE.replace("OUTPUT_PATH", output_path)
