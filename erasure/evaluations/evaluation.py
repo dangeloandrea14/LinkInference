@@ -13,6 +13,7 @@ class Evaluation():
         self.data_info['unlearner'] = unlearner.__class__.__name__
         self.data_info['dataset'] = unlearner.dataset.name
         self.data_info['parameters'] = unlearner.params
+        self._cache = {}
 
     def add_value(self, key, value):
         self.data_info[key] = value

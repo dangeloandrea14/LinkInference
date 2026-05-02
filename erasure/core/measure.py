@@ -25,25 +25,38 @@ class GraphMeasure(Measure):
 
         return erasure_model
 
-    def infected_nodes(self, unlearner, edges_to_forget, hops):
-
+    def infected_nodes(self, unlearner, edges_to_forget, hops, _cache=None):
+        if _cache is not None:
+            nx_key = ('_nx_graph', id(unlearner.dataset))
+            if nx_key not in _cache:
+                G = nx.Graph()
+                G.add_edges_from(unlearner.dataset.partitions['all'][0][0].edge_index.t().tolist())
+                _cache[nx_key] = G
+            G = _cache[nx_key]
+            inf_key = ('_infected', id(edges_to_forget), hops)
+            if inf_key not in _cache:
+                _cache[inf_key] = self._bfs_infected(G, edges_to_forget, hops)
+            return _cache[inf_key]
         G = nx.Graph()
-        all_edges = unlearner.dataset.partitions['all'][0][0].edge_index.t().tolist()  
+        G.add_edges_from(unlearner.dataset.partitions['all'][0][0].edge_index.t().tolist())
+        return self._bfs_infected(G, edges_to_forget, hops)
 
-        G.add_edges_from(all_edges)
-
+    def _bfs_infected(self, G, edges_to_forget, hops):
         edge_nodes = set()
         for u, v in edges_to_forget:
             edge_nodes.add(u)
             edge_nodes.add(v)
-
         infected = set()
         for node in edge_nodes:
             if node in G:
-                neighbors = nx.single_source_shortest_path_length(G, node, cutoff=hops).keys()
-                infected.update(neighbors)
-
+                infected.update(nx.single_source_shortest_path_length(G, node, cutoff=hops).keys())
         return list(infected)
+
+    def _get_revised_graph(self, e, source_partition, forget_edges):
+        key = ('_revised_graph', id(source_partition), id(forget_edges))
+        if key not in e._cache:
+            e._cache[key] = source_partition.revise_graph_edges(forget_edges, remove=True)
+        return e._cache[key]
     
     def get_unlearned_graph(self, predictor, removal_type, forget_part = 'forget'):
         

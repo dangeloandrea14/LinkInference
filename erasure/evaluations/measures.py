@@ -98,7 +98,7 @@ class TorchSKLearnGraph(GraphMeasure):
         partition_data = erasure_model.dataset.partitions[self.partition_name]
         if partition_data and isinstance(partition_data[0], tuple):
             hops = len(erasure_model.model.hidden_channels) + 1
-            partition_data = self.infected_nodes(e.unlearner, partition_data, hops)
+            partition_data = self.infected_nodes(e.unlearner, partition_data, hops, _cache=e._cache)
 
         partition_mask = torch.zeros(num_nodes, dtype=torch.bool)
         partition_mask[partition_data] = True
@@ -109,7 +109,7 @@ class TorchSKLearnGraph(GraphMeasure):
             if self.removal_type == 'node':
                 new_graph, remapped_partitions = graph.revise_graph_nodes(toremove, erasure_model.dataset.partitions, remove=True)
             if self.removal_type == 'edge':
-                new_graph = erasure_model.dataset.partitions['all'].revise_graph_edges(toremove, remove=True)
+                new_graph = self._get_revised_graph(e, erasure_model.dataset.partitions['all'], toremove)
                 remapped_partitions = erasure_model.dataset.partitions
 
 
@@ -460,10 +460,10 @@ class AINGraph(GraphMeasure):
         forget_part = e.unlearner.dataset.partitions[self.forget_part_name]
 
         if self.removal_type == 'edge':
-            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops, _cache=e._cache)
             # Use modified graph (forget edges removed) for unlearned/gold model evaluation
             forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
-            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+            eval_graph = self._get_revised_graph(e, graph, forget_edges)
         else:
             eval_graph = graph
 
@@ -509,10 +509,10 @@ class RelearnTimeGraph(GraphMeasure):
         forget_part = e.unlearner.dataset.partitions[self.forget_part_name]
 
         if self.removal_type == 'edge':
-            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops, _cache=e._cache)
             # Use modified graph (forget edges removed) for evaluation
             forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
-            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+            eval_graph = self._get_revised_graph(e, graph, forget_edges)
         else:
             eval_graph = graph
 
@@ -558,10 +558,10 @@ class AUSGraph(GraphMeasure):
         test_part = e.unlearner.dataset.partitions[self.test_part_name]
 
         if self.removal_type == 'edge':
-            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops)
+            forget_part = self.infected_nodes(e.unlearner, forget_part, self.hops, _cache=e._cache)
             # Use modified graph (forget edges removed) for unlearned model evaluation
             forget_edges = e.unlearner.dataset.partitions[self.forget_part_name]
-            eval_graph = graph.revise_graph_edges(forget_edges, remove=True)
+            eval_graph = self._get_revised_graph(e, graph, forget_edges)
         else:
             eval_graph = graph
 
