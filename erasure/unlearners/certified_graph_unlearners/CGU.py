@@ -47,6 +47,7 @@ class CGU_edge(TorchUnlearner):
         self.y_binary = self.local.config['parameters']['y_binary']
         self.lam = self.local.config['parameters']['lam']
         self.num_steps_optimizer = self.local.config['parameters']['num_steps_optimizer']
+        self.max_edges = self.local.config['parameters']['max_edges']
         self.optimizer = self.predictor.optimizer
         self.lr = self.predictor.optimizer.param_groups[0]['lr']
 
@@ -214,7 +215,10 @@ class CGU_edge(TorchUnlearner):
         perm_idx = 0
 
         # start the removal process
-        for i in range(len(forget)):
+        n_edges = min(len(forget), self.max_edges)
+        if n_edges < len(forget):
+            self.info(f"CGU_edge: processing {n_edges}/{len(forget)} forget edges (max_edges limit)")
+        for i in range(n_edges):
             while (edge_index[0, perm[perm_idx]] == edge_index[1, perm[perm_idx]]) or (not edge_mask[perm[perm_idx]]):
                 perm_idx += 1
 
@@ -317,6 +321,7 @@ class CGU_edge(TorchUnlearner):
         self.local.config['parameters']['y_binary'] = self.local.config['parameters'].get("y_binary",1)
         self.local.config['parameters']['lam'] = self.local.config['parameters'].get("lam",1e-2)
         self.local.config['parameters']['num_steps_optimizer'] = self.local.config['parameters'].get('num_steps_optimizer',100)
+        self.local.config['parameters']['max_edges'] = self.local.config['parameters'].get('max_edges', 100)
 
 
     # hessian of loss wrt w for binary classification
