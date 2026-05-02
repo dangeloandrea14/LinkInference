@@ -53,6 +53,33 @@ DATASETS = {
         "batched": False,
         "gcn_hidden_channels": [256, 256],  # deeper GCN; shallow 1-layer gets ~15% on 40 classes
     },
+    "Pubmed": {
+        "datasource_class": "torch_geometric.datasets.Planetoid",
+        "datasource_params": '{"root":"resources/data", "name":"Pubmed"}',
+        "in_channels": 500,
+        "out_channels": 3,
+        "predictor_class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "batch_size": 4,
+        "batched": False,
+    },
+    "AmazonComputers": {
+        "datasource_class": "torch_geometric.datasets.Amazon",
+        "datasource_params": '{"root":"resources/data", "name":"Computers"}',
+        "in_channels": 767,
+        "out_channels": 10,
+        "predictor_class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "batch_size": 4,
+        "batched": False,
+    },
+    "DBLP": {
+        "datasource_class": "torch_geometric.datasets.CitationFull",
+        "datasource_params": '{"root":"resources/data", "name":"DBLP"}',
+        "in_channels": 1639,
+        "out_channels": 4,
+        "predictor_class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "batch_size": 4,
+        "batched": False,
+    },
 }
 
 ARCHITECTURES = {

@@ -37,14 +37,17 @@ if __name__ == "__main__":
     global_ctx.predictor = predictor
     global_ctx.logger.info('Global Predictor: ' + str(predictor))
 
-    #Create unlearners 
+    #Create unlearners
     unlearners = []
     unlearners_cfg = global_ctx.config.unlearners
     for un in unlearners_cfg:
         current = Local(un)
         current.dataset = data_manager
         current.predictor = copy.deepcopy(predictor)
-        unlearners.append( global_ctx.factory.get_object(current) )
+        try:
+            unlearners.append( global_ctx.factory.get_object(current) )
+        except Exception as e:
+            global_ctx.logger.warning(f"Skipping unlearner {un.get('class','?')}: {e}")
 
     #Evaluator
     current = Local(global_ctx.config.evaluator)

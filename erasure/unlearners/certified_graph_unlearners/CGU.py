@@ -11,8 +11,13 @@ import math
 from sklearn import preprocessing
 from numpy.linalg import norm
 from torch_geometric.typing import Adj, OptTensor
-from torch_sparse import SparseTensor, fill_diag, matmul, mul
-from torch_sparse import sum as sparsesum
+try:
+    from torch_sparse import SparseTensor, fill_diag, matmul, mul
+    from torch_sparse import sum as sparsesum
+    _TORCH_SPARSE_OK = True
+except (ImportError, OSError):
+    _TORCH_SPARSE_OK = False
+    class SparseTensor: pass  # stub so class-level type annotations don't raise NameError
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.nn.conv import MessagePassing
@@ -27,7 +32,8 @@ class CGU_edge(TorchUnlearner):
         """
         Initializes the CGU_edge class with global and local contexts.
         """
-
+        if not _TORCH_SPARSE_OK:
+            raise RuntimeError("CGU_edge requires torch_sparse, which is not available in this environment.")
         super().init()
 
         self.std = self.local.config['parameters']['std']

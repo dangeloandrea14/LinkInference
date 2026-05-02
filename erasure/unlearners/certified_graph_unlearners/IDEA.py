@@ -16,8 +16,12 @@ from erasure.model.graphs.SGC import SGC
 from sklearn import preprocessing
 from numpy.linalg import norm
 from torch_geometric.typing import Adj, OptTensor
-from torch_sparse import SparseTensor, fill_diag, matmul, mul
-from torch_sparse import sum as sparsesum
+try:
+    from torch_sparse import SparseTensor, fill_diag, matmul, mul
+    from torch_sparse import sum as sparsesum
+    _TORCH_SPARSE_OK = True
+except (ImportError, OSError):
+    _TORCH_SPARSE_OK = False
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.nn.conv import MessagePassing
@@ -32,7 +36,8 @@ class IDEA(TorchUnlearner):
         """
         Initializes the IDEA class with global and local contexts.
         """
-
+        if not _TORCH_SPARSE_OK:
+            raise RuntimeError("IDEA requires torch_sparse, which is not available in this environment.")
         super().init()
         self.iteration = self.local.config['parameters']['iteration']
         self.scale = self.local.config['parameters']['scale']
@@ -166,7 +171,23 @@ class IDEA(TorchUnlearner):
 
         
         result_tuple = (grad_all, grad1, grad2)
-        params_change = self.approxi(result_tuple)
+
+        # Retry with exponentially increasing scale until LiSSA converges.
+        # Non-linear models (GCN, GIN) have larger Hessian eigenvalues than SGC,
+        # so the default scale may cause divergence; doubling scale adds damping.
+        original_scale = self.scale
+        params_change = None
+        for attempt, factor in enumerate([1, 2, 4, 8, 16, 32]):
+            self.scale = original_scale * factor
+            if attempt > 0:
+                self.info(f"LiSSA diverged — retrying with scale={self.scale}")
+            candidate = self.approxi(result_tuple)
+            if not any(torch.isnan(pc).any() or torch.isinf(pc).any() for pc in candidate):
+                params_change = candidate
+                break
+        if params_change is None:
+            self.info("Warning: LiSSA did not converge at any scale — skipping influence update")
+            params_change = [torch.zeros_like(p) for p in self.predictor.model.parameters() if p.requires_grad]
 
         """Apply influence correction first, then fine-tune from the corrected state."""
         parameters = [p for p in self.predictor.model.parameters() if p.requires_grad]
@@ -228,22 +249,26 @@ class IDEA(TorchUnlearner):
     def approxi(self, res_tuple):
         '''
         res_tuple == (grad_all, grad1, grad2)
+        Returns params_change, or a list of NaN tensors if LiSSA diverges.
         '''
         v = tuple(grad1 - grad2 for grad1, grad2 in zip(res_tuple[1], res_tuple[2]))
-        h_estimate = tuple(grad1 - grad2 for grad1, grad2 in zip(res_tuple[1], res_tuple[2]))
+        h_estimate = list(grad1 - grad2 for grad1, grad2 in zip(res_tuple[1], res_tuple[2]))
 
         v_norms = [torch.norm(v_).item() for v_ in v]
-        
+
         for _ in range(self.iteration):
+            model_params = [p for p in self.predictor.model.parameters() if p.requires_grad]
+            hv = self.hvps(res_tuple[0], model_params, h_estimate)
 
-            model_params  = [p for p in self.predictor.model.parameters() if p.requires_grad]
-            hv            = self.hvps(res_tuple[0], model_params, h_estimate)
-
-            
             with torch.no_grad():
-                h_estimate    = [ v1 + (1-self.damp)*h_estimate1 - hv1/self.scale
-                            for v1, h_estimate1, hv1 in zip(v, h_estimate, hv)]
+                h_estimate = [v1 + (1 - self.damp) * h1 - hv1 / self.scale
+                              for v1, h1, hv1 in zip(v, h_estimate, hv)]
 
+            # Early exit if the estimate has diverged — caller will retry with larger scale
+            if any(torch.isnan(h).any() or torch.isinf(h).any() for h in h_estimate):
+                return [torch.full_like(h, float('nan')) for h in h_estimate]
+
+        model_params = [p for p in self.predictor.model.parameters() if p.requires_grad]
         params_change = [h_est / self.scale for h_est in h_estimate]
         params_esti   = [p1 + p2 for p1, p2 in zip(params_change, model_params)]
 
