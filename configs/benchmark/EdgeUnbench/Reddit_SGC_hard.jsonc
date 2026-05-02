@@ -19,7 +19,7 @@
         "class": "erasure.model.TorchGraphModelBatched.TorchGraphModelBatched",
         "parameters": {
             "alias": "Reddit_SGC",
-            "epochs": 100,
+            "epochs": 10,
             "optimizer": {"class": "torch.optim.Adam","parameters": {"lr": 0.001}},
             "loss_fn": {"class": "torch.nn.CrossEntropyLoss","parameters": {"reduction":"mean"}},
             "model": {
