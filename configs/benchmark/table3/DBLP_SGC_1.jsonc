@@ -1,0 +1,156 @@
+{
+    "data": {
+        "class": "erasure.data.datasets.DatasetManager.DatasetManager",
+        "parameters": {
+            "DataSource": {
+                "class": "erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource",
+                "parameters": {
+                    "datasource": {
+                        "class": "torch_geometric.datasets.CitationFull",
+                        "parameters": {
+                            "root": "resources/data",
+                            "name": "DBLP"
+                        },
+                        "preprocess": []
+                    }
+                }
+            },
+            "partitions": [
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "all_shuffled",
+                            "-"
+                        ],
+                        "percentage": 1,
+                        "shuffle": true
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "train_0",
+                            "test"
+                        ],
+                        "percentage": 0.8,
+                        "ref_data": "all_shuffled",
+                        "shuffle": false
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "validation",
+                            "train"
+                        ],
+                        "percentage": 0.1,
+                        "ref_data": "train_0",
+                        "shuffle": false
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "forget",
+                            "retain"
+                        ],
+                        "percentage": 0.01,
+                        "ref_data": "all",
+                        "shuffle": false,
+                        "edge_removal": true
+                    }
+                }
+            ],
+            "batch_size": 4,
+            "split_seed": 16
+        }
+    },
+    "predictor": {
+        "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "parameters": {
+            "alias": "DBLP_SGC",
+            "epochs": 100,
+            "optimizer": {
+                "class": "torch.optim.Adam",
+                "parameters": {
+                    "lr": 0.001
+                }
+            },
+            "loss_fn": {
+                "class": "torch.nn.CrossEntropyLoss",
+                "parameters": {
+                    "reduction": "mean"
+                }
+            },
+            "model": {
+                "class": "erasure.model.graphs.SGC.SGC",
+                "parameters": {
+                    "in_channels": 1639,
+                    "hidden_channels": [
+                        64
+                    ],
+                    "out_channels": 4
+                }
+            }
+        }
+    },
+    "unlearners": [
+        {
+            "compose_idt": "configs/snippets/u_id.json"
+        },
+        {
+            "class": "erasure.unlearners.GoldModel.GoldModelGraph",
+            "parameters": {
+                "training_set": "retain"
+            }
+        }
+    ],
+    "evaluator": {
+        "class": "erasure.evaluations.manager.Evaluator",
+        "parameters": {
+            "measures": [
+                {
+                    "class": "erasure.evaluations.running.RunTime"
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "test",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "test",
+                        "target": "unlearned",
+                        "unlearned_graph": false
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "test",
+                        "target": "original",
+                        "unlearned_graph": false
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.SaveValues",
+                    "parameters": {
+                        "path": "output/runs/table3/DBLP_SGC_1.json"
+                    }
+                }
+            ]
+        }
+    },
+    "globals": {
+        "cached": "false",
+        "seed": 0,
+        "removal_type": "edge"
+    }
+}

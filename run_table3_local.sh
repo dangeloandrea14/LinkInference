@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # run_table3_local.sh
-# Runs Table 3 configs (Identity + GoldModel, accuracy only) for all missing
-# architecture × dataset × forget-% combinations.
-# GCN results already exist in output/runs/dataset_selection/.
+# Runs only the 1%-forget Table 3 configs (Identity + GoldModel, accuracy only).
 # Usage: bash run_table3_local.sh [--dry-run]
 
 cd "$(dirname "$0")"
@@ -37,7 +35,7 @@ run() {
 
 DATASETS=(AmazonPhotos AmazonComputers DBLP Flickr ogbn_arxiv)
 ARCHS=(GIN GAT GraphSAGE SGC SGC_CGU)
-PCTS=(5 20)
+PCTS=(1)
 
 for ds in "${DATASETS[@]}"; do
     for arch in "${ARCHS[@]}"; do
@@ -47,8 +45,7 @@ for ds in "${DATASETS[@]}"; do
     done
 done
 
-# Pubmed: only SGC_CGU 20% is missing
-run "configs/benchmark/table3/Pubmed_SGC_CGU_20.jsonc"
+run "configs/benchmark/table3/Pubmed_SGC_CGU_1.jsonc"
 
 echo ""
 echo "=== $(date '+%H:%M:%S') table3 runs done. Completed: $COUNT ==="
