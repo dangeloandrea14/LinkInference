@@ -26,6 +26,7 @@ class ScaleGUN(TorchUnlearner):
         self.params.setdefault('ref_data_retain', 'retain')
         self.params.setdefault('ref_data_forget', 'forget')
         self.params.setdefault('train_mode', 'ovr')
+        self.params.setdefault('max_edges', 500)
 
     def init(self):
         super().init()
@@ -39,6 +40,7 @@ class ScaleGUN(TorchUnlearner):
         self.ref_data_retain = self.params['ref_data_retain']
         self.ref_data_forget = self.params['ref_data_forget']
         self.train_mode = self.params['train_mode']
+        self.max_edges = self.params['max_edges']
 
     def __unlearn__(self):
         self.info('Starting ScaleGUN')
@@ -102,6 +104,11 @@ class ScaleGUN(TorchUnlearner):
             if key not in seen:
                 seen.add(key)
                 unique_forget.append((u, v))
+
+        n_edges = min(len(unique_forget), self.max_edges)
+        if n_edges < len(unique_forget):
+            self.info(f'ScaleGUN: processing {n_edges}/{len(unique_forget)} forget edges (max_edges limit)')
+        unique_forget = unique_forget[:n_edges]
 
         edge_mask = torch.ones(edge_index.shape[1], dtype=torch.bool)
         w_approx = w.clone().detach()
