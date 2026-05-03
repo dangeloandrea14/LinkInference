@@ -25,7 +25,7 @@ submit() {
 
 DATASETS=(ogbn-arxiv Reddit)
 #ARCHS_HARD_ONLY=(GAT GraphSAGE SGC MLP SGC_CGU)
-ARCHS_HARD_ONLY=(SGC_CGU)
+ARCHS_HARD_ONLY=(GAT GraphSAGE)   # SGC_CGU already submitted separately
 ARCHS_WITH_EASY=(GCN GIN)
 
 total=0
