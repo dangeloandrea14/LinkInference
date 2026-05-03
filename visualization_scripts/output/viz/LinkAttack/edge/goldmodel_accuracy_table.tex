@@ -1,18 +1,41 @@
 \begin{table}[t]
 \centering
 \caption{Gold Model test accuracy (\%) across architectures and datasets
-         at 5\% and 20\% forget-set size.
-         Identity shows the original model accuracy (upper bound).
-         $\Delta$ is the accuracy change relative to Identity (negative = drop).}
+         at 5\%, 20\%, and 50\% forget-set size.
+         Original shows the accuracy of the unmodified model (upper bound).
+         $\Delta$ is the accuracy change relative to Original.}
 \label{tab:goldmodel_accuracy}
 \small
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}ll r rr rr@{}}
+\begin{tabular}{@{}ll r rr rr rr@{}}
 \toprule
-\multirow{2}{*}{Dataset} & \multirow{2}{*}{Architecture} & \multirow{2}{*}{Original} & \multicolumn{2}{c}{Gold Model (5\%)} & \multicolumn{2}{c}{Gold Model (20\%)} \\
-\cmidrule(lr){4-5}\cmidrule(lr){6-7}
- & & & Acc & $\Delta$ & Acc & $\Delta$ \\
+\multirow{2}{*}{Dataset} & \multirow{2}{*}{Architecture} & \multirow{2}{*}{Original} & \multicolumn{2}{c}{Gold Model (5\%)} & \multicolumn{2}{c}{Gold Model (20\%)} & \multicolumn{2}{c}{Gold Model (50\%)} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+ & & & Acc & $\Delta$ & Acc & $\Delta$ & Acc & $\Delta$ \\
 \midrule
+\multirow{5}{*}{Amazon Computers} & GCN & 79.7 & 81.1 & +1.3 & 81.6 & +1.9 & -- & -- \\
+ & GIN & 42.7 & 43.8 & +1.1 & 25.0 & -17.6 & 36.6 & -6.1 \\
+ & GAT & 81.8 & 81.4 & -0.4 & 80.9 & -0.9 & 79.1 & -2.7 \\
+ & GraphSAGE & 84.0 & 83.9 & -0.1 & 83.4 & -0.5 & 81.1 & -2.9 \\
+ & SGCCGU & 75.6 & 74.4 & -1.2 & 74.6 & -1.1 & 73.5 & -2.2 \\
+\midrule
+\multirow{5}{*}{Amazon Photos} & GCN & 91.0 & 89.1 & -2.0 & 90.3 & -0.8 & -- & -- \\
+ & GIN & 66.3 & 74.5 & +8.2 & 70.7 & +4.4 & 65.2 & -1.0 \\
+ & GAT & 91.6 & 90.9 & -0.7 & 90.4 & -1.2 & 88.9 & -2.7 \\
+ & GraphSAGE & 93.5 & 92.9 & -0.7 & 92.2 & -1.4 & 90.3 & -3.2 \\
+ & SGCCGU & 87.3 & 87.4 & +0.1 & 86.3 & -1.0 & 85.1 & -2.2 \\
+\midrule
+\multirow{5}{*}{DBLP} & GCN & 82.5 & 82.6 & +0.1 & 83.1 & +0.6 & -- & -- \\
+ & GIN & 83.7 & 83.2 & -0.5 & 83.9 & +0.2 & 82.4 & -1.3 \\
+ & GAT & 83.4 & 82.3 & -1.2 & 82.3 & -1.2 & 81.9 & -1.5 \\
+ & GraphSAGE & 84.3 & 84.4 & +0.1 & 84.3 & +0.0 & 83.9 & -0.4 \\
+ & SGCCGU & 71.0 & 70.6 & -0.4 & 70.3 & -0.6 & 69.7 & -1.2 \\
+\midrule
+\multirow{5}{*}{Flickr} & GCN & 49.4 & 48.9 & -0.5 & 48.3 & -1.1 & -- & -- \\
+ & GIN & 33.6 & 36.9 & +3.4 & 41.7 & +8.1 & 43.6 & +10.0 \\
+ & GAT & 42.0 & 41.8 & -0.2 & 41.2 & -0.8 & 40.3 & -1.7 \\
+ & GraphSAGE & 49.1 & 49.0 & -0.1 & 49.1 & +0.0 & 46.6 & -2.5 \\
+ & SGCCGU & 48.7 & 40.9 & -7.8 & 39.0 & -9.6 & 35.9 & -12.8 \\
 \bottomrule
 \end{tabular}
 \end{table}
