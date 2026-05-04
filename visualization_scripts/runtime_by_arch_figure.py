@@ -16,8 +16,9 @@ from matplotlib.ticker import NullFormatter
 from matplotlib.transforms import blended_transform_factory as btf
 
 # ── paths ─────────────────────────────────────────────────────────────────────
-INPUT_DIR  = "output/runs/LinkAttack/edge"
-OUTPUT_DIR = "output/viz/LinkAttack/edge"
+INPUT_DIR   = "output/runs/LinkAttack/edge"
+RERUN_DIR   = "output/runs/runtime_rerun"
+OUTPUT_DIR  = "output/viz/LinkAttack/edge"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── constants ─────────────────────────────────────────────────────────────────
@@ -82,12 +83,21 @@ def label_unlearner(r):
 
 
 def load_runtimes(dataset, arch, pct):
-    """Returns dict of method -> absolute RunTime in seconds, or None."""
+    """Returns dict of method -> absolute RunTime in seconds, or None.
+    For any arch, rerun data (if present) takes precedence over base data."""
     path = os.path.join(INPUT_DIR, f"{dataset}_{arch}_{pct}.json")
     if not os.path.exists(path):
         return None
     records  = load_json(path)
     labelled = {label_unlearner(r): r.get("RunTime") for r in records}
+
+    rerun_path = os.path.join(RERUN_DIR, f"{dataset}_{arch}_{pct}.json")
+    if os.path.exists(rerun_path):
+        for r in load_json(rerun_path):
+            m = label_unlearner(r)
+            if r.get("RunTime"):
+                labelled[m] = r["RunTime"]
+
     if not labelled.get("Gold Model"):
         return None
     return {
@@ -107,15 +117,15 @@ for ds in DATASETS:
             data[ds][arch] = runtimes
 
 # ── plot ──────────────────────────────────────────────────────────────────────
-FS   = 13
-FS_S = 11
+FS   = 9
+FS_S = 8
 
 YTICKS  = [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200]
 YLIM    = (0.05, 300)
 
 rc = {
+    "text.usetex"      : True,
     "font.family"      : "serif",
-    "font.serif"       : ["Times New Roman", "DejaVu Serif"],
     "font.size"        : FS,
     "axes.labelsize"   : FS,
     "axes.titlesize"   : FS,
@@ -123,7 +133,9 @@ rc = {
     "ytick.labelsize"  : FS,
     "axes.spines.top"  : False,
     "axes.spines.right": False,
-    "axes.linewidth"   : 0.8,
+    "axes.linewidth"   : 0.5,
+    "xtick.major.width": 0.5,
+    "ytick.major.width": 0.5,
     "figure.dpi"       : 600,
 }
 
@@ -135,7 +147,7 @@ M_OFF   = {m: offsets[i] for i, m in enumerate(ALL_METHODS)}
 
 with plt.rc_context(rc):
     fig, axes = plt.subplots(
-        1, 3, figsize=(14, 4.5), sharey=True,
+        1, 3, figsize=(6.75, 2.8), sharey=True,
     )
     axes_flat = axes.flatten()
 
@@ -157,8 +169,8 @@ with plt.rc_context(rc):
                 xs, ys,
                 color=UNL_COLOR.get(method, "gray"),
                 marker=UNL_MARKER.get(method, "o"),
-                s=50, zorder=4,
-                linewidths=0.6,
+                s=20, zorder=4,
+                linewidths=0.4,
                 edgecolors="black" if is_focus else "none",
             )
 
@@ -170,7 +182,7 @@ with plt.rc_context(rc):
                 ax.fill_between([xi - 0.45, xi + 0.45], gm_rt, YLIM[1],
                                 color="#c0392b", alpha=0.07, zorder=0)
                 ax.hlines(gm_rt, xi - 0.45, xi + 0.45,
-                          colors="#c0392b", linewidth=1.4,
+                          colors="#c0392b", linewidth=0.9,
                           linestyle="--", zorder=5)
 
         # Vertical separators between architecture groups
@@ -195,7 +207,7 @@ with plt.rc_context(rc):
             ax.text(xi, 1.0, "linear", transform=btf(ax.transData, ax.transAxes),
                     fontsize=FS_S - 2, color="#666", style="italic",
                     ha="center", va="bottom")
-        ax.grid(axis="y", linestyle=":", alpha=0.3, zorder=0)
+        ax.grid(axis="y", linestyle=":", alpha=0.2, linewidth=0.5, zorder=0)
 
         if di == 0:
             ax.set_ylabel("RunTime (seconds, log scale)")
@@ -210,11 +222,11 @@ with plt.rc_context(rc):
 
     # ── legend ────────────────────────────────────────────────────────────────
     gold_h = mlines.Line2D([], [], color="#c0392b", linestyle="--",
-                            linewidth=2.0, label="Gold Model")
+                            linewidth=1.2, label="Gold Model")
     focus_handles = [
         mlines.Line2D([], [], color=UNL_COLOR[m], marker=UNL_MARKER[m],
-                      markersize=7, linestyle="None",
-                      markeredgecolor="black", markeredgewidth=0.6, label=m)
+                      markersize=5, linestyle="None",
+                      markeredgecolor="black", markeredgewidth=0.4, label=m)
         for m in FOCUS
     ]
 
@@ -222,15 +234,16 @@ with plt.rc_context(rc):
     fig.legend(
         handles=[gold_h] + focus_handles,
         loc="lower center",
-        ncol=n_handles,          # single row
+        ncol=n_handles,
         fontsize=FS_S,
         frameon=True, framealpha=0.9, edgecolor="#ccc",
-        handlelength=1.4,
-        bbox_to_anchor=(0.5, -0.04),
+        handlelength=1.2, handletextpad=0.4,
+        borderpad=0.4, columnspacing=0.8,
+        bbox_to_anchor=(0.5, -0.08),
     )
 
     plt.tight_layout()
-    plt.subplots_adjust(wspace=0.06, bottom=0.22)
+    plt.subplots_adjust(wspace=0.06, bottom=0.30)
 
     for fmt in ("png", "pdf"):
         kw = {"bbox_inches": "tight"}

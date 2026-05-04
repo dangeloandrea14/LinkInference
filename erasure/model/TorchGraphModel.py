@@ -48,7 +48,7 @@ class TorchGraphModel(Trainable):
         self.es_patience = int(es_cfg.get('patience', 10))
         self.es_min_delta = float(es_cfg.get('min_delta', 1e-2))
 
-        self.device = (
+        self.device = self.local_config['parameters'].get('device') or (
             "cuda"
             if torch.cuda.is_available()
             else "mps"

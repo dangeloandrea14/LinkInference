@@ -9,8 +9,7 @@ cd "$(dirname "$0")"
 
 mkdir -p output/runs/EdgeUnbench
 
-DATASETS=(AmazonComputers DBLP)
-ARCHS_HARD_ONLY=(GAT GraphSAGE)
+DATASETS=(Reddit)
 ARCHS_WITH_EASY=(GCN GIN)
 
 run() {

@@ -27,32 +27,35 @@ from matplotlib.transforms import blended_transform_factory
 
 # ── paths ─────────────────────────────────────────────────────────────────────
 INPUT_DIR  = "output/runs/LinkAttack/edge"
+TABLE3_DIR = "output/runs/table3"
 OUTPUT_DIR = "output/viz/LinkAttack/edge"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ── shared constants ──────────────────────────────────────────────────────────
-DATASETS       = ["Cora", "Citeseer", "Pubmed"]           # bar chart
-SWEEP_DATASETS = ["Cora", "Citeseer", "Coauthor", "Pubmed"]  # line plot
-PCTS     = [1, 5, 10, 20, 50]
+DATASETS       = ["Cora", "Citeseer", "Pubmed"]                              # bar chart
+SWEEP_DATASETS = ["AmazonComputers", "AmazonPhotos", "DBLP"]               # line plot
+PCTS       = [1, 5, 10, 20, 50]
+SWEEP_PCTS = [1, 5, 20, 50]     # table3 datasets have no 10% split
 
 # Methods sorted alphabetically; baselines appended at end of sweep panel only
-FOCUS          = ["CEU", "SalUn", "FF", "IDEA", "SSD"]
+FOCUS          = ["CEU", "SalUn", "GNNDelete", "IDEA", "SSD"]
 SWEEP_EXTRAS   = ["Gold Model"]
 BOLD_BASELINES = {"Gold Model"}
 
 # Venue labels shown under method names in the bar chart x-axis
 VENUE_LABEL = {
-    "CEU"  : "(KDD'23)",
-    "IDEA" : "(KDD'24)",
-    "SSD"  : "(AAAI'24)",
-    "SalUn": "(ICLR'24)",
+    "CEU"      : "(KDD'23)",
+    "IDEA"     : "(KDD'24)",
+    "SSD"      : "(AAAI'24)",
+    "SalUn"    : "(ICLR'24)",
+    "GNNDelete": "(ICLR'23)",
 }
 
 # Unified colour palette (unlearner → colour)
 UNL_COLOR = {
     "Gold Model": "#c0392b",
     "CEU"       : "#76b7b2",
-    "FF"        : "#4e79a7",
+    "GNNDelete" : "#4e79a7",
     "IDEA"      : "#b07aa1",
     "SSD"       : "#f28e2b",
     "SalUn"     : "#59a14f",
@@ -60,7 +63,7 @@ UNL_COLOR = {
 UNL_MARKER = {
     "Gold Model": "D",
     "CEU"       : "X",
-    "FF"        : "o",
+    "GNNDelete" : "o",
     "IDEA"      : "P",
     "SSD"       : "^",
     "SalUn"     : "v",
@@ -69,18 +72,31 @@ UNL_MARKER = {
 # Dataset encoding — no legend entries; annotated inside panels instead
 DS_HATCH = {"Cora": "",  "Citeseer": "//", "Coauthor": "xx", "Pubmed": "xx"}
 
-# Evenly spaced grayscale — four distinguishable shades from black to light gray
+# Bar-chart datasets keep grayscale; sweep datasets use distinct colors
 DS_COLOR = {
-    "Coauthor": "#000000",
-    "Cora"    : "#404040",
-    "Pubmed"  : "#808080",
-    "Citeseer": "#949494",
+    "Coauthor"        : "#000000",
+    "Cora"            : "#404040",
+    "Pubmed"          : "#808080",
+    "Citeseer"        : "#949494",
+    "AmazonComputers" : "#5b8db8",
+    "AmazonPhotos"    : "#b85c5c",
+    "DBLP"            : "#5a9e6f",
 }
 DS_MARKER = {
-    "Cora"    : "o",
-    "Citeseer": "s",
-    "Coauthor": "^",
-    "Pubmed"  : "D",
+    "Cora"            : "o",
+    "Citeseer"        : "s",
+    "Coauthor"        : "^",
+    "Pubmed"          : "D",
+    "AmazonComputers" : "o",
+    "AmazonPhotos"    : "s",
+    "DBLP"            : "^",
+}
+# Short display labels for in-plot annotations
+DS_LABEL = {
+    "AmazonComputers" : "Computers",
+    "AmazonPhotos"    : "Photos",
+    "DBLP"            : "DBLP",
+    "Pubmed"          : "Pubmed",
 }
 
 
@@ -121,15 +137,11 @@ def load_json(path):
     return json.loads("[" + content.rstrip(",") + "]")
 
 
-def find_run_file(dataset, pct):
-    candidates = [
-        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json"),
-        os.path.join(INPUT_DIR, f"{dataset}_GCN_{pct}.json"),
-    ]
-    for path in candidates:
-        if os.path.exists(path):
-            return path
-    return None
+def find_run_file(dataset, pct, run_dir=None):
+    if run_dir is None:
+        run_dir = INPUT_DIR
+    path = os.path.join(run_dir, f"{dataset}_GCN_{pct}.json")
+    return path if os.path.exists(path) else None
 
 
 def load_runtime_ratios():
@@ -160,8 +172,9 @@ def load_sweep_df():
     want    = set(FOCUS) | set(SWEEP_EXTRAS)
     rows    = []
     for dataset in SWEEP_DATASETS:
-        for pct in PCTS:
-            path = find_run_file(dataset, pct)
+        run_dir = INPUT_DIR if dataset == "Pubmed" else TABLE3_DIR
+        for pct in SWEEP_PCTS:
+            path = find_run_file(dataset, pct, run_dir)
             if path is None:
                 continue
             for r in load_json(path):
@@ -169,9 +182,9 @@ def load_sweep_df():
                 if unl not in want:
                     continue
                 rows.append({
-                    "dataset"      : dataset,
-                    "forget_pct"   : pct,
-                    "unlearner"    : unl,
+                    "dataset"         : dataset,
+                    "forget_pct"      : pct,
+                    "unlearner"       : unl,
                     "Acc (test, orig)": r.get(ACC_KEY, np.nan),
                 })
     return pd.DataFrame(rows)
@@ -179,12 +192,12 @@ def load_sweep_df():
 
 # ── plotting ──────────────────────────────────────────────────────────────────
 def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
-    FS       = 14   # single font size used everywhere
-    FS_VENUE = 11   # smaller for venue labels (secondary info)
+    FS       = 9    # single font size used everywhere
+    FS_VENUE = 7    # smaller for venue labels (secondary info)
 
     rc = {
+        "text.usetex"      : True,
         "font.family"      : "serif",
-        "font.serif"       : ["Times New Roman", "DejaVu Serif"],
         "font.size"        : FS,
         "axes.labelsize"   : FS,
         "axes.titlesize"   : FS,
@@ -192,25 +205,29 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
         "ytick.labelsize"  : FS,
         "axes.spines.top"  : False,
         "axes.spines.right": False,
-        "axes.linewidth"   : 0.8,
+        "axes.linewidth"   : 0.5,
+        "xtick.major.width": 0.5,
+        "ytick.major.width": 0.5,
+        "xtick.minor.width": 0.4,
+        "ytick.minor.width": 0.4,
         "figure.dpi"       : 600,
     }
 
     n_unl   = len(FOCUS)
-    width   = 0.30
-    x_bar   = np.arange(n_unl)
+    width   = 0.25
+    x_bar   = np.arange(n_unl) * 1.4
     offsets = np.array([-1.0, 0.0, 1.0]) * width
 
-    x_pos    = list(range(len(PCTS)))
-    pct_to_x = {p: i for i, p in enumerate(PCTS)}
-    x_labels = [f"{p}%" for p in PCTS]
+    x_pos    = list(range(len(SWEEP_PCTS)))
+    pct_to_x = {p: i for i, p in enumerate(SWEEP_PCTS)}
+    x_labels = [f"{p}\\%" for p in SWEEP_PCTS]
 
     sweep_order = [u for u in SWEEP_EXTRAS + FOCUS if u not in BOLD_BASELINES] + \
                   [u for u in SWEEP_EXTRAS + FOCUS if u in BOLD_BASELINES]
 
     with plt.rc_context(rc):
         fig, (ax_rt, ax_sw) = plt.subplots(
-            1, 2, figsize=(12, 4.8),
+            1, 2, figsize=(6.75, 2.8),
             gridspec_kw={"width_ratios": [1.05, 1]},
         )
 
@@ -232,12 +249,12 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
                 if val > 30:
                     ax_rt.text(
                         x_bar[xi] + offsets[di], val * 1.08,
-                        f"{val:.0f}×",
+                        f"${val:.0f}\\times$",
                         ha="center", va="bottom",
-                        fontsize=6.5, color=color, fontweight="bold",
+                        fontsize=5.5, color=color, fontweight="bold",
                     )
 
-        ax_rt.axhline(1.0, color=UNL_COLOR["Gold Model"], linewidth=1.4,
+        ax_rt.axhline(1.0, color=UNL_COLOR["Gold Model"], linewidth=0.9,
                       linestyle="--", zorder=4)
         ax_rt.set_yscale("log")
         ax_rt.set_ylim(bottom=0.05)
@@ -265,17 +282,17 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
         trans_rt = blended_transform_factory(ax_rt.transData, ax_rt.transAxes)
         for xi, unl in enumerate(FOCUS):
             if unl in VENUE_LABEL:
-                ax_rt.text(xi, -0.08, VENUE_LABEL[unl],
+                ax_rt.text(x_bar[xi], -0.14, VENUE_LABEL[unl],
                            transform=trans_rt,
                            fontsize=FS_VENUE, color="#444", style="italic",
                            ha="center", va="top")
 
-        ax_rt.grid(axis="y", which="major", linestyle=":", alpha=0.4, zorder=0)
-        ax_rt.grid(axis="y", which="minor", linestyle=":", alpha=0.15, zorder=0)
-        ax_rt.set_title("(a) Runtime", pad=6)
+        ax_rt.grid(axis="y", which="major", linestyle=":", alpha=0.25, linewidth=0.5, zorder=0)
+        ax_rt.grid(axis="y", which="minor", linestyle=":", alpha=0.1,  linewidth=0.4, zorder=0)
+        ax_rt.set_title("(a) Runtime", pad=4)
         trans_mixed = blended_transform_factory(ax_rt.transAxes, ax_rt.transData)
         ax_rt.text(0.98, 1.08, "more expensive\nthan retraining",
-                   transform=trans_mixed, fontsize=FS,
+                   transform=trans_mixed, fontsize=FS - 1,
                    color=UNL_COLOR["Gold Model"], va="bottom", ha="right")
 
         ds_bar_handles = [
@@ -287,8 +304,9 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
                            linewidth=0.5, label="Pubmed"),
         ]
         ax_rt.legend(handles=ds_bar_handles, loc="upper right", ncol=3,
-                     fontsize=FS - 3, frameon=True, framealpha=0.9,
-                     edgecolor="#ccc", handlelength=1.0)
+                     fontsize=FS - 2, frameon=True, framealpha=0.9,
+                     edgecolor="#ccc", handlelength=1.0,
+                     borderpad=0.4, labelspacing=0.2)
 
         # ── RIGHT: accuracy sweep line chart (Gold Model only) ───────────────
         for dataset in SWEEP_DATASETS:
@@ -303,13 +321,14 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
             delta = vals[0] - vals[-1]
 
             ax_sw.plot(xs, vals,
-                       color=color, linewidth=1.8,
-                       marker=DS_MARKER[dataset], markersize=5.5,
-                       markerfacecolor=color, markeredgewidth=0.4,
+                       color=color, linewidth=1.2,
+                       marker=DS_MARKER[dataset], markersize=4.0,
+                       markerfacecolor=color, markeredgewidth=0.3,
                        markeredgecolor=color)
 
             mid = len(xs) // 2
-            ax_sw.text(xs[mid], vals[mid] - 0.012, dataset,
+            label = DS_LABEL.get(dataset, dataset)
+            ax_sw.text(xs[mid], vals[mid] - 0.012, label,
                        va="top", ha="center",
                        color=color, fontsize=FS - 2, clip_on=False)
 
@@ -323,13 +342,13 @@ def make_figure(ratios, sweep_df, gold_rt_avg=1.0):
         ax_sw.set_xlim(-0.3, len(x_pos) - 0.2)
         ax_sw.set_xlabel("Forget set size")
         ax_sw.set_ylabel("Test Accuracy")
-        ax_sw.set_title("(b) GCN Test accuracy vs. forget size", pad=6)
-        ax_sw.grid(True, linestyle="--", alpha=0.25)
+        ax_sw.set_title("(b) GCN Test accuracy vs. forget size", pad=4)
+        ax_sw.grid(True, linestyle=":", alpha=0.25, linewidth=0.5)
         ax_sw.set_ylim(0.5, 1.0)
 
 
         plt.tight_layout()
-        plt.subplots_adjust(wspace=0.35)
+        plt.subplots_adjust(wspace=0.35, bottom=0.18)
 
         for fmt in ("png", "pdf"):
             kw = {"bbox_inches": "tight"}
