@@ -172,6 +172,9 @@ class IDEA(TorchUnlearner):
         
         result_tuple = (grad_all, grad1, grad2)
 
+        # Fallback used by alpha_computation if LiSSA never converges.
+        self.params_esti = list(self.predictor.model.parameters())
+
         # Retry with exponentially increasing scale until LiSSA converges.
         # Non-linear models (GCN, GIN) have larger Hessian eigenvalues than SGC,
         # so the default scale may cause divergence; doubling scale adds damping.
