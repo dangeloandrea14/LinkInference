@@ -14,6 +14,10 @@ launchers/*
 data/*
 .vscode/*
 output/*
-.claude/*
 *.md
 *.tex
+*.sh
+launchers/*
+latex/*
+latex_apx/*
+visualization_scripts/*

@@ -25,12 +25,12 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 DATASETS = ["Cora", "Citeseer", "Pubmed"]
 ARCHS    = ["GCN", "GIN", "GAT", "GraphSAGE", "SGCCGU"]
 PCT      = 5
-SKIP     = {"Identity"}
+SKIP     = {"Identity", "cfk", "eu_k", "SuccessiveRandomLabels", "Cascade"}
 
 # Methods — consistent colours with intro figure
 FOCUS = ["CEU", "SalUn", "GNNDelete", "IDEA", "SSD", "CGU", "ScaleGUN"]
-OTHER = []
-ALL_METHODS = FOCUS
+OTHER = ["FT", "SCRUB", "NegGrad", "AdvNegGrad", "BadTeach", "Fisher", "UNSIR"]
+ALL_METHODS = FOCUS + OTHER
 
 UNL_COLOR = {
     "Gold Model": "#c0392b",
@@ -41,6 +41,14 @@ UNL_COLOR = {
     "GNNDelete" : "#e15759",
     "CGU"       : "#edc948",
     "ScaleGUN"  : "#9c755f",
+    # additional methods
+    "FT"        : "#4e79a7",
+    "SCRUB"     : "#f1ce63",
+    "NegGrad"   : "#86bcb6",
+    "AdvNegGrad": "#d37295",
+    "BadTeach"  : "#a0cbe8",
+    "Fisher"    : "#ffbe7d",
+    "UNSIR"     : "#8cd17d",
 }
 UNL_MARKER = {
     "Gold Model": "D",
@@ -51,6 +59,14 @@ UNL_MARKER = {
     "GNNDelete" : "s",
     "CGU"       : "p",
     "ScaleGUN"  : "*",
+    # additional methods
+    "FT"        : "o",
+    "SCRUB"     : "h",
+    "NegGrad"   : "<",
+    "AdvNegGrad": ">",
+    "BadTeach"  : "d",
+    "Fisher"    : "H",
+    "UNSIR"     : "8",
 }
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -66,13 +82,21 @@ def label_unlearner(r):
     sub = r.get("parameters", {}).get("sub_unlearner", [])
     classes = [s.get("class", "") for s in (sub or [])]
     if u == "Cascade":
-        return "SalUn" if any("Saliency" in c for c in classes) else "Cascade"
+        if any("Saliency" in c for c in classes):
+            return "SalUn"
+        if any("UNSIR" in c for c in classes):
+            return "UNSIR"
+        return "UNSIR"  # treat remaining Cascade variants as UNSIR
     ltl = r.get("parameters", {}).get("last_trainable_layers", -1)
     return {
         "Identity"                   : "Identity",
         "GoldModelGraph"             : "Gold Model",
         "Finetuning"                 : "FT" if ltl == -1 else "cfk",
+        "NegGrad"                    : "NegGrad",
+        "AdvancedNegGrad"            : "AdvNegGrad",
+        "BadTeaching"                : "BadTeach",
         "Scrub"                      : "SCRUB",
+        "FisherForgetting"           : "Fisher",
         "SelectiveSynapticDampening" : "SSD",
         "IDEA"                       : "IDEA",
         "CGU_edge"                   : "CGU",
@@ -223,19 +247,20 @@ with plt.rc_context(rc):
     # ── legend ────────────────────────────────────────────────────────────────
     gold_h = mlines.Line2D([], [], color="#c0392b", linestyle="--",
                             linewidth=1.2, label="Gold Model")
-    focus_handles = [
+    method_handles = [
         mlines.Line2D([], [], color=UNL_COLOR[m], marker=UNL_MARKER[m],
                       markersize=5, linestyle="None",
-                      markeredgecolor="black", markeredgewidth=0.4, label=m)
-        for m in FOCUS
+                      markeredgecolor="black" if m in set(FOCUS) else "none",
+                      markeredgewidth=0.4, label=m)
+        for m in ALL_METHODS
     ]
 
-    n_handles = 1 + len(FOCUS)
+    all_handles = [gold_h] + method_handles
     fig.legend(
-        handles=[gold_h] + focus_handles,
+        handles=all_handles,
         loc="lower center",
-        ncol=n_handles,
-        fontsize=FS_S,
+        ncol=8,
+        fontsize=FS_S - 1,
         frameon=True, framealpha=0.9, edgecolor="#ccc",
         handlelength=1.2, handletextpad=0.4,
         borderpad=0.4, columnspacing=0.8,
@@ -243,7 +268,7 @@ with plt.rc_context(rc):
     )
 
     plt.tight_layout()
-    plt.subplots_adjust(wspace=0.06, bottom=0.30)
+    plt.subplots_adjust(wspace=0.06, bottom=0.38)
 
     for fmt in ("png", "pdf"):
         kw = {"bbox_inches": "tight"}
