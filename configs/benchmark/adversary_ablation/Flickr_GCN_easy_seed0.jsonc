@@ -1,0 +1,492 @@
+{
+    "data": {
+        "class": "erasure.data.datasets.DatasetManager.DatasetManager",
+        "parameters": {
+            "DataSource": {
+                "class": "erasure.data.data_sources.TorchGeometricDataSource.TorchGeometricDataSource",
+                "parameters": {
+                    "datasource": {
+                        "class": "torch_geometric.datasets.Flickr",
+                        "parameters": {
+                            "root": "resources/data/Flickr"
+                        },
+                        "preprocess": []
+                    }
+                }
+            },
+            "partitions": [
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "all_shuffled",
+                            "-"
+                        ],
+                        "percentage": 1,
+                        "shuffle": true
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "train_0",
+                            "test"
+                        ],
+                        "percentage": 0.8,
+                        "ref_data": "all_shuffled",
+                        "shuffle": false
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterPercentage",
+                    "parameters": {
+                        "parts_names": [
+                            "validation",
+                            "train"
+                        ],
+                        "percentage": 0.1,
+                        "ref_data": "train_0",
+                        "shuffle": false
+                    }
+                },
+                {
+                    "class": "erasure.data.datasets.DataSplitterGraph.DataSplitterEdgeDifficulty",
+                    "parameters": {
+                        "parts_names": [
+                            "forget",
+                            "retain"
+                        ],
+                        "percentage": 0.05,
+                        "ref_data": "all",
+                        "mode": "easy"
+                    }
+                }
+            ],
+            "batch_size": 4,
+            "split_seed": 16
+        }
+    },
+    "predictor": {
+        "class": "erasure.model.TorchGraphModel.TorchGraphModel",
+        "parameters": {
+            "alias": "Flickr_GCN_advabl_seed0",
+            "epochs": 100,
+            "optimizer": {
+                "class": "torch.optim.Adam",
+                "parameters": {
+                    "lr": 0.001
+                }
+            },
+            "loss_fn": {
+                "class": "torch.nn.CrossEntropyLoss",
+                "parameters": {
+                    "reduction": "mean"
+                }
+            },
+            "model": {
+                "class": "erasure.model.graphs.GCN.GCN",
+                "parameters": {
+                    "in_channels": 500,
+                    "hidden_channels": [
+                        64
+                    ],
+                    "out_channels": 7
+                }
+            }
+        }
+    },
+    "unlearners": [
+        {
+            "compose_idt": "configs/snippets/u_id.json"
+        },
+        {
+            "class": "erasure.unlearners.GoldModel.GoldModelGraph",
+            "parameters": {
+                "training_set": "retain"
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
+            "parameters": {
+                "epochs": 1,
+                "ref_data": "retain",
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                }
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.NegGrad.NegGrad",
+            "parameters": {
+                "epochs": 1,
+                "ref_data": "forget",
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                }
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.AdvancedNegGrad.AdvancedNegGrad",
+            "parameters": {
+                "epochs": 1,
+                "ref_data_retain": "retain",
+                "ref_data_forget": "forget",
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                }
+            }
+        },
+        {
+            "class": "erasure.unlearners.composite.Cascade",
+            "parameters": {
+                "sub_unlearner": [
+                    {
+                        "class": "erasure.unlearners.graph_unlearners.UNSIR.UNSIR",
+                        "parameters": {
+                            "epochs": 1,
+                            "ref_data_retain": "retain",
+                            "ref_data_forget": "forget",
+                            "noise_lr": 0.1,
+                            "optimizer": {
+                                "class": "torch.optim.Adam",
+                                "parameters": {
+                                    "lr": 0.001
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "class": "erasure.unlearners.graph_unlearners.Finetuning.Finetuning",
+                        "parameters": {
+                            "epochs": 1,
+                            "ref_data": "retain",
+                            "optimizer": {
+                                "class": "torch.optim.Adam",
+                                "parameters": {
+                                    "lr": 0.001
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.BadTeaching.BadTeaching",
+            "parameters": {
+                "epochs": 1,
+                "ref_data_retain": "retain",
+                "ref_data_forget": "forget",
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                },
+                "KL_temperature": 1.0
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.Scrub.Scrub",
+            "parameters": {
+                "epochs": 1,
+                "ref_data_retain": "retain",
+                "ref_data_forget": "forget",
+                "T": 2.0,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                }
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.FisherForgetting.FisherForgetting",
+            "parameters": {
+                "ref_data": "retain",
+                "alpha": 1e-06
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.SelectiveSynapticDampening.SelectiveSynapticDampening",
+            "parameters": {
+                "ref_data_train": "train",
+                "ref_data_forget": "forget",
+                "dampening_constant": 0.1,
+                "selection_weighting": 50,
+                "optimizer": {
+                    "class": "torch.optim.Adam",
+                    "parameters": {
+                        "lr": 0.001
+                    }
+                }
+            }
+        },
+        {
+            "class": "erasure.unlearners.composite.Cascade",
+            "parameters": {
+                "sub_unlearner": [
+                    {
+                        "class": "erasure.unlearners.graph_unlearners.SaliencyMapGeneration.SaliencyMapGeneration",
+                        "parameters": {
+                            "ref_data": "forget",
+                            "treshold": 0.5,
+                            "save_dir": "saliency_maps",
+                            "file_name": "saliency_map"
+                        }
+                    },
+                    {
+                        "class": "erasure.unlearners.graph_unlearners.SuccessiveRandomLabels.SuccessiveRandomLabels",
+                        "parameters": {
+                            "model_mask_path": "saliency_maps/saliency_map",
+                            "epochs": 1,
+                            "ref_data_retain": "retain",
+                            "ref_data_forget": "forget",
+                            "optimizer": {
+                                "class": "torch.optim.Adam",
+                                "parameters": {
+                                    "lr": 0.001
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "class": "erasure.unlearners.certified_graph_unlearners.IDEA.IDEA",
+            "parameters": {
+                "scale": 500
+            }
+        },
+        {
+            "class": "erasure.unlearners.certified_graph_unlearners.CGU.CGU_edge",
+            "parameters": {}
+        },
+        {
+            "class": "erasure.unlearners.certified_graph_unlearners.CEU.CEU",
+            "parameters": {}
+        },
+        {
+            "class": "erasure.unlearners.certified_graph_unlearners.ScaleGUN.ScaleGUN",
+            "parameters": {
+                "std": 0.01,
+                "lam": 0.01,
+                "eps": 1.0,
+                "delta": 0.0001,
+                "prop_step": 3,
+                "num_steps_optimizer": 100,
+                "lr": 0.01,
+                "ref_data_retain": "retain",
+                "ref_data_forget": "forget",
+                "train_mode": "ovr"
+            }
+        },
+        {
+            "class": "erasure.unlearners.graph_unlearners.GNNDelete.GNNDelete",
+            "parameters": {
+                "epochs": 10,
+                "lr": 0.001,
+                "alpha": 0.5,
+                "loss_fct": "mse_mean",
+                "ref_data_forget": "forget"
+            }
+        }
+    ],
+    "evaluator": {
+        "class": "erasure.evaluations.manager.Evaluator",
+        "parameters": {
+            "measures": [
+                {
+                    "class": "erasure.evaluations.running.RunTime"
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "test",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "forget",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.TorchSKLearnGraph",
+                    "parameters": {
+                        "partition": "test",
+                        "target": "unlearned",
+                        "unlearned_graph": false
+                    }
+                },
+                {
+                    "compose_umia": "configs/snippets/e_umia_graph.json"
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "graph_knowledge": "none",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=none",
+                        "target": "unlearn"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0",
+                    "parameters": {
+                        "graph_knowledge": "none",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=none",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "graph_knowledge": "partial",
+                        "knowledge_fraction": 0.25,
+                        "knowledge_seed": 42,
+                        "tag": "k=p25",
+                        "target": "unlearn"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0",
+                    "parameters": {
+                        "graph_knowledge": "partial",
+                        "knowledge_fraction": 0.25,
+                        "knowledge_seed": 42,
+                        "tag": "k=p25",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "graph_knowledge": "partial",
+                        "knowledge_fraction": 0.5,
+                        "knowledge_seed": 42,
+                        "tag": "k=p50",
+                        "target": "unlearn"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0",
+                    "parameters": {
+                        "graph_knowledge": "partial",
+                        "knowledge_fraction": 0.5,
+                        "knowledge_seed": 42,
+                        "tag": "k=p50",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "graph_knowledge": "retain",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=retain",
+                        "target": "unlearn"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0",
+                    "parameters": {
+                        "graph_knowledge": "retain",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=retain",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "graph_knowledge": "oracle",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=oracle",
+                        "target": "unlearn"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_0.LinkStealing0",
+                    "parameters": {
+                        "graph_knowledge": "oracle",
+                        "knowledge_fraction": 1.0,
+                        "knowledge_seed": 42,
+                        "tag": "k=oracle",
+                        "target": "unlearned"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.LinkTeller.LinkTeller.LinkTeller",
+                    "parameters": {
+                        "target": "unlearn",
+                        "edge_sampler": "bfs+",
+                        "graph_knowledge": "retain",
+                        "tag": "k=retain+hardneg"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_3.LinkStealingSupervised",
+                    "parameters": {
+                        "target": "unlearned",
+                        "n_labelled": 100,
+                        "graph_knowledge": "retain",
+                        "knowledge_seed": 42,
+                        "tag": "k=retain+lab100"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_3.LinkStealingSupervised",
+                    "parameters": {
+                        "target": "unlearned",
+                        "n_labelled": 1000,
+                        "graph_knowledge": "retain",
+                        "knowledge_seed": 42,
+                        "tag": "k=retain+lab1000"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.link_stealing_attack.link_stealing_attack_3.LinkStealingSupervised",
+                    "parameters": {
+                        "target": "unlearned",
+                        "n_labelled": 5000,
+                        "graph_knowledge": "retain",
+                        "knowledge_seed": 42,
+                        "tag": "k=retain+lab5000"
+                    }
+                },
+                {
+                    "class": "erasure.evaluations.measures.SaveValues",
+                    "parameters": {
+                        "path": "output/rebuttal/adversary_ablation/runs/Flickr_GCN_easy_seed0.json"
+                    }
+                }
+            ]
+        }
+    },
+    "globals": {
+        "cached": "true",
+        "seed": 0,
+        "removal_type": "edge"
+    }
+}

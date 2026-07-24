@@ -1,0 +1,125 @@
+{
+  "@context": {
+    "@language": "en",
+    "@vocab": "https://schema.org/",
+    "citeAs": "cr:citeAs",
+    "conformsTo": "dct:conformsTo",
+    "cr": "http://mlcommons.org/croissant/",
+    "dct": "http://purl.org/dc/terms/",
+    "rai": "http://mlcommons.org/croissant/RAI/",
+    "sc": "https://schema.org/"
+  },
+  "@type": "sc:Dataset",
+  "@id": "lethe-edge-unlearning-benchmark",
+  "name": "Lethe",
+  "description": "Lethe is the first comprehensive benchmark for Edge Unlearning (EU) in Graph Neural Networks. It features 15 unlearning methods, 8 graph datasets, and 5 GNN architectures, evaluated under two forget-set difficulty settings (low- and high-centrality) defined via the WalkCentrality metric. Unlike prior work that relies on accuracy-based proxy metrics, Lethe evaluates EU methods using three dedicated link inference attacks—Edge Membership Inference Attack (UMIA), LinkTeller (LT), and Link Stealing (LS)—which directly probe whether structural information about forgotten edges can be adversarially recovered from the unlearned model. Lethe is fully configuration-driven, reproducible, and extensible to new datasets, architectures, methods, and attacks.",
+  "url": "https://anonymous.4open.science/r/Lethe-B27C/",
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "version": "1.0.0",
+  "datePublished": "2026",
+  "inLanguage": "en",
+  "keywords": [
+    "graph neural networks",
+    "edge unlearning",
+    "machine unlearning",
+    "link inference attacks",
+    "graph learning",
+    "benchmark",
+    "GDPR",
+    "right to be forgotten"
+  ],
+  "citeAs": "Anonymous Author(s). Lethe: Link Inference Attacks For Evaluation of Edge Unlearning Methods. Submitted to the 40th Conference on Neural Information Processing Systems (NeurIPS 2026).",
+  "isAccessibleForFree": true,
+  "conformsTo": "http://mlcommons.org/croissant/1.0",
+
+  "rai:dataLimitations": "Lethe is scoped to edge unlearning for node classification in transductive GNN settings. It does not address node or feature unlearning, inductive learning, or link prediction tasks. Evaluation covers 5 GNN architectures (GCN, GIN, GAT, GraphSAGE, SGC) and 8 datasets; results may not generalise to other architectures or domains. The three link inference attacks (UMIA, LinkTeller, Link Stealing) represent a standardised but non-exhaustive set of adversarial threat models. Certified methods (CEU, CGU, ScaleGUN) are restricted to linear SGC architectures and are not scalable beyond small forget-set sizes (< 5% of edges).",
+  "rai:dataBiases": "The underlying graph datasets are citation networks (Cora, Citeseer, Pubmed, DBLP, ogbn-arxiv), Amazon co-purchase networks (Computers, Photos), and a social network (Flickr). Citation networks over-represent Western academic institutions and English-language publications. Co-purchase networks reflect consumer behaviour biases of Amazon's US marketplace. The Flickr social network may reflect demographic and interest-group biases of its user base. These biases are inherited from the original dataset sources and are not introduced by Lethe itself.",
+  "rai:personalSensitiveInformation": "None. All datasets used in this benchmark are publicly available and contain no personally identifiable information, as confirmed in the paper's Broader Impact section. Node features represent bag-of-words or embedding vectors derived from publicly available text or product metadata, not individual user data.",
+  "rai:dataUseCases": "Lethe is intended for: (1) benchmarking and comparing edge unlearning methods for graph neural networks; (2) evaluating the privacy risk of GNN models under adversarial link inference attacks after edge removal; (3) supporting reproducible and fair evaluation of compliance with data-removal regulations such as GDPR; (4) guiding the development of more effective and scalable unlearning algorithms by exposing systematic failures of current methods on large, structurally informative graphs.",
+  "rai:dataSocialImpact": "Positive: Lethe is designed as a defensive evaluation tool to help researchers identify and correct weaknesses in edge unlearning methods before deployment in privacy-sensitive settings (e.g., social networks, medical record systems). It promotes compliance with the GDPR right to be forgotten for graph-structured data. Negative/dual-use: The link inference attack implementations are inherently dual-use; an adversary could apply them to probe production GNN systems. However, all three attacks are based on previously published methods and the code is already publicly available. The benchmark encourages treating low attack AUC as an empirical signal rather than a privacy certificate.",
+  "rai:hasSyntheticData": false,
+
+  "distribution": [
+    {
+      "@type": "cr:FileObject",
+      "@id": "lethe-code-repository",
+      "name": "Lethe Benchmark Code",
+      "description": "Full benchmark codebase including configuration files, unlearning method implementations, link inference attack implementations, and evaluation scripts. All experiments are launched via: python main.py <config>.jsonc",
+      "contentUrl": "https://anonymous.4open.science/api/repo/Lethe-B27C/zip",
+      "encodingFormat": "application/zip",
+      "sha256": "49f85c801589ecdcc52cfaca99693aaea7b8af16a9ac3f41dd85a5f3193fe276"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-cora",
+      "name": "Cora",
+      "description": "Citation network with 2,708 nodes, 5,278 edges (undirected: 10,556), 1,433 node features, and 7 classes. Average degree 7.8, density 0.29%. Loaded via torch_geometric.datasets.Planetoid.",
+      "contentUrl": "https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz",
+      "encodingFormat": "application/x-tar",
+      "sha256": "0d4ed463d1627bb7f3e8420effe8f5545fd492ae8f88dab44ce86cee7b26d7e8"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-citeseer",
+      "name": "Citeseer",
+      "description": "Citation network with 3,327 nodes, 4,552 edges (undirected: 9,104), 3,703 node features, and 6 classes. Average degree 5.5, density 0.17%. Loaded via torch_geometric.datasets.Planetoid.",
+      "contentUrl": "https://linqs-data.soe.ucsc.edu/public/lbc/citeseer.tgz",
+      "encodingFormat": "application/x-tar",
+      "sha256": "b02ee7b5d83130f8fd45b59017a76fdae3e998629a1904c2c5e07343a9664685"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-pubmed",
+      "name": "Pubmed",
+      "description": "Citation network with 19,717 nodes, 44,324 edges, 500 node features, and 3 classes. Average degree 4.5, density 0.02%. Loaded via torch_geometric.datasets.Planetoid.",
+      "contentUrl": "https://linqs-data.soe.ucsc.edu/public/Pubmed-Diabetes.tgz",
+      "encodingFormat": "application/x-tar",
+      "sha256": "218e3c86146cf6d470b305d824f26c86845f0c858ad3fdd269f6cd2ce63e12bd"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-amazon-computers",
+      "name": "Amazon Computers",
+      "description": "Amazon co-purchase graph with 13,752 nodes, 491,722 edges, 767 node features, and 10 classes. Average degree 35.8, density 0.52%. Loaded via torch_geometric.datasets.Amazon.",
+      "contentUrl": "https://data.pyg.org/datasets/amazon_electronics_computers.npz",
+      "encodingFormat": "application/octet-stream",
+      "sha256": "efd4583b9038959e1f730fd21939b728ad1198598353b56b3f27ed1117ea09b1"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-amazon-photos",
+      "name": "Amazon Photos",
+      "description": "Amazon co-purchase graph with 7,650 nodes, 238,162 edges, 745 node features, and 8 classes. Average degree 31.1, density 0.81%. Loaded via torch_geometric.datasets.Amazon.",
+      "contentUrl": "https://data.pyg.org/datasets/amazon_electronics_photo.npz",
+      "encodingFormat": "application/octet-stream",
+      "sha256": "bbaaaddde0153cecbcf3bd287fbbdc1e7734828a9569c3fb9e44f05c71a2f519"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-dblp",
+      "name": "DBLP",
+      "description": "DBLP citation network with 17,716 nodes, 105,734 edges, 1,639 node features, and 4 classes. Average degree 6.0, density 0.07%. Loaded via torch_geometric.datasets.CitationFull.",
+      "contentUrl": "https://data.pyg.org/datasets/CitationFull_dblp.zip",
+      "encodingFormat": "application/zip",
+      "sha256": "4b023d6e776ccb38c13de5c345d1790c917fda652dfe24754566d783f1d53918"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-flickr",
+      "name": "Flickr",
+      "description": "Social network graph with 89,250 nodes, 899,756 edges, 500 node features, and 7 classes. Average degree 10.1, density 0.02%. Loaded via torch_geometric.datasets.Flickr.",
+      "contentUrl": "https://data.pyg.org/datasets/flickr.zip",
+      "encodingFormat": "application/zip",
+      "sha256": "f0351860d997dc5cb3f091c017d5b72f005c43fbb2a10dd3aed5667cf7056f18"
+    },
+    {
+      "@type": "cr:FileObject",
+      "@id": "dataset-ogbn-arxiv",
+      "name": "ogbn-arxiv",
+      "description": "Open Graph Benchmark citation network with 169,343 nodes, 1,166,243 edges, 128 node features, and 40 classes. Average degree 7.1, density 0.01%. Loaded via the OGB package (ogb.nodeproppred.PygNodePropPredDataset).",
+      "contentUrl": "https://snap.stanford.edu/ogb/data/nodeproppred/arxiv.zip",
+      "encodingFormat": "application/zip",
+      "sha256": "c2383cd10aa41e33c5148ae6548895b70e08a10e5007aa3478c8ac9656950710"
+    }
+  ]
+}

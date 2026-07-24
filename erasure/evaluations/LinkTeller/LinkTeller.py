@@ -8,6 +8,7 @@ from torch_geometric.utils import to_networkx
 from sklearn import metrics
 import numpy as np
 from erasure.evaluations.LinkTeller.utils import construct_edge_sets, construct_edge_sets_from_random_subgraph, construct_balanced_edge_sets
+from erasure.evaluations.adversary import build_adversary_graph, tagged
 
 
 class LinkTeller(GraphMeasure):
@@ -26,7 +27,11 @@ class LinkTeller(GraphMeasure):
         self.removal_type = self.global_ctx.removal_type
         self.k_hat = self.params["k_hat"]
         self.max_edges = self.params["max_edges"]
-        
+        self.graph_knowledge = self.params["graph_knowledge"]
+        self.knowledge_fraction = self.params["knowledge_fraction"]
+        self.knowledge_seed = self.params["knowledge_seed"]
+        self.tag = self.params["tag"]
+
 
     def check_configuration(self):
         self.params["influence"] = self.params.get("influence", 0.0001)
@@ -37,6 +42,10 @@ class LinkTeller(GraphMeasure):
         self.params["retain_part"] = self.params.get("retain_part","retain")
         self.params["k_hat"] = self.params.get("k_hat", None)
         self.params["max_edges"] = self.params.get("max_edges", 500)
+        self.params["graph_knowledge"] = self.params.get("graph_knowledge", "retain")
+        self.params["knowledge_fraction"] = self.params.get("knowledge_fraction", 1.0)
+        self.params["knowledge_seed"] = self.params.get("knowledge_seed", 42)
+        self.params["tag"] = self.params.get("tag", "")
 
 
 
@@ -51,9 +60,16 @@ class LinkTeller(GraphMeasure):
         
         og_graph = e.predictor.dataset.partitions['all'][0][0]
 
-        self.features = unlearned_graph.x
-        self.edge_index = unlearned_graph.edge_index
-        self.n_features = len(unlearned_graph.x[0])
+        # The graph the adversary queries the model with. Defaults to the retain graph,
+        # i.e. exactly `unlearned_graph`, so untagged configs are unaffected.
+        adv_graph = build_adversary_graph(unlearned_graph, og_graph,
+                                          knowledge=self.graph_knowledge,
+                                          fraction=self.knowledge_fraction,
+                                          seed=self.knowledge_seed)
+
+        self.features = adv_graph.x
+        self.edge_index = adv_graph.edge_index
+        self.n_features = len(adv_graph.x[0])
 
         self.forget = e.unlearner.dataset.partitions[self.forget_part]
         self.retain = e.unlearner.dataset.partitions[self.retain_part]
@@ -120,8 +136,9 @@ class LinkTeller(GraphMeasure):
         print('auc =', auc)
 
 
-        self.info(f'LinkTeller {self.target} auc with sampler {self.edge_sampler}: {auc}')
-        e.add_value(f'LinkTeller {self.target} auc with sampler {self.edge_sampler}:', auc)
+        key = tagged(f'LinkTeller {self.target} auc with sampler {self.edge_sampler}:', self.tag)
+        self.info(f'{key} {auc}')
+        e.add_value(key, auc)
 
 
         return e

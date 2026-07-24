@@ -11,6 +11,7 @@ from torch.nn.functional import softmax
 
 import numpy as np
 from erasure.evaluations.LinkTeller.utils import construct_edge_sets, construct_edge_sets_from_random_subgraph, construct_edge_sets_through_bfs, construct_balanced_edge_sets
+from erasure.evaluations.adversary import build_adversary_graph, tagged
 
 
 class LinkStealing0(GraphMeasure):
@@ -26,8 +27,10 @@ class LinkStealing0(GraphMeasure):
         self.train_part = self.params["train_part"]
         self.test_part = self.params["test_part"]
         self.forget_part = self.params["forget_part"]
-
-        
+        self.graph_knowledge = self.params["graph_knowledge"]
+        self.knowledge_fraction = self.params["knowledge_fraction"]
+        self.knowledge_seed = self.params["knowledge_seed"]
+        self.tag = self.params["tag"]
 
     def check_configuration(self):
         self.params["ratio"] = self.params.get("ratio", 0.2)
@@ -35,6 +38,10 @@ class LinkStealing0(GraphMeasure):
         self.params["test_part"] = self.params.get("test_part", "test")
         self.params["forget_part"] = self.params.get("forget_part", "forget")
         self.params["target"] = self.params.get("target","unlearned")
+        self.params["graph_knowledge"] = self.params.get("graph_knowledge", "retain")
+        self.params["knowledge_fraction"] = self.params.get("knowledge_fraction", 1.0)
+        self.params["knowledge_seed"] = self.params.get("knowledge_seed", 42)
+        self.params["tag"] = self.params.get("tag", "")
 
 
 
@@ -45,8 +52,15 @@ class LinkStealing0(GraphMeasure):
         # Use the unlearned graph (forget edges removed) so inference does not
         # trivially propagate messages through the forgotten edge (u,v).
         unlearned_graph, _, _ = self.get_unlearned_graph(e.unlearner, self.global_ctx.removal_type)
-        self.features = unlearned_graph.x
-        self.edge_index = unlearned_graph.edge_index
+
+        # Defaults to the retain graph, so untagged configs take exactly the old path.
+        adv_graph = build_adversary_graph(unlearned_graph, graph,
+                                          knowledge=self.graph_knowledge,
+                                          fraction=self.knowledge_fraction,
+                                          seed=self.knowledge_seed)
+
+        self.features = adv_graph.x
+        self.edge_index = adv_graph.edge_index
         self.n_features = len(graph.x[0])
 
         forget_raw = e.unlearner.dataset.partitions[self.forget_part]
@@ -72,13 +86,15 @@ class LinkStealing0(GraphMeasure):
 
         aucs1 = compute_auc(probs_train, exist_edges, non_existent_edges)
 
-        self.info(f"Link Stealing Attack on {self.target} 0 exist/non_exist: {aucs1}")
-        e.add_value(f"Link Stealing Attack {self.target} 0 exist/non_exist", aucs1)
+        key1 = tagged(f"Link Stealing Attack {self.target} 0 exist/non_exist", self.tag)
+        self.info(f"{key1}: {aucs1}")
+        e.add_value(key1, aucs1)
 
         aucs2 = compute_auc(probs_train, self.forget, non_existent_edges)
 
-        self.info(f"Link Stealing Attack 0 on {self.target} forget/non_exist: {aucs2}")
-        e.add_value(f"Link Stealing Attack 0 {self.target} forget/non_exist", aucs2)
+        key2 = tagged(f"Link Stealing Attack 0 {self.target} forget/non_exist", self.tag)
+        self.info(f"{key2}: {aucs2}")
+        e.add_value(key2, aucs2)
 
         return e
 
