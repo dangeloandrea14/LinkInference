@@ -22,10 +22,14 @@ try:
     _TORCH_SPARSE_OK = True
 except (ImportError, OSError):
     _TORCH_SPARSE_OK = False
+    class SparseTensor: pass 
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.nn.conv import MessagePassing
-from torch_scatter import scatter_add
+try:
+    from torch_scatter import scatter_add
+except (ImportError, OSError):
+    from erasure.utils.scatter_compat import scatter_add
 from typing import Optional
 import torch.nn.functional as F
 from erasure.core.factory_base import get_instance_kvargs
@@ -36,8 +40,8 @@ class IDEA(TorchUnlearner):
         """
         Initializes the IDEA class with global and local contexts.
         """
-        if not _TORCH_SPARSE_OK:
-            raise RuntimeError("IDEA requires torch_sparse, which is not available in this environment.")
+        # torch_sparse is optional: its symbols appear only in SparseTensor code
+        # paths, and this framework always propagates a dense edge_index tensor.
         super().init()
         self.iteration = self.local.config['parameters']['iteration']
         self.scale = self.local.config['parameters']['scale']

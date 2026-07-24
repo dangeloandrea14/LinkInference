@@ -1,0 +1,52 @@
+# Lethe / EdgeUnbench dependencies
+#
+# Versions are those of a verified-working environment (Python 3.12).
+# Install torch FIRST with the build matching your cluster's CUDA, then the rest --
+# see the ordering notes at the bottom.
+
+# ── Core: required for every run ──────────────────────────────────────────────
+torch==2.13.0
+torch_geometric==2.8.0
+numpy==2.4.6
+scipy==1.17.1
+scikit-learn==1.9.0
+pandas==2.3.3
+PyYAML==6.0.3
+networkx==3.6.1
+tqdm==4.68.4
+psutil==7.2.2
+
+# Config parsing and logging. Small, but the framework will not start without them:
+# erasure/utils/config/file_parser.py imports jsonc_parser, erasure/utils/logger.py
+# imports picologging.
+jsonc-parser==1.1.5
+picologging==0.9.3
+jsonpickle==4.1.2
+
+# Table/figure generation (visualization_scripts/).
+matplotlib==3.11.0
+
+# ── NOT required: torch_scatter / torch_sparse ───────────────────────────────
+# Do NOT install these. They are unmaintained compiled extensions with no wheels for
+# recent torch (none exist for torch 2.13 on any platform, x86_64 or aarch64), and a
+# source build against CUDA 13 will not succeed.
+#
+# CEU, CGU and IDEA used to import them unconditionally, which made those three fail to
+# import; main.py caught the error and logged only "Skipping unlearner", silently
+# dropping them from results. They now fall back to native equivalents
+# (erasure/utils/scatter_compat.py) and run with no compiled extensions at all.
+#
+# Only `scatter_add` was ever genuinely called; the torch_sparse symbols appear solely
+# in SparseTensor code paths, and this framework always propagates a dense edge_index.
+torch_scatter
+torch_sparse
+
+# ── Optional ─────────────────────────────────────────────────────────────────
+# Only for ogbn-arxiv. Not needed for the adversary ablation (Photos/DBLP/Flickr).
+# ogb
+
+# Only for the framework's image/text unlearning paths, which no graph config touches.
+# torchvision
+# transformers
+# datasets
+# ucimlrepo
