@@ -9,6 +9,8 @@ from erasure.core.factory_base import get_function
 from erasure.core.measure import Measure, GraphMeasure
 from erasure.evaluations.evaluation import Evaluation
 from erasure.evaluations.utils import compute_accuracy, compute_relearn_time, compute_accuracy_graph, compute_relearn_time_graph
+from erasure.model.lp_utils import (HOLDOUT_PARTS, canonical_pairs, mp_edge_index,
+                                    ranking_scores, sample_negative_pairs, seeded)
 from erasure.utils.cfg_utils import init_dflts_to_of
 from erasure.utils.config.global_ctx import Global
 from erasure.utils.config.local_ctx import Local
@@ -143,6 +145,99 @@ class TorchSKLearnGraph(GraphMeasure):
 
             e.add_value(self.metric_name+'.'+self.partition_name+'.'+self.target+".on_graph:"+str(self.unlearned_graph), value)
 
+
+        return e
+
+
+class LinkPredictionGraph(GraphMeasure):
+    """Link-prediction utility / forgetting metric: ROC-AUC and AP over node pairs.
+
+    The link-prediction counterpart of ``TorchSKLearnGraph``.  Positives come from
+    an edge partition, negatives are sampled node pairs that are not edges of the
+    observed graph, and the scores come from the predictor's edge decoder.
+
+    Two partitions are worth measuring, and they answer different questions:
+
+    * ``partition='lp_test_pos'`` -- downstream utility, the analogue of test accuracy;
+    * ``partition='forget'`` -- whether the unlearned model still ranks the
+      *forgotten* edges above non-edges.  Node classification has no equivalent of
+      this: under link prediction, edge unlearning has a direct, task-native
+      signature in the model's own output.
+    """
+
+    def init(self):
+        super().init()
+
+        self.partition_name = self.params['partition']
+        self.target = self.params['target']
+        self.metric_name = self.params['name']
+        self.unlearned_graph = self.params['unlearned_graph']
+        self.holdout_parts = tuple(self.params['holdout_parts'])
+        self.seed = int(self.params['seed'])
+        self.max_edges = self.params['max_edges']
+        self.removal_type = self.global_ctx.removal_type
+
+    def check_configuration(self):
+        super().check_configuration()
+        self.params['partition'] = self.params.get('partition', 'lp_test_pos')
+        self.params['target'] = self.params.get('target', 'unlearned')
+        self.params['name'] = self.params.get('name', 'link_pred')
+        self.params['unlearned_graph'] = self.params.get('unlearned_graph', True)
+        self.params['holdout_parts'] = self.params.get('holdout_parts', list(HOLDOUT_PARTS))
+        self.params['seed'] = self.params.get('seed', 12345)
+        self.params['max_edges'] = self.params.get('max_edges', None)
+
+    def process(self, e: Evaluation):
+        erasure_model = self.get_model(e)
+        device = erasure_model.model.device
+
+        if not hasattr(erasure_model.model, 'decode'):
+            raise TypeError(
+                f'{self.metric_name} needs a link-prediction model exposing decode(); '
+                f'got {type(erasure_model.model).__name__}')
+
+        partitions = erasure_model.dataset.partitions
+        graph_wrapper = partitions['all']
+        num_nodes = graph_wrapper.num_nodes
+
+        # Negatives must not be edges of the *observed* graph, so take the exclusion
+        # set from the unlearner's (unmodified) data manager rather than from the
+        # possibly-already-pruned graph of the model under test.
+        observed = e.unlearner.dataset.partitions['all'][0][0].edge_index.to(device).long()
+
+        if self.unlearned_graph and 'forget' in partitions and self.removal_type == 'edge':
+            graph_wrapper = self._get_revised_graph(e, partitions['all'], partitions['forget'])
+
+        graph = graph_wrapper[0][0]
+        holdout = []
+        for part in self.holdout_parts:
+            holdout.extend(partitions.get(part, []))
+
+        mp_ei = mp_edge_index(graph.edge_index.to(device).long(), holdout, num_nodes)
+        X = graph.x.to(device).float()
+
+        pos = canonical_pairs(partitions[self.partition_name]).to(device)
+        if self.max_edges and pos.size(0) > self.max_edges:
+            with seeded(self.seed):
+                pos = pos[torch.randperm(pos.size(0), device=pos.device)[:self.max_edges]]
+
+        neg = sample_negative_pairs(pos.size(0), observed, num_nodes,
+                                    seed=self.seed).to(device)
+
+        with torch.no_grad():
+            z = erasure_model.model(X, mp_ei)
+            pos_scores = erasure_model.model.decode(z, pos)
+            neg_scores = erasure_model.model.decode(z, neg)
+
+        auc, ap = ranking_scores(pos_scores, neg_scores)
+
+        suffix = f'{self.partition_name}.{self.target}.on_graph:{self.unlearned_graph}'
+        self.info(f'{self.metric_name} on partition: "{self.partition_name}", target model: '
+                  f'{self.target}, unlearned graph: {self.unlearned_graph}: '
+                  f'auc={auc}, ap={ap} ({pos.size(0)} positives) of {erasure_model}')
+
+        e.add_value(f'{self.metric_name}.auc.{suffix}', auc)
+        e.add_value(f'{self.metric_name}.ap.{suffix}', ap)
 
         return e
 

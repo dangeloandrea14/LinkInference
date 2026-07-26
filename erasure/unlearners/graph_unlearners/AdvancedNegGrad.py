@@ -34,26 +34,28 @@ class AdvancedNegGrad(GraphUnlearner):
 
 
         retain_set = self.dataset.partitions[self.ref_data_retain]
-        forget_set = self.dataset.partitions[self.ref_data_forget]
+        forget_edges = self.dataset.partitions[self.ref_data_forget]
+        forget_set = forget_edges
 
         num_nodes = self.x.size(0)
 
         if self.removal_type == 'edge':
-            forget_set = self.infected_nodes(forget_set, self.hops)
+            forget_set = self.infected_nodes(forget_edges, self.hops)
             forget_set_s = set(forget_set)
             retain_set = [n for n in range(num_nodes) if n not in forget_set_s]
-            
+        else:
+            forget_edges = None
+
 
         for epoch in range(self.epochs):
             losses = []
             self.predictor.model.train()
 
-            out_retain = self.predictor.model(self.x, self.edge_index)[retain_set]
-            out_forget = self.predictor.model(self.x, self.edge_index)[forget_set]
-            
-            loss_ascent_forget = -self.predictor.loss_fn(out_forget, self.labels[forget_set].to(self.device))
-            loss_retain = self.predictor.loss_fn(out_retain, self.labels[retain_set].to(self.device))
-                
+            # Order matters: retain first, then forget, so the dropout masks drawn by
+            # the two forward passes match the original inline implementation.
+            loss_retain = self.task_loss(node_subset=retain_set)
+            loss_ascent_forget = -self.task_loss(node_subset=forget_set, edge_subset=forget_edges)
+
             # Overall loss
             joint_loss = loss_ascent_forget + loss_retain
 

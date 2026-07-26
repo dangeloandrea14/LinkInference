@@ -38,8 +38,10 @@ matplotlib==3.11.0
 #
 # Only `scatter_add` was ever genuinely called; the torch_sparse symbols appear solely
 # in SparseTensor code paths, and this framework always propagates a dense edge_index.
-torch_scatter
-torch_sparse
+#
+# Deliberately left uninstallable -- do not uncomment:
+# torch_scatter
+# torch_sparse
 
 # ── Optional ─────────────────────────────────────────────────────────────────
 # Only for ogbn-arxiv. Not needed for the adversary ablation (Photos/DBLP/Flickr).

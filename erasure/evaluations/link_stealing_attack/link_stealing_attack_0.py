@@ -31,6 +31,7 @@ class LinkStealing0(GraphMeasure):
         self.knowledge_fraction = self.params["knowledge_fraction"]
         self.knowledge_seed = self.params["knowledge_seed"]
         self.tag = self.params["tag"]
+        self.apply_softmax = self.params["apply_softmax"]
 
     def check_configuration(self):
         self.params["ratio"] = self.params.get("ratio", 0.2)
@@ -42,6 +43,11 @@ class LinkStealing0(GraphMeasure):
         self.params["knowledge_fraction"] = self.params.get("knowledge_fraction", 1.0)
         self.params["knowledge_seed"] = self.params.get("knowledge_seed", 42)
         self.params["tag"] = self.params.get("tag", "")
+        # Node classification: the model output is a class posterior, so the softmax is
+        # part of the attack as published.  Link prediction: the output is a node
+        # embedding, where a softmax over embedding dimensions is meaningless -- set
+        # this to false so the pairwise distances are computed on the embeddings.
+        self.params["apply_softmax"] = self.params.get("apply_softmax", True)
 
 
 
@@ -80,7 +86,7 @@ class LinkStealing0(GraphMeasure):
 
         with torch.no_grad():
             pred_train = self.model.model(self.features ,self.edge_index)
-            probs_train = softmax(pred_train, dim=1) 
+            probs_train = softmax(pred_train, dim=1) if self.apply_softmax else pred_train
 
         probs_train = probs_train.detach().cpu().numpy()
 

@@ -25,7 +25,32 @@ class GraphUnlearner(TorchUnlearner):
         self.forget_part = self.local.config['parameters']['forget_part']
         self.retain_part = self.local.config['parameters']['retain_part']
         self.train_part = self.local.config['parameters']['train_part']
-        
+
+        # Link-prediction task arm: the predictor owns the task loss, and the
+        # message-passing graph must exclude the held-out supervision edges the
+        # model is evaluated on.  For node classification nothing changes.
+        self.is_link_prediction = hasattr(self.predictor, 'task_loss')
+        if self.is_link_prediction:
+            _, _, mp_ei, _ = self.predictor.lp_context()
+            self.edge_index = mp_ei.to(self.device).long()
+
+    def task_loss(self, node_subset=None, edge_subset=None):
+        """The training objective of the predictor's task, over a subset of samples.
+
+        Node classification (default): cross-entropy over ``node_subset``, exactly
+        as the unlearners computed it inline before.  Link prediction: delegated to
+        ``TorchGraphLinkModel.task_loss``, which scores node pairs instead of nodes
+        -- ``edge_subset`` when the caller has specific edges in mind (the forget
+        set, for the gradient-ascent methods), otherwise the supervision edges
+        incident to ``node_subset``.
+        """
+        if self.is_link_prediction:
+            return self.predictor.task_loss(node_subset=node_subset,
+                                            edge_subset=edge_subset)
+
+        pred = self.predictor.model(self.x, self.edge_index)[node_subset]
+        return self.predictor.loss_fn(pred, self.labels[node_subset])
+
 
     def infected_nodes(self, edges_to_forget, hops):
         import networkx as nx

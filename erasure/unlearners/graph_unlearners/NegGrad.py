@@ -27,30 +27,26 @@ class NegGrad(GraphUnlearner):
 
         self.info(f'Starting NegGrad with {self.epochs} epochs')
 
-        forget_set = self.dataset.partitions[self.ref_data]
-
+        forget_edges = self.dataset.partitions[self.ref_data]
+        forget_set = forget_edges
 
         if self.removal_type == 'edge':
-            forget_set = self.infected_nodes(forget_set, self.hops)
-            
+            forget_set = self.infected_nodes(forget_edges, self.hops)
+        else:
+            forget_edges = None
 
         for epoch in range(self.epochs):
-            losses, preds, labels_list = [], [], []
+            losses = []
             self.predictor.model.train()
 
 
             self.predictor.optimizer.zero_grad() 
 
-            pred = self.predictor.model(self.x,self.edge_index)[forget_set]
-
-            loss = -self.predictor.loss_fn(pred, self.labels[forget_set])
+            loss = -self.task_loss(node_subset=forget_set, edge_subset=forget_edges)
 
             losses.append(loss.to('cpu').detach().numpy())
 
             loss.backward()
-
-            labels_list += list(self.labels.squeeze().long().detach().to('cpu').numpy())
-            preds += list(pred.squeeze().detach().to('cpu').numpy())
 
             self.predictor.optimizer.step()
 

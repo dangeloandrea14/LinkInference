@@ -37,9 +37,7 @@ class Finetuning(GraphUnlearner):
 
             self.predictor.optimizer.zero_grad()
 
-            pred = self.predictor.model(self.x, self.edge_index)[self.retain]
-
-            loss = self.predictor.loss_fn(pred,self.labels[self.retain])
+            loss = self.task_loss(node_subset=self.retain)
             losses.append(loss.to('cpu').detach().numpy())
 
             loss.backward()

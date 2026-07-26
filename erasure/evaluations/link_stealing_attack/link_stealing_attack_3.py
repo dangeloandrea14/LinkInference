@@ -77,6 +77,7 @@ class LinkStealingSupervised(GraphMeasure):
         self.hidden = self.params["hidden"]
         self.dropout = self.params["dropout"]
         self.lr = self.params["lr"]
+        self.apply_softmax = self.params["apply_softmax"]
 
     def check_configuration(self):
         self.params["target"] = self.params.get("target", "unlearned")
@@ -93,6 +94,9 @@ class LinkStealingSupervised(GraphMeasure):
         self.params["hidden"] = self.params.get("hidden", 32)
         self.params["dropout"] = self.params.get("dropout", 0.5)
         self.params["lr"] = self.params.get("lr", 1e-3)
+        # False for the link-prediction task arm, where the model output is a node
+        # embedding rather than a class posterior.  See LinkStealing0.
+        self.params["apply_softmax"] = self.params.get("apply_softmax", True)
 
     def process(self, e: Evaluation):
         graph = e.unlearner.dataset.partitions['all'][0][0]
@@ -109,7 +113,7 @@ class LinkStealingSupervised(GraphMeasure):
         with torch.no_grad():
             logits = model.model(adv_graph.x.to(model.device),
                                  adv_graph.edge_index.to(model.device))
-            probs = softmax(logits, dim=1).detach().cpu().numpy()
+            probs = (softmax(logits, dim=1) if self.apply_softmax else logits).detach().cpu().numpy()
 
         forget = {(min(u, v), max(u, v)) for u, v in e.unlearner.dataset.partitions[self.forget_part]}
         retain = {(min(u, v), max(u, v)) for u, v in zip(unlearned_graph.edge_index[0].tolist(),
