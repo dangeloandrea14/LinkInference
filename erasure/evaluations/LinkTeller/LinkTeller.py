@@ -93,6 +93,12 @@ class LinkTeller(GraphMeasure):
         norm_exist = []
         norm_nonexist = []
 
+        # The unperturbed forward pass does not depend on the edge under test, but
+        # get_gradient_eps recomputed it for every one of the 2*max_edges probes.
+        # Cache it once: same arithmetic, half the forward passes.  The model is in
+        # eval() so the pass is deterministic and the cached value is exact.
+        self._out_base = None
+
         with torch.no_grad():
             for u, v in self.forget_edges:
 
@@ -176,8 +182,9 @@ class LinkTeller(GraphMeasure):
         pert[v] = self.features[v] * self.influence
         with torch.no_grad():
             out_plus  = self.model.model(self.features + pert, self.edge_index).detach()
-            out_base  = self.model.model(self.features,          self.edge_index).detach()
-        return (out_plus[u] - out_base[u]) / self.influence
+            if getattr(self, '_out_base', None) is None:
+                self._out_base = self.model.model(self.features, self.edge_index).detach()
+        return (out_plus[u] - self._out_base[u]) / self.influence
         
 
     def get_edge_sampler(self,name):
